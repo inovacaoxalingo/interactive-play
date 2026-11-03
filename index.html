@@ -4,6 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Interactive Play – Xalingo</title>
+<!-- Google Analytics (GA4), mesma propriedade do catálogo: conta de forma anônima quantas pessoas entram e qual produto escolhem.
+     Sem dados pessoais e sem recursos de publicidade (página para crianças). Só liga no endereço publicado; para testar, abra com ?ga=1 -->
+<script>
+(function () {
+  var ID = 'G-HB9RN5N1J2';
+  if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', ID, { content_group: 'Interactive Play - Entrada', allow_google_signals: false, allow_ad_personalization_signals: false });
+  var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+  document.head.appendChild(s);
+  // qual produto a pessoa escolheu na página de entrada
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a.card'); if (!a) return;
+    window.gtag('event', 'select_content', { content_type: 'jogo', content_id: a.getAttribute('href').replace(/\/.*$/, '') });
+  });
+})();
+</script>
 <meta name="description" content="Produtos STEAM Interactive Play da Xalingo Brinquedos: monte o quebra-cabeça e descubra conteúdos com realidade aumentada direto no navegador.">
 <meta name="theme-color" content="#164194">
 <meta name="color-scheme" content="light">
@@ -71,7 +90,7 @@ footer{text-align:center;color:var(--suave);font-size:12px;margin-top:26px;line-
   </div>
 
   <div class="dica"><b>💡 Dica:</b> abra no Safari (iPhone) ou no Chrome (Android), e não dentro do Instagram ou do WhatsApp, para a câmera funcionar. Quando o navegador perguntar, permita o uso da câmera.</div>
-  <footer>© Xalingo Brinquedos · Interactive Play</footer>
+  <footer>© Xalingo Brinquedos · Interactive Play<br>Contamos os acessos de forma anônima, com o Google Analytics, sem pedir nenhum dado pessoal.</footer>
 </div>
 </body>
 </html>

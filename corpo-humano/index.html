@@ -344,7 +344,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 // Código impresso no QR do quebra-cabeça (lotes atuais). Lotes futuros: link ...?k=CÓDIGO
 const CODIGOS_VALIDOS = ['wWOwtn76Iq'];
 // Google Analytics 4: deixe vazio para não medir nada. Ex.: 'G-XXXXXXXXXX'
-const GA4_ID = '';
+const GA4_ID = 'G-HB9RN5N1J2';   // mesma propriedade do catálogo e do Planetas (ref. 53265)
 const CHAVE = 'xalingo_53309_';
 const LIB_LOCAL = { modelViewer: 'assets/lib/model-viewer.min.js', zxing: 'assets/lib/zxing-reader.js', zxingWasm: 'assets/lib/zxing_reader.wasm' };
 const LIB_CDN = { modelViewer: 'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js', zxing: 'https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.6/dist/iife/reader/index.js' };
@@ -381,7 +381,7 @@ const ehIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 function evento(nome, params) { try { if (window.gtag) window.gtag('event', nome, params || {}); } catch (e) {} }
 if (GA4_ID && !embutido()) {
   window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); };
-  gtag('js', new Date()); gtag('config', GA4_ID, { anonymize_ip: true });
+  gtag('js', new Date()); gtag('config', GA4_ID, { content_group: 'Interactive Play - Corpo Humano (ref. 53309)', allow_google_signals: false, allow_ad_personalization_signals: false });   // sem recursos de publicidade: página para crianças
   carregarScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID).catch(() => {});
   $('#ajudaPrivacidade').insertAdjacentHTML('beforeend', ' Contamos os acessos de forma anônima, com o Google Analytics, para melhorar a página.');
 }
@@ -521,7 +521,7 @@ function abrirSistema(id) {
   $$('#listaAudios .faixa').forEach(b => b.onclick = () => { sequencia = false; $('#ouvirTudo').setAttribute('aria-pressed', 'false'); tocar(s, +b.dataset.j); });
   $('#sisAnt').onclick = () => location.hash = '#/sistema/' + SIS[(i + SIS.length - 1) % SIS.length].id;
   $('#sisProx').onclick = () => location.hash = '#/sistema/' + SIS[(i + 1) % SIS.length].id;
-  evento('sistema_aberto', { sistema: s.id });
+  evento('sistema_aberto', { sistema: s.id }); evento('select_content', { content_type: 'sistema', content_id: s.id });
   // 3D
   const host = $('#mvHost'); host.innerHTML = ''; const car = $('#carregando3d'); car.style.display = 'grid'; car.textContent = 'Carregando o modelo 3D…';
   garantirModelViewer().then(() => {

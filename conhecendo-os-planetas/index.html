@@ -6,6 +6,22 @@
 <meta name="theme-color" content="#0e1440">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='16' fill='%23f0bf57'/%3E%3Cellipse cx='32' cy='32' rx='29' ry='9' fill='none' stroke='%23e3b500' stroke-width='4' transform='rotate(-20 32 32)'/%3E%3C/svg%3E">
 <title>Conhecendo os Planetas · Interactive Play</title>
+<!-- Google Analytics (GA4), mesma propriedade do catálogo. Conta acessos e o uso do jogo de forma anônima:
+     sem dados pessoais, sem imagens da câmera, sem recursos de publicidade (página para crianças).
+     Só liga no endereço publicado (github.io); para testar em outro lugar, abra com ?ga=1 -->
+<script>
+(function () {
+  var ID = 'G-HB9RN5N1J2';
+  window.medir = function (nome, p) { try { if (window.gtag) window.gtag('event', nome, p || {}); } catch (e) {} };
+  if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', ID, { content_group: 'Interactive Play - Planetas (ref. 53265)', allow_google_signals: false, allow_ad_personalization_signals: false });
+  var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+  document.head.appendChild(s);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -270,7 +286,7 @@ h1{font-size:clamp(2rem,9vw,2.9rem);line-height:1.02;font-weight:800;letter-spac
         </button>
       </div>
     </div>
-    <p class="cuidado">Brinque com um adulto por perto e em um lugar seguro. A câmera só é usada para ver o quebra-cabeça: nenhuma imagem ou dado sai do aparelho.</p>
+    <p class="cuidado">Brinque com um adulto por perto e em um lugar seguro. A câmera só é usada para ver o quebra-cabeça: nenhuma imagem sai do aparelho. Contamos os acessos de forma anônima, com o Google Analytics, sem pedir nenhum dado pessoal.</p>
     <p class="rodape"><img src="assets/marca/xalingo-branco.webp" alt="Xalingo"><a href="../">Outros produtos Interactive Play</a></p>
   </section>
 </main>
@@ -394,10 +410,11 @@ h1{font-size:clamp(2rem,9vw,2.9rem);line-height:1.02;font-weight:800;letter-spac
   if (location.protocol === 'file:') { aviso('Abra o jogo pelo link publicado (https). Aberto direto do computador, a câmera, os sons e os modelos 3D não carregam.'); }
   if (!(window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('importmap'))) {
     aviso('Este navegador é antigo para o jogo. Atualize o celular (iPhone com iOS 16.4 ou mais novo) ou use o Chrome atualizado.');
+    medir('erro_navegador_antigo');
     return;
   }
   setTimeout(function () {
-    if (!window.__app) aviso('Não consegui carregar os arquivos do jogo. Confira a internet — redes de empresa podem bloquear o endereço cdn.jsdelivr.net.');
+    if (!window.__app) { aviso('Não consegui carregar os arquivos do jogo. Confira a internet — redes de empresa podem bloquear o endereço cdn.jsdelivr.net.'); medir('erro_carregar'); }
   }, 15000);
 })();
 </script>
@@ -945,6 +962,8 @@ const ui = { splash: $('#splash'), hud: $('#hud'), scan: $('#scan'), card: $('#c
              joy: $('#joy'), naveBar: $('#naveBar') };
 let mode = null, sys = null, renderer = null, scene = null, camera = null, mind = null, controls = null, real = false, onResize = null;
 let current = null, viagem = false;
+/* medição anônima (GA4, ligada no <head>): o que as crianças usam no jogo. Nunca envia nome, imagem ou dado pessoal */
+const ga = (nome, p) => { try { window.medir && window.medir(nome, Object.assign({ modo: mode || 'inicio' }, p)); } catch (e) {} };
 
 /* splash: Xalinguinho na nave sobre o tabuleiro */
 drawSky($('#ceu'));
@@ -982,6 +1001,7 @@ syncDesc();
 function descobrir(k) {
   if (desc.has(k)) return false;
   desc.add(k); prefs.desc = [...desc]; salvar(); syncDesc();
+  if (desc.size === ORDEM.length) ga('unlock_achievement', { achievement_id: 'sistema_solar_completo' });
   if (desc.size === ORDEM.length) setTimeout(() => { toast('Parabéns! Você descobriu todos os 17 astros do Sistema Solar!', 5200); SOM.efeito('vamosla'); }, 600);
   else toast(`Nova descoberta: ${INFO[k].nome}! (${desc.size} de ${ORDEM.length})`, 2600);
   return true;
@@ -1008,11 +1028,12 @@ function lerCartao(forcar) {
     if (current !== k) return;
     $('#bOuvir').setAttribute('aria-pressed', 'false'); $('#bOuvirTxt').textContent = 'Ouvir';
     setTimeout(() => { if (current === k && !SOM.narrando) marcarLeitura(-1); }, 1500);
-    if (ok && viagem) setTimeout(() => { if (viagem && current === k) showCard(ORDEM[(ORDEM.indexOf(k) + 1) % ORDEM.length]); }, 1600);
+    if (ok && viagem) setTimeout(() => { if (viagem && current === k) showCard(ORDEM[(ORDEM.indexOf(k) + 1) % ORDEM.length], 'viagem'); }, 1600);
   }, forcar);
 }
-function showCard(k) {
+function showCard(k, origem = 'outro') {
   const d = INFO[k]; current = k;
+  ga('select_content', { content_type: 'astro', content_id: k, origem });   // origem: toque, nave, album, proximo, viagem
   $('#cNome').textContent = d.nome; $('#cTipo').textContent = d.tipo;
   $('#cImg').src = AS + 'astros/' + k + '.webp';
   $('#cFatos').innerHTML = d.fatos.map((f, i) => `<li class="fato"><img src="${AS}icones/${k}_${i + 1}.webp" alt=""><span>${f.t}${f.nota ? `<small class="corr">${f.nota}</small>` : ''}</span></li>`).join('');
@@ -1027,9 +1048,9 @@ function hideCard() {
   if (!(sys && sys.nave.ativo)) ui.chips.classList.remove('hidden');
 }
 $('#bFechar').onclick = () => { beep(); hideCard(); };
-$('#bProximo').onclick = () => showCard(ORDEM[(ORDEM.indexOf(current) + 1) % ORDEM.length]);
+$('#bProximo').onclick = () => showCard(ORDEM[(ORDEM.indexOf(current) + 1) % ORDEM.length], 'proximo');
 $('#bOuvir').onclick = () => { if (SOM.narrando) { viagem = false; pararLeitura(); } else lerCartao(true); };
-$('#bViagem').onclick = () => { viagem = true; showCard('sol'); };
+$('#bViagem').onclick = () => { viagem = true; ga('viagem_guiada'); showCard('sol', 'viagem'); };
 $('#bReal').onclick = () => {
   real = !real; $('#bReal').setAttribute('aria-pressed', String(real)); sys && sys.setReal(real); beep();
   toast(real ? 'Agora os planetas estão no tamanho de verdade entre eles. O Sol ficou de fora: ele teria 109 Terras de largura!'
@@ -1047,7 +1068,7 @@ function pilotar(on) {
   if (on) { naveUltima = performance.now(); perdidoDito = false; enc.alvo = null; enc.carga = 0; hideCard(); ui.chips.classList.add('hidden'); SOM.narrar(['tutorial', 'toque_para_explorar']); toast('Arraste o controle e pare a nave em cima de um astro até o anel encher.', 3800); }
   else { joy.x = joy.y = 0; $('#joyKnob').style.transform = ''; if (!current) ui.chips.classList.remove('hidden'); }
 }
-$('#bNave').onclick = () => { beep(); pilotar(true); };
+$('#bNave').onclick = () => { beep(); pilotar(true); ga('pilotar_nave'); };
 $('#bSairNave').onclick = () => { beep(); pilotar(false); hideCard(); };
 (() => {
   const el = ui.joy, knob = $('#joyKnob');
@@ -1123,7 +1144,7 @@ function encontroNave(dt) {
     sys.marcarMira(melhor, Math.min(1, enc.carga / ENC.tempo));
     if (enc.carga >= ENC.tempo) {
       nv.sobre = melhor; enc.ultimo = agora; naveUltima = agora; enc.alvo = null; enc.carga = 0; sys.marcarMira(null);
-      viagem = false; showCard(melhor);
+      viagem = false; showCard(melhor, 'nave');
     }
   } else { enc.alvo = null; enc.carga = 0; sys.marcarMira(null); }
 }
@@ -1140,7 +1161,7 @@ $('#stage').addEventListener('pointerup', e => {
   ndc.set((e.clientX - rect.left) / rect.width * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const hits = ray.intersectObjects(sys.pick.filter(h => h.parent.visible), false);
-  if (hits.length) { viagem = false; showCard(hits[0].object.userData.key); }
+  if (hits.length) { viagem = false; showCard(hits[0].object.userData.key, 'toque'); }
 });
 
 /* ---------- janelas ---------- */
@@ -1159,9 +1180,9 @@ function abrirAlbum() {
   $('#albumSub').textContent = desc.size === ORDEM.length ? 'Você descobriu todo o Sistema Solar!' :
     `${desc.size} de ${ORDEM.length} astros descobertos. Toque nos astros ou pilote a nave até eles para descobrir os outros.`;
   $('#albumBarra').style.width = (desc.size / ORDEM.length * 100) + '%';
-  g.querySelectorAll('button.tile').forEach(b => b.onclick = () => { fechar('#mAlbum'); if (mode) showCard(b.dataset.k); });
+  g.querySelectorAll('button.tile').forEach(b => b.onclick = () => { fechar('#mAlbum'); if (mode) showCard(b.dataset.k, 'album'); });
   $('#bZerar').textContent = 'Começar de novo'; $('#bZerar').dataset.conf = '';
-  abrir('#mAlbum');
+  abrir('#mAlbum'); ga('abrir_album', { descobertos: desc.size });
 }
 $('#bAlbum').onclick = abrirAlbum;
 $('#bZerar').onclick = () => {
@@ -1179,12 +1200,12 @@ function paginaComo(i) {
   $('#comoAnt').disabled = pg === 0; $('#comoAnt').style.opacity = pg === 0 ? .4 : 1;
   $('#comoProx').textContent = pg === INSTR.length - 1 ? 'Vamos lá!' : 'Próxima';
 }
-$('#bComo').onclick = () => { paginaComo(0); abrir('#mComo'); };
+$('#bComo').onclick = () => { paginaComo(0); abrir('#mComo'); ga('como_jogar'); };
 $('#comoAnt').onclick = () => { beep(); paginaComo(pg - 1); };
 $('#comoProx').onclick = () => { beep(); if (pg === INSTR.length - 1) fechar('#mComo'); else paginaComo(pg + 1); };
 $('#bVideo').onclick = () => {
   const v = $('#vid'); if (!v.src) v.src = AS + 'video/sistema-solar.mp4';
-  abrir('#mVideo'); SOM.pausarMusica(); v.play().catch(() => {});
+  abrir('#mVideo'); SOM.pausarMusica(); v.play().catch(() => {}); ga('ver_video');
 };
 
 function loading(msg) { if (msg) { $('#carregandoMsg').textContent = msg; ui.load.classList.remove('hidden'); } else ui.load.classList.add('hidden'); }
@@ -1212,10 +1233,11 @@ function ligarNave() {}
    Modo câmera (realidade aumentada) — MindAR reconhece a arte do QC
    ===================================================================== */
 $('#bCamera').onclick = async () => {
-  beep(); aviso('');
-  if (!window.isSecureContext) { aviso('A câmera só abre em um endereço seguro (https). Abra este jogo pelo link publicado, não pelo arquivo no computador.'); return; }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { aviso('Este navegador não deixa usar a câmera. Use o Chrome (Android) ou o Safari (iPhone) atualizados.'); return; }
+  beep(); aviso(''); ga('iniciar_jogo', { method: 'camera' });
+  if (!window.isSecureContext) { aviso('A câmera só abre em um endereço seguro (https). Abra este jogo pelo link publicado, não pelo arquivo no computador.'); ga('erro_camera', { method: 'sem_https' }); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { aviso('Este navegador não deixa usar a câmera. Use o Chrome (Android) ou o Safari (iPhone) atualizados.'); ga('erro_camera', { method: 'navegador_sem_camera' }); return; }
   loading('Preparando a câmera…');
+  const t0 = performance.now();
   try {
     const [{ MindARThree }] = await Promise.all([import('mindar-image-three'), carregarModelos]);
     enterHud(); mode = 'ar';
@@ -1235,13 +1257,15 @@ $('#bCamera').onclick = async () => {
     anchor.onTargetFound = () => {
       ui.scan.classList.add('hidden'); clearTimeout(dicaTimer);
       if (!found || performance.now() - lostAt > 2500) sys.rise();
-      if (!found) { toast('Encontrei! Toque em um astro ou pilote a nave.'); SOM.efeito('vamosla'); found = true; }
+      if (!found) { toast('Encontrei! Toque em um astro ou pilote a nave.'); SOM.efeito('vamosla'); found = true;
+                    ga('quebra_cabeca_reconhecido', { segundos: Math.round((performance.now() - t0) / 1000) }); }
     };
     anchor.onTargetUpdate = () => { STATS.updates++; };
     anchor.onTargetLost = () => {
       lostAt = performance.now(); ui.scan.classList.remove('hidden'); $('#scanMsg').firstChild.textContent = 'Procurando o quebra-cabeça…';
     };
     await mind.start();
+    ga('camera_aberta');
     loading(); ui.scan.classList.remove('hidden'); dicaTimer = setTimeout(dica, 12000);
     const clock = new THREE.Clock(), size = new THREE.Vector2();
     renderer.setAnimationLoop(() => {
@@ -1252,7 +1276,11 @@ $('#bCamera').onclick = async () => {
       if (window.__medir) medir(anchor.group, seguidor);
     });
   } catch (e) {
-    console.error(e); stopAll();
+    console.error(e);
+    const n = (e && e.name) || '';
+    ga('erro_camera', { method: /NotAllowed|Security/.test(n) ? 'permissao_negada' : /NotFound|Overconstrained/.test(n) ? 'sem_camera'
+                              : /NotReadable|Abort/.test(n) ? 'camera_ocupada' : 'outro' });
+    stopAll();
     aviso('Não consegui abrir a câmera. Confira se o navegador tem permissão para usar a câmera e tente de novo — ou entre em “Não tenho o quebra-cabeça”.');
   }
 };
@@ -1261,7 +1289,7 @@ $('#bCamera').onclick = async () => {
    Modo sem câmera — o quebra-cabeça em 3D na tela
    ===================================================================== */
 $('#bSemCamera').onclick = async () => {
-  beep(); aviso(''); loading('Montando o Sistema Solar…');
+  beep(); aviso(''); loading('Montando o Sistema Solar…'); ga('iniciar_jogo', { method: '3d' });
   try {
     const [{ OrbitControls }] = await Promise.all([import('three/addons/controls/OrbitControls.js'), carregarModelos]);
     enterHud(); mode = '3d'; SOM.efeito('vamosla');
@@ -1300,7 +1328,7 @@ $('#bSemCamera').onclick = async () => {
       const dt = Math.min(clock.getDelta(), .05); renderer.getDrawingBufferSize(size);
       controls.update(); controleNave(); sys.update(dt, clock.elapsedTime, size.y); encontroNave(dt); renderer.render(scene, camera);
     });
-  } catch (e) { console.error(e); stopAll(); aviso('Não consegui montar a cena 3D neste aparelho.'); }
+  } catch (e) { console.error(e); ga('erro_3d'); stopAll(); aviso('Não consegui montar a cena 3D neste aparelho.'); }
 };
 
 function boardTexture() {
