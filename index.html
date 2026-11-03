@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Interactive Play – Xalingo</title>
+<meta name="description" content="Produtos STEAM Interactive Play da Xalingo Brinquedos: monte o quebra-cabeça e descubra conteúdos com realidade aumentada direto no navegador.">
+<meta name="theme-color" content="#164194">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="assets/icone-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch.png">
+<meta property="og:title" content="Interactive Play – Xalingo">
+<meta property="og:description" content="Monte o quebra-cabeça e descubra conteúdos em 3D e realidade aumentada, sem instalar nada.">
+<meta property="og:image" content="https://inovacaoxalingo.github.io/interactive-play/assets/capa-corpo-humano.webp">
+<style>
+@font-face{font-family:'Open Sans';font-weight:300 800;font-display:swap;src:url('assets/open-sans.woff2') format('woff2')}
+:root{--azul:#164194;--azul-esc:#0E2C6B;--amarelo:#FFD200;--texto:#1D2540;--suave:#5B6380}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Open Sans',system-ui,sans-serif;color:var(--texto);background:#F7F5F0 url('assets/doodles.webp') center/900px auto repeat}
+a{color:inherit;text-decoration:none}
+.app{max-width:820px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 32px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+header .xal{height:46px;width:auto}
+.capa{margin-top:18px;background:#fff;border-radius:24px;padding:24px 20px;text-align:center;box-shadow:0 6px 0 rgba(14,44,107,.16),0 12px 28px rgba(14,44,107,.1)}
+.capa img{width:min(380px,86%);height:auto;margin:0 auto;display:block}
+.capa p{color:var(--suave);font-size:16px;line-height:1.5;margin:14px auto 0;max-width:560px}
+h2{font-size:clamp(20px,5vw,26px);font-weight:800;text-transform:uppercase;margin:28px 4px 12px}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 6px 0 rgba(14,44,107,.16);transition:transform .12s}
+.card:active{transform:scale(.98)}
+.card img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.card .txt{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card b{font-size:18px;font-weight:800;text-transform:uppercase;line-height:1.15}
+.card .ref{font-size:12px;font-weight:700;color:var(--suave)}
+.card p{margin:0;color:var(--suave);font-size:14.5px;line-height:1.45;flex:1}
+.card .ir{margin-top:8px;align-self:flex-start;background:var(--azul);color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:10px 16px;border-radius:14px;box-shadow:0 4px 0 var(--azul-esc)}
+.selos{display:flex;gap:6px;flex-wrap:wrap}
+.selos span{font-size:11.5px;font-weight:800;text-transform:uppercase;background:#FFF2B3;color:#5A4A00;padding:3px 8px;border-radius:999px}
+.dica{margin-top:22px;padding:14px 16px;border-radius:16px;background:#FFF7D6;color:#5A4A00;font-size:14px;line-height:1.5}
+footer{text-align:center;color:var(--suave);font-size:12px;margin-top:26px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><img class="xal" src="assets/logo_xalingo.webp" alt="Xalingo"></header>
+  <section class="capa">
+    <img src="assets/interactive-play.webp" alt="Interactive Play" width="512" height="130">
+    <p>Monte o quebra-cabeça Interactive Play e use o celular para descobrir os conteúdos em 3D, com narração e realidade aumentada. Funciona direto no navegador, sem instalar nada.</p>
+  </section>
+
+  <h2>Escolha o seu produto</h2>
+  <div class="grade">
+    <a class="card" href="corpo-humano/">
+      <img src="assets/capa-corpo-humano.webp" alt="Quebra-cabeça Conhecendo o Corpo Humano" loading="lazy">
+      <div class="txt">
+        <div class="selos"><span>QR code</span><span>3D</span><span>Realidade aumentada</span></div>
+        <b>Conhecendo o Corpo Humano</b><span class="ref">STEAM Interactive Play · ref. 53309</span>
+        <p>Escaneie o QR code do quebra-cabeça e explore os 5 sistemas do corpo com narração, modelos 3D e um desafio. O jogo da memória é liberado para todos.</p>
+        <span class="ir">Abrir ›</span>
+      </div>
+    </a>
+    <a class="card" href="conhecendo-os-planetas/">
+      <img src="assets/capa-planetas.webp" alt="Quebra-cabeça Conhecendo os Planetas" loading="lazy">
+      <div class="txt">
+        <div class="selos"><span>Câmera</span><span>3D</span><span>Realidade aumentada</span></div>
+        <b>Conhecendo os Planetas</b><span class="ref">STEAM Interactive Play · ref. 53265</span>
+        <p>Monte o quebra-cabeça, aponte a câmera e veja os planetas saírem do tabuleiro em 3D. Pilote a nave e complete o álbum dos astros.</p>
+        <span class="ir">Abrir ›</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="dica"><b>💡 Dica:</b> abra no Safari (iPhone) ou no Chrome (Android), e não dentro do Instagram ou do WhatsApp, para a câmera funcionar. Quando o navegador perguntar, permita o uso da câmera.</div>
+  <footer>© Xalingo Brinquedos · Interactive Play</footer>
+</div>
+</body>
+</html>
