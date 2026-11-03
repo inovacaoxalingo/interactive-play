@@ -271,7 +271,7 @@ h1{font-size:clamp(2rem,9vw,2.9rem);line-height:1.02;font-weight:800;letter-spac
       </div>
     </div>
     <p class="cuidado">Brinque com um adulto por perto e em um lugar seguro. A câmera só é usada para ver o quebra-cabeça: nenhuma imagem ou dado sai do aparelho.</p>
-    <p class="rodape"><img src="assets/marca/xalingo-branco.webp" alt="Xalingo"><a href="../">Mais jogos</a></p>
+    <p class="rodape"><img src="assets/marca/xalingo-branco.webp" alt="Xalingo"><a href="../">Outros produtos Interactive Play</a></p>
   </section>
 </main>
 
@@ -962,7 +962,7 @@ function toast(msg, ms = 3200) {
   ui.toast.textContent = msg; ui.toast.classList.add('on');
   clearTimeout(toast.h); toast.h = setTimeout(() => ui.toast.classList.remove('on'), ms);
 }
-const beep = () => SOM.efeito('beep', .25);     // só nos botões, baixinho (antes tocava a cada astro e incomodava)
+const beep = () => {};     // bip removido do jogo inteiro (incomodava, inclusive ao fechar os cartões)
 
 /* ---------- botões de som ---------- */
 function syncSons() {
