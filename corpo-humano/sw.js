@@ -1,7 +1,7 @@
 /* Service worker – Conhecendo o Corpo Humano (ref. 53309)
    Guarda a página e as imagens para abrir rápido e funcionar com internet fraca.
    A versão muda a cada publicação, e o cache antigo é apagado sozinho. */
-const VERSAO = '202611032130';
+const VERSAO = '202611040900';
 const PREFIXO = 'xalingo-53309-';
 const CACHE = PREFIXO + VERSAO;
 const BASICO = [
