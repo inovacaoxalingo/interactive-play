@@ -6,7 +6,9 @@
 <meta name="theme-color" content="#0e1440">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='16' fill='%23f0bf57'/%3E%3Cellipse cx='32' cy='32' rx='29' ry='9' fill='none' stroke='%23e3b500' stroke-width='4' transform='rotate(-20 32 32)'/%3E%3C/svg%3E">
 <title>Conhecendo os Planetas · Interactive Play</title>
-<!-- Google Analytics (GA4), mesma propriedade do catálogo. Conta acessos e o uso do jogo de forma anônima:
+<!-- Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima — arquivo comum do Interactive Play -->
+<script src="../assets/aceite.js?v=1" data-idade="4" data-politica="../privacidade.html"></script>
+<!-- Google Analytics (GA4), mesma propriedade do catálogo. Conta acessos e o uso do jogo de forma anônima, só se o adulto permitir:
      sem dados pessoais, sem imagens da câmera, sem recursos de publicidade (página para crianças).
      Só liga no endereço publicado (github.io); para testar em outro lugar, abra com ?ga=1 -->
 <script>
@@ -14,17 +16,18 @@
   var ID = 'G-HB9RN5N1J2';
   window.medir = function (nome, p) { try { if (window.gtag) window.gtag('event', nome, p || {}); } catch (e) {} };
   if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+  if (!window.XalingoAceite) return;
+  XalingoAceite.aoPermitir(function () {
+  if (window.gtag) return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function () { window.dataLayer.push(arguments); };
   window.gtag('js', new Date());
   window.gtag('config', ID, { content_group: 'Interactive Play - Planetas (ref. 53265)', allow_google_signals: false, allow_ad_personalization_signals: false });
   var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
   document.head.appendChild(s);
+  });
 })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -33,6 +36,7 @@
 } }
 </script>
 <style>
+@font-face{font-family:'Open Sans';font-style:normal;font-weight:300 800;font-display:swap;src:url('../assets/open-sans.woff2') format('woff2')}
 :root{
   --espaco:#0e1440; --violeta:#2b1e5c; --noite:#070b24;
   --amarelo:#e3b500; --amarelo-claro:#f7d93b; --gelo:#5cc6ea;
@@ -89,6 +93,7 @@ h1{font-size:clamp(2rem,9vw,2.9rem);line-height:1.02;font-weight:800;letter-spac
 .acoes-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn-ter{min-height:50px;font-size:.95rem;background:rgba(92,198,234,.12);border:1px solid rgba(92,198,234,.35)}
 .cuidado{margin:16px 0 0;font-size:.82rem;color:var(--texto-2);max-width:50ch}
+.cuidado a{color:var(--amarelo-claro);font-weight:700}
 .rodape{margin:14px 0 0;display:flex;align-items:center;gap:14px;font-size:.85rem;color:var(--texto-2)}
 .rodape img{height:26px;width:auto}
 .rodape a{color:var(--texto);font-weight:700}
@@ -286,7 +291,7 @@ h1{font-size:clamp(2rem,9vw,2.9rem);line-height:1.02;font-weight:800;letter-spac
         </button>
       </div>
     </div>
-    <p class="cuidado">Brinque com um adulto por perto e em um lugar seguro. A câmera só é usada para ver o quebra-cabeça: nenhuma imagem sai do aparelho. Contamos os acessos de forma anônima, com o Google Analytics, sem pedir nenhum dado pessoal.</p>
+    <p class="cuidado">Indicado para crianças a partir de 4 anos. Brinque com um adulto por perto e em um lugar seguro. A câmera só é usada para ver o quebra-cabeça: nenhuma imagem sai do aparelho. <a href="../privacidade.html">Privacidade</a> · <a href="#" onclick="XalingoAceite.reabrir();return false">Contagem de acessos</a></p>
     <p class="rodape"><img src="assets/marca/xalingo-branco.webp" alt="Xalingo"><a href="../">Outros produtos Interactive Play</a></p>
   </section>
 </main>

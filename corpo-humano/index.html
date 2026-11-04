@@ -21,6 +21,8 @@
 <meta property="og:url" content="https://inovacaoxalingo.github.io/interactive-play/corpo-humano/">
 <meta property="og:image" content="https://inovacaoxalingo.github.io/interactive-play/corpo-humano/assets/compartilhar.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<!-- Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima — arquivo comum do Interactive Play -->
+<script src="../assets/aceite.js?v=1" data-idade="6" data-politica="../privacidade.html"></script>
 <style>
 @font-face{font-family:'Open Sans';font-style:normal;font-weight:300 800;font-display:swap;src:url('assets/fonts/open-sans.woff2') format('woff2')}
 :root{
@@ -197,6 +199,75 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
 .modal p{margin:0 0 16px;color:#3D3200;font-weight:600;line-height:1.45}
 .estrelas{font-size:40px;letter-spacing:4px;margin:4px 0 8px}
 .confete{position:fixed;inset:0;pointer-events:none;z-index:70}
+
+/* ===== v1.1 — órgãos, percurso, medalhas ===== */
+.palco .desenho{grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr)}
+.fig-box{position:relative;height:100%;width:auto;aspect-ratio:252/560;max-width:100%;justify-self:center;min-width:0}
+.palco .desenho .fig-box img{width:100%;height:100%;object-fit:contain}
+.fig-box svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:4}
+.pin{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--c);box-shadow:0 2px 6px rgba(0,0,0,.3);padding:0;z-index:2}
+.pin::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--c);transition:background .2s}
+.pin.visto{border-color:#3FAE2A}
+.pin.visto::after{background:#3FAE2A}
+.pin.on,.pin.fala{z-index:3;animation:pulsaPin 1.1s ease-in-out infinite}
+@keyframes pulsaPin{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 55%,transparent),0 2px 6px rgba(0,0,0,.3)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 0%,transparent),0 2px 6px rgba(0,0,0,.3)}}
+.rot{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;background:var(--azul-esc);color:#fff;font-weight:800;font-size:12.5px;padding:5px 9px;border-radius:9px;pointer-events:none;opacity:0;transition:opacity .2s;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.pin.on .rot,.pin.fala .rot,.hs.on .rot{opacity:1}
+.hs{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--c);box-shadow:0 2px 6px rgba(0,0,0,.35);padding:0;position:relative;cursor:pointer}
+.hs::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--c)}
+.hs.visto{border-color:#3FAE2A}.hs.visto::after{background:#3FAE2A}
+.hs.on{animation:pulsaPin 1.1s ease-in-out infinite}
+.fig-box.percurso .pin:not(.fala){opacity:.3;transform:translate(-50%,-50%) scale(.7)}
+.fig-box .pin{transition:opacity .25s,transform .25s}
+#mvHost model-viewer{--min-hotspot-opacity:.55}
+.chip-perc{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(14,44,107,.92);color:#fff;font-weight:800;font-size:13px;padding:8px 14px;border-radius:999px;z-index:4;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.chip-perc[hidden]{display:none}
+.ficha{margin-top:12px;background:#fff;border-radius:18px;border:3px solid var(--c);padding:12px 14px;box-shadow:0 4px 0 rgba(14,44,107,.12)}
+.ficha[hidden]{display:none}
+.ficha-t{display:flex;align-items:center;gap:8px}
+.ficha-t b{flex:1;font-size:18px;text-transform:uppercase;color:var(--c);line-height:1.1}
+.ficha-t button{width:40px;height:40px;border-radius:12px;background:#F4F2EC;font-size:18px;display:grid;place-items:center}
+.ficha p{margin:6px 0 0;font-size:16px;line-height:1.5}
+.ficha .ver-tudo{margin-top:8px;font-size:13px;font-weight:800;color:var(--azul);text-decoration:underline}
+.dica-org{margin:10px 2px 0;font-size:14px;font-weight:700;color:var(--suave);text-align:center}
+.missao{margin-top:14px;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFF7D6;box-shadow:0 4px 0 rgba(201,164,0,.35)}
+.missao .txt{flex:1;min-width:0}
+.missao b{display:block;font-size:14px;text-transform:uppercase;color:#5A4A00}
+.missao span{display:block;font-size:13.5px;font-weight:700;color:#5A4A00;margin-top:3px}
+.missao span.ok{color:#2E7D1E}
+.missao a{font-size:13px;font-weight:800;color:var(--azul);text-decoration:underline}
+/* medalha */
+.medalha{position:relative;display:inline-block;flex:none;width:var(--t,64px);height:calc(var(--t,64px) * 1.22)}
+.medalha::before,.medalha::after{content:"";position:absolute;top:0;width:calc(var(--t,64px) * .3);height:calc(var(--t,64px) * .55);background:var(--c);border-radius:2px}
+.medalha::before{left:calc(var(--t,64px) * .2);transform:skewX(14deg);filter:brightness(.85)}
+.medalha::after{right:calc(var(--t,64px) * .2);transform:skewX(-14deg)}
+.medalha .disco{position:absolute;left:0;bottom:0;width:var(--t,64px);height:var(--t,64px);border-radius:50%;background:radial-gradient(circle at 32% 28%,#FFF3A6,#E3B500 52%,#A87F00);padding:calc(var(--t,64px) * .085);box-shadow:0 3px 8px rgba(0,0,0,.28);z-index:1}
+.medalha .disco i{position:relative;display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--c);overflow:hidden;font-style:normal;font-size:calc(var(--t,64px) * .42)}
+.medalha .disco img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% var(--py,30%);background:#fff}
+.medalha.bloq{filter:grayscale(1);opacity:.42}
+.grade-med{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:16px}
+.cartao-med{background:#fff;border-radius:20px;padding:14px 10px 12px;text-align:center;box-shadow:0 4px 0 rgba(14,44,107,.12);display:flex;flex-direction:column;align-items:center;gap:6px}
+.cartao-med b{font-size:13.5px;text-transform:uppercase;line-height:1.15}
+.cartao-med small{font-size:12.5px;font-weight:700;color:var(--suave);line-height:1.35}
+.cartao-med small.ok{color:#2E7D1E}
+.med-prog{margin-top:14px}
+.med-prog i{background:var(--amarelo)}
+.sis .med{position:absolute;top:8px;right:8px;z-index:2;background:#fff;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800;color:var(--azul-esc);text-shadow:none}
+.sis .pg{position:relative;display:block;height:6px;margin:8px 12px 0;border-radius:6px;background:rgba(255,255,255,.35);overflow:hidden}
+.sis .pg i{display:block;height:100%;background:#fff;border-radius:6px}
+.btn-med{margin-top:16px}
+.campo{display:block;margin-top:14px}
+.campo span{display:block;font-size:13px;font-weight:800;color:var(--azul);text-transform:uppercase;margin-bottom:6px}
+.campo input{width:100%;font:inherit;font-size:18px;font-weight:700;padding:12px 14px;border-radius:14px;border:2px solid #D5D2C8;background:#fff;color:var(--texto)}
+.campo input:focus{outline:none;border-color:var(--azul)}
+#certImg{margin-top:14px;width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.18);background:#fff}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:#fff}
+  body.imprimindo *{visibility:hidden}
+  body.imprimindo #certImg{visibility:visible;position:fixed;left:0;top:0;width:100%;box-shadow:none;border-radius:0;margin:0}
+}
+
 @media (min-width:640px){.sis img{height:200px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -217,6 +288,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       <h1 class="sr" style="position:absolute;left:-9999px">Conhecendo o Corpo Humano</h1>
       <img class="ip" src="assets/logo_ip.webp" alt="Interactive Play – Conhecendo o Corpo Humano">
       <span class="ref">STEAM Interactive Play · ref. 53309</span>
+      <span class="ref idade">Indicado a partir de 6 anos · com um adulto por perto</span>
       <p class="sub">Monte o quebra-cabeça e escaneie o QR code que fica na parte laranja para liberar os 5 sistemas do corpo humano com narração, 3D e realidade aumentada.</p>
       <div class="escolha">
         <button id="btnTenho"><img src="assets/btn_tenho.webp" alt="Tenho o jogo físico"><span class="leg" id="legTenho">Escanear o QR code</span></button>
@@ -225,6 +297,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       <div class="liberado" id="boxLiberado">
         <button class="btn" data-ir="#/sistemas">🧠 Explorar os sistemas</button>
         <button class="btn amarelo" data-ir="#/desafio">🏆 Desafio do corpo humano</button>
+        <button class="btn branco" data-ir="#/medalhas">🏅 <span class="btn-med-txt">Minhas medalhas</span></button>
       </div>
     </div>
     <div class="dica" id="dicaQR"><b>💡 Onde fica o QR code?</b> Na parte laranja do quebra-cabeça, perto do Sistema Cardiovascular. Deixe bem iluminado, sem reflexo de luz em cima, e aproxime o celular até o QR ocupar boa parte do quadrado amarelo.
@@ -236,9 +309,9 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       <details><summary>A câmera não abre</summary><p id="ajudaCamera">Abra esta página no Safari (iPhone) ou no Chrome (Android), e não dentro do Instagram, WhatsApp ou Facebook. Quando o navegador perguntar, toque em <b>Permitir</b>. Se já bloqueou: no iPhone, vá em Ajustes › Safari › Câmera › Permitir; no Android, toque no cadeado ao lado do endereço › Permissões › Câmera. Se ainda assim não ler, use o botão <b>Tirar foto do QR</b>.</p></details>
       <details><summary>Não tem som</summary><p>Aumente o volume do celular e confira se o botão 🔊 no alto da página está ligado. As narrações também aparecem escritas na tela, enquanto tocam.</p></details>
       <details><summary>Usar como aplicativo</summary><p id="ajudaInstalar">No iPhone, toque em Compartilhar › Adicionar à Tela de Início. No Android, abra o menu ⋮ do Chrome › Adicionar à tela inicial. O ícone fica junto com seus apps.</p></details>
-      <details><summary>Privacidade</summary><p id="ajudaPrivacidade">A câmera é usada só para ler o QR code: nenhuma imagem sai do seu celular e não pedimos nenhum dado pessoal. A liberação fica salva só neste aparelho. <a href="https://www.xalingo.com.br/politicas/corpohumano/" target="_blank" rel="noopener">Política de privacidade</a>.</p></details>
+      <details><summary>Privacidade</summary><p id="ajudaPrivacidade">A câmera é usada só para ler o QR code: nenhuma imagem sai do seu celular e não pedimos nenhum dado pessoal. A liberação, as medalhas e as preferências de som ficam salvas só neste aparelho. Se o adulto permitir, contamos os acessos de forma anônima, com o Google Analytics, sem propaganda. <a href="../privacidade.html">Política de privacidade</a> · <a href="#" onclick="XalingoAceite.reabrir();return false">Mudar a escolha da contagem</a></p></details>
     </div>
-    <p class="rodape">© Xalingo Brinquedos · STEAM Interactive Play · ref. 53309<br><span id="versao">versão 1.0 · 03/11/2026</span></p>
+    <p class="rodape">© Xalingo Brinquedos · STEAM Interactive Play · ref. 53309<br><span id="versao">versão 1.1 · 03/11/2026</span></p>
   </section>
 
   <!-- SISTEMAS -->
@@ -246,6 +319,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
     <div class="topo" style="margin-bottom:0"><a class="voltar" href="#/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Início</a></div>
     <div style="margin-top:14px"><h2>Os sistemas do corpo</h2><p class="sub">Escolha um sistema para ouvir, ver em 3D e colocar na sua mesa.</p></div>
     <div class="grade" id="gradeSis"></div>
+    <button class="btn branco btn-med" data-ir="#/medalhas">🏅 <span class="btn-med-txt">Minhas medalhas</span></button>
     <div class="atalhos">
       <button class="btn amarelo peq" data-ir="#/desafio">🏆 Desafio</button>
       <button class="btn branco peq" data-ir="#/memoria">🃏 Memória</button>
@@ -263,9 +337,13 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       </div>
       <div class="carregando" id="carregando3d">Carregando o modelo 3D…</div>
       <div id="mvHost" style="position:absolute;inset:0"></div>
-      <div class="desenho"><img id="sisFig" alt=""></div>
+      <div class="desenho"><div class="fig-box" id="figBox"><img id="sisFig" alt=""><svg id="figTrilha" aria-hidden="true"></svg><div id="figPins"></div></div></div>
+      <span class="chip-perc" id="chipPerc" hidden></span>
       <span class="selo-tam" id="seloTam" hidden></span>
     </div>
+    <div class="ficha" id="ficha" hidden aria-live="polite"><div class="ficha-t"><b id="fichaNome"></b><button id="fichaOuvir" aria-label="Ouvir">🔊</button><button id="fichaFechar" aria-label="Fechar">✕</button></div><p id="fichaTxt"></p><button class="ver-tudo" id="fichaVerTudo" hidden>↺ Ver o modelo inteiro</button></div>
+    <p class="dica-org">👆 Toque nos pontinhos para descobrir o nome de cada parte.</p>
+    <div class="missao" id="missao"></div>
     <button class="ouvir-tudo" id="ouvirTudo" aria-pressed="false"></button>
     <div class="audios" id="listaAudios"></div>
     <p class="obs-som">🔊 Sem som? Aumente o volume do celular. As narrações aparecem escritas enquanto tocam.</p>
@@ -293,6 +371,28 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
     </div>
   </section>
 
+  <!-- MEDALHAS -->
+  <section class="tela" id="t-medalhas">
+    <div class="topo" style="margin-bottom:0"><a class="voltar" href="#/sistemas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Sistemas</a></div>
+    <div style="margin-top:14px"><h2>Minhas medalhas</h2><p class="sub" id="medSub"></p></div>
+    <div class="prog med-prog"><i id="medBarra"></i></div>
+    <div class="grade-med" id="gradeMed"></div>
+    <button class="btn amarelo" id="btnCert" style="margin-top:16px"></button>
+    <p class="obs-som">As medalhas ficam guardadas só neste aparelho.</p>
+  </section>
+
+  <!-- CERTIFICADO -->
+  <section class="tela" id="t-certificado">
+    <div class="topo" style="margin-bottom:0"><a class="voltar" href="#/medalhas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Medalhas</a></div>
+    <div class="painel" style="margin-top:14px">
+      <h2>Seu certificado</h2>
+      <p class="sub">Escreva o nome de quem explorou o corpo humano. O nome só aparece na imagem: não é salvo nem enviado para lugar nenhum.</p>
+      <label class="campo"><span>Nome</span><input id="certNome" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="Nome da criança"></label>
+      <img id="certImg" alt="Certificado de Explorador do Corpo Humano" width="1600" height="1131">
+      <div class="nav-sis"><button class="btn" id="certSalvar">💾 Salvar</button><button class="btn branco" id="certImprimir">🖨️ Imprimir</button></div>
+    </div>
+  </section>
+
   <!-- DESAFIO -->
   <section class="tela" id="t-desafio">
     <div class="topo" style="margin-bottom:0"><a class="voltar" href="#/sistemas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Sistemas</a></div>
@@ -307,6 +407,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
   </section>
 </div>
 
+<!-- (fim das telas) -->
 <!-- LEITOR DE QR -->
 <div class="scan" id="scan" aria-hidden="true" role="dialog" aria-label="Leitor de QR code">
   <video id="video" playsinline muted></video>
@@ -379,12 +480,13 @@ const ehIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 
 /* ---------- medição opcional (GA4) ---------- */
 function evento(nome, params) { try { if (window.gtag) window.gtag('event', nome, params || {}); } catch (e) {} }
-if (GA4_ID && !embutido()) {
+// só liga se o adulto permitir no aviso da 1ª visita (assets/aceite.js do Interactive Play)
+if (GA4_ID && !embutido() && window.XalingoAceite) XalingoAceite.aoPermitir(() => {
+  if (window.gtag) return;
   window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); };
   gtag('js', new Date()); gtag('config', GA4_ID, { content_group: 'Interactive Play - Corpo Humano (ref. 53309)', allow_google_signals: false, allow_ad_personalization_signals: false });   // sem recursos de publicidade: página para crianças
   carregarScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID).catch(() => {});
-  $('#ajudaPrivacidade').insertAdjacentHTML('beforeend', ' Contamos os acessos de forma anônima, com o Google Analytics, para melhorar a página.');
-}
+});
 
 /* ---------- navegador dentro de app (Instagram, WhatsApp…) ---------- */
 (() => {
@@ -467,19 +569,23 @@ function rota() {
   pararNarracao(); pararScanner(false); fecharModal();
   $$('.tela').forEach(t => t.classList.remove('ativa'));
   let tela = 'inicio';
-  if ((p[0] === 'sistemas' || p[0] === 'sistema' || p[0] === 'desafio') && !liberado()) {
+  if (['sistemas', 'sistema', 'desafio', 'medalhas', 'certificado'].includes(p[0]) && !liberado()) {
     history.replaceState(null, '', location.pathname + location.search + '#/');
     setTimeout(() => toast('Escaneie o QR code do quebra-cabeça para liberar 😉'), 50);
     p.length = 0; p.push('');
   }
-  if (p[0] === 'sistemas') tela = 'sistemas';
+  if (p[0] === 'certificado' && prog.m.length < MEDALHAS().length) { p[0] = 'medalhas'; history.replaceState(null, '', location.pathname + location.search + '#/medalhas'); setTimeout(() => toast('Junte as 6 medalhas para liberar o certificado'), 50); }
+  if (p[0] === 'sistemas') { tela = 'sistemas'; renderGrade(); }
+  else if (p[0] === 'medalhas') { tela = 'medalhas'; mostrarMedalhas(); }
+  else if (p[0] === 'certificado') { tela = 'certificado'; mostrarCertificado(); }
   else if (p[0] === 'sistema') { tela = 'sistema'; abrirSistema(p[1]); }
   else if (p[0] === 'memoria') { tela = 'memoria'; mostrarNiveis(); }
   else if (p[0] === 'desafio') { tela = 'desafio'; iniciarDesafio(); }
   else atualizarInicio();
+  renderGrade();
   $('#t-' + tela).classList.add('ativa');
   window.scrollTo({ top: 0 });
-  const t = { inicio: 'Conhecendo o Corpo Humano', sistemas: 'Os sistemas do corpo', memoria: 'Jogo da memória', desafio: 'Desafio' }[tela];
+  const t = { inicio: 'Conhecendo o Corpo Humano', sistemas: 'Os sistemas do corpo', memoria: 'Jogo da memória', desafio: 'Desafio', medalhas: 'Minhas medalhas', certificado: 'Certificado' }[tela];
   document.title = (tela === 'sistema' && atual ? atual.nomeTexto : t) + ' – Xalingo';
 }
 window.addEventListener('hashchange', rota);
@@ -488,7 +594,7 @@ $('#btnTenho').onclick = () => liberado() ? (location.hash = '#/sistemas') : abr
 $('#btnNaoTenho').onclick = () => location.hash = '#/memoria';
 
 /* ---------- lista de sistemas ---------- */
-$('#gradeSis').innerHTML = SIS.map(s => `<a class="sis" href="#/sistema/${s.id}" style="--c:${s.cor}"><img src="${s.fig}" alt="" loading="lazy" width="230" height="512"><b>${s.nome}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</a>`).join('');
+/* (a lista agora é desenhada por renderGrade(), com o progresso de cada sistema) */
 
 /* ---------- tela do sistema ---------- */
 let mvPronto = null, atual = null;
@@ -512,7 +618,7 @@ function abrirSistema(id) {
   $('#sisNome').innerHTML = s.nome; $('#sisSub').innerHTML = s.sub || '';
   $('#sisFig').src = s.fig; $('#sisFig').alt = 'Desenho do ' + s.nomeTexto; $('#sisFigMini').src = s.fig;
   $('#seloTam').textContent = s.tamanho; $('#seloTam').hidden = true;
-  definirAba('3d');
+  definirAba('3d'); montarOrgaos(s);
   const total = s.audios.reduce((a, b) => a + b.dur, 0);
   $('#ouvirTudo').innerHTML = `${svgPlay.replace('<svg', '<svg width="18" height="18"')} Ouvir tudo · ${Math.round(total / 60)} min`; $('#ouvirTudo').setAttribute('aria-pressed', 'false');
   $('#listaAudios').innerHTML = s.audios.map((a, j) => `
@@ -534,6 +640,7 @@ function abrirSistema(id) {
     if (!embutido()) at['ios-src'] = asset('modelos/' + s.id + '.usdz');
     for (const [k, v] of Object.entries(at)) mv.setAttribute(k, v);
     mv.innerHTML = `<button slot="ar-button" class="btn-ra">${svgRA}Ver na minha mesa</button>`;
+    ligarHotspots(mv, s);
     mv.querySelector('.btn-ra').addEventListener('click', () => { pararNarracao(); evento('ra_aberta', { sistema: s.id }); });
     mv.addEventListener('load', () => { car.style.display = 'none'; $('#seloTam').hidden = !mv.canActivateAR; });
     mv.addEventListener('error', () => { car.textContent = 'Não foi possível abrir o 3D neste aparelho. Veja a aba Desenho.'; definirAba('desenho'); });
@@ -564,19 +671,23 @@ function tocar(s, j) {
   btn.scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (!somOn) toast('Os sons estão desligados – toque em 🔇 para ligar');
   narracao.muted = !somOn;
+  narracao._ouv = [s.id, j]; try { speechSynthesis.cancel(); } catch (e) {}
   narracao.play().catch(() => toast('Toque de novo para ouvir'));
+  if (PERCURSOS[a.arquivo]) iniciarPercurso(a.arquivo);
   atualizarMusica(); evento('narracao', { sistema: s.id, faixa: a.arquivo });
   const barra = btn.querySelector('.barra i');
   const passo = () => { if (!narracao) return; barra.style.width = (100 * narracao.currentTime / (narracao.duration || a.dur)) + '%'; rafBarra = requestAnimationFrame(passo); };
   rafBarra = requestAnimationFrame(passo);
   narracao.onended = () => {
+    marcarOuvido(s.id, j);
     pararNarracao(true);
     if (sequencia && atual === s && j + 1 < s.audios.length) setTimeout(() => { if (sequencia) tocar(s, j + 1); }, 700);
     else if (sequencia) { sequencia = false; $('#ouvirTudo').setAttribute('aria-pressed', 'false'); }
   };
 }
 function pararNarracao(manterLegenda) {
-  cancelAnimationFrame(rafBarra);
+  cancelAnimationFrame(rafBarra); pararPercurso();
+  if (narracao && narracao._ouv && narracao.duration && narracao.currentTime / narracao.duration >= 0.85) marcarOuvido(...narracao._ouv);
   if (narracao) { narracao.onended = null; narracao.pause(); narracao.removeAttribute('src'); narracao.load(); narracao = null; }
   $$('#listaAudios .faixa').forEach(b => { b.classList.remove('tocando'); b.querySelector('.play').innerHTML = svgPlay; b.removeAttribute('aria-label'); });
   if (!manterLegenda) { $$('.legenda').forEach(l => l.classList.remove('on')); sequencia = false; $('#ouvirTudo').setAttribute('aria-pressed', 'false'); }
@@ -660,6 +771,8 @@ $('#qProx').onclick = () => {
   $('#qProg').style.width = '100%';
   const n = dq.qs.length, a = dq.acertos; const est = a >= n - 1 ? 3 : a >= n / 2 ? 2 : 1;
   evento('desafio_fim', { acertos: a, total: n });
+  prog.d = Math.max(prog.d || 0, a); salvarProg();
+  if (a >= 6 && !prog.m.includes('desafio')) { fecharModal(); ganharMedalha('desafio'); return; }
   sfx('success', 0.7); if (est >= 2) confete();
   abrirModal({ selo: est === 3 ? 'Incrível!' : 'Muito bem!', titulo: `Você acertou ${a} de ${n}`, estrelas: est, texto: est === 3 ? 'Você é um(a) especialista no corpo humano!' : 'Ouça as curiosidades dos sistemas e tente de novo.', botoes: [['Jogar de novo', '', ''], ['Ver os sistemas', '#/sistemas', 'branco']] });
   $$('#mBotoes .btn')[0].onclick = () => { fecharModal(); iniciarDesafio(); };
@@ -794,9 +907,10 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ---------- modal, toast, confete ---------- */
-function abrirModal({ selo, titulo, texto, estrelas, botoes }) {
+function abrirModal({ selo, titulo, texto, estrelas, botoes, visual }) {
   $('#mSelo').textContent = selo; $('#mTitulo').textContent = titulo; $('#mTexto').textContent = texto;
-  $('#mEstrelas').textContent = estrelas ? '⭐'.repeat(estrelas) + '☆'.repeat(3 - estrelas) : ''; $('#mEstrelas').style.display = estrelas ? '' : 'none';
+  $('#mEstrelas').textContent = estrelas ? '⭐'.repeat(estrelas) + '☆'.repeat(3 - estrelas) : ''; $('#mEstrelas').style.display = estrelas || visual ? '' : 'none';
+  if (visual) $('#mEstrelas').innerHTML = visual;
   $('#mBotoes').innerHTML = botoes.map(([t, ir, cls]) => `<button class="btn ${cls}" ${ir ? `data-ir="${ir}"` : ''}>${t}</button>`).join('');
   $('#modal').classList.add('on'); setTimeout(() => { const b = $('#mBotoes .btn'); if (b) b.focus({ preventScroll: true }); }, 50);
 }
@@ -823,6 +937,347 @@ window.addEventListener('beforeinstallprompt', e => {
   $('#ajudaInstalar').insertAdjacentHTML('beforeend', ' <button class="btn peq" id="btnInstalar" style="margin-top:10px">📲 Instalar agora</button>');
   $('#btnInstalar').onclick = async () => { pedidoInstalar.prompt(); const r = await pedidoInstalar.userChoice; evento('instalar', { resultado: r.outcome }); pedidoInstalar = null; $('#btnInstalar').remove(); };
 });
+
+
+/* =====================================================================
+   v1.1 — órgãos com nome (3D e desenho), percurso animado e medalhas
+   ===================================================================== */
+/* fig: posição no desenho (% da largura, % da altura) · d3: posição no modelo 3D (metros, eixos do glTF) */
+const ORGAOS = {
+  digestorio: [
+    { id: 'boca', nome: 'Boca', txt: 'A digestão começa aqui: os dentes trituram a comida, a língua ajuda a misturar e a saliva deixa tudo molhadinho.', fig: [50, 29.5] },
+    { id: 'esofago', nome: 'Esôfago', txt: 'Um tubo que leva a comida da garganta até o estômago.', fig: [50.5, 37], d3: [0.014, 0.36, 0] },
+    { id: 'estomago', nome: 'Estômago', txt: 'Mistura a comida com o suco gástrico e a transforma numa massa.', fig: [60, 47.5], d3: [0.07, 0.255, 0.03] },
+    { id: 'figado', nome: 'Fígado', txt: 'O maior órgão de dentro do corpo. Produz a bile, que ajuda a digerir as gorduras.', fig: [37, 46.5], d3: [-0.05, 0.29, 0.04] },
+    { id: 'vesicula', nome: 'Vesícula biliar', txt: 'Guarda a bile e a solta no intestino na hora da digestão.', fig: [43, 50.5], d3: [-0.053, 0.258, 0.04] },
+    { id: 'pancreas', nome: 'Pâncreas', txt: 'Produz o suco pancreático, que ajuda a digerir a comida no intestino.', fig: [53, 52.6] },
+    { id: 'delgado', nome: 'Intestino delgado', txt: 'Um tubo fino, comprido e cheio de curvas. É aqui que os nutrientes da comida passam para o sangue.', fig: [50, 58], d3: [0.003, 0.11, 0.045] },
+    { id: 'grosso', nome: 'Intestino grosso', txt: 'Aproveita a água e os sais minerais. O que sobra vira fezes.', fig: [67.5, 57.5], d3: [-0.082, 0.13, 0.025] },
+    { id: 'anus', nome: 'Ânus', txt: 'A saída do sistema digestório: é por aqui que as fezes saem do corpo.', fig: [49.5, 67] }
+  ],
+  respiratorio: [
+    { id: 'nariz', nome: 'Nariz', txt: 'O ar entra pelas narinas e fica mais quentinho, úmido e limpo. O muco segura a sujeira.', fig: [50, 22.5] },
+    { id: 'garganta', nome: 'Faringe e laringe', txt: 'Ficam na garganta. Na laringe estão as pregas vocais, que vibram quando a gente fala.', fig: [50, 32.5] },
+    { id: 'traqueia', nome: 'Traqueia', txt: 'Um tubo com anéis firmes que leva o ar até os brônquios.', fig: [50, 38.5], d3: [0, 0.24, 0.015] },
+    { id: 'bronquios', nome: 'Brônquios', txt: 'A traqueia se divide em dois brônquios, um para cada pulmão.', fig: [50, 43.4], d3: [0.024, 0.156, 0.012] },
+    { id: 'pulmao_d', nome: 'Pulmão direito', txt: 'É o maior e tem três lobos. Nos pulmões, o oxigênio do ar passa para o sangue.', fig: [38, 46.5], d3: [-0.076, 0.095, 0.045] },
+    { id: 'pulmao_e', nome: 'Pulmão esquerdo', txt: 'Tem dois lobos e é um pouco menor, para sobrar espaço para o coração.', fig: [62, 46.5], d3: [0.076, 0.095, 0.045] }
+  ],
+  nervoso: [
+    { id: 'cerebro', nome: 'Cérebro', txt: 'Comanda o corpo todo: pensa, aprende, lembra, sente e manda os movimentos.', fig: [50, 9], d3: [0.04, 0.16, 0.07] },
+    { id: 'cerebelo', nome: 'Cerebelo', txt: 'Fica na parte de trás da cabeça e cuida do equilíbrio e da coordenação dos movimentos.', d3: [0, 0.095, -0.06] },
+    { id: 'medula', nome: 'Medula espinhal', txt: 'Passa por dentro da coluna e leva as mensagens entre o cérebro e o resto do corpo.', fig: [50, 45], d3: [0, 0.03, -0.03] },
+    { id: 'nervos', nome: 'Nervos', txt: 'Funcionam como fios: levam e trazem mensagens de todas as partes do corpo, até a ponta dos dedos.', fig: [23, 50] }
+  ],
+  cardiovascular: [
+    { id: 'coracao', nome: 'Coração', txt: 'Um músculo mais ou menos do tamanho da sua mão fechada, que bombeia o sangue sem parar.', fig: [52, 45] },
+    { id: 'arterias', nome: 'Artérias', txt: 'Levam o sangue que sai do coração para o corpo. No desenho, estão em vermelho.', fig: [22, 52] },
+    { id: 'veias', nome: 'Veias', txt: 'Trazem o sangue de volta para o coração. No desenho, estão em azul.', fig: [50, 57.5] },
+    { id: 'ventriculos', nome: 'Ventrículos', txt: 'As duas câmaras de baixo do coração. Elas se apertam e empurram o sangue para fora.', d3: [-0.008, 0.045, 0.04] },
+    { id: 'atrio_d', nome: 'Átrio direito', txt: 'Recebe o sangue que volta do corpo.', d3: [-0.035, 0.085, 0.03] },
+    { id: 'atrio_e', nome: 'Átrio esquerdo', txt: 'Recebe o sangue cheio de oxigênio que vem dos pulmões.', d3: [0.03, 0.085, 0.028] },
+    { id: 'aorta', nome: 'Aorta', txt: 'A maior artéria do corpo. Leva o sangue cheio de oxigênio do coração para o corpo todo.', d3: [0.02, 0.135, -0.005] },
+    { id: 'cava', nome: 'Veia cava', txt: 'Traz de volta ao coração o sangue que já passou pelo corpo.', d3: [-0.029, 0.14, 0.005] },
+    { id: 'pulmonar', nome: 'Artéria pulmonar', txt: 'Leva o sangue do coração até os pulmões para buscar oxigênio.', d3: [0.003, 0.11, 0.035] }
+  ],
+  esqueletico: [
+    { id: 'cranio', nome: 'Crânio', txt: 'Protege o cérebro. É formado por ossos planos bem encaixados.', fig: [50, 10], d3: [0, 0.57, 0.062] },
+    { id: 'mandibula', nome: 'Mandíbula', txt: 'O osso do queixo. Ele se mexe para abrir e fechar a boca.', fig: [50, 31.5], d3: [0, 0.495, 0.056] },
+    { id: 'costelas', nome: 'Costelas', txt: 'Formam a caixa torácica, uma “gaiola” que protege o coração e os pulmões.', fig: [40, 47], d3: [-0.045, 0.37, 0.04] },
+    { id: 'esterno', nome: 'Esterno', txt: 'O osso do meio do peito, onde as costelas se prendem.', d3: [0, 0.39, 0.042] },
+    { id: 'coluna', nome: 'Coluna vertebral', txt: 'Feita de vértebras, sustenta o corpo e protege a medula espinhal.', fig: [50, 56], d3: [0, 0.3, 0] },
+    { id: 'bacia', nome: 'Bacia', txt: 'Liga a coluna às pernas e protege órgãos da barriga.', fig: [40, 61.5], d3: [-0.035, 0.245, 0.025] },
+    { id: 'umero', nome: 'Úmero', txt: 'O osso do braço, do ombro até o cotovelo.', fig: [24, 46], d3: [-0.079, 0.386, 0.012] },
+    { id: 'mao', nome: 'Ossos da mão', txt: 'Cada mão tem 27 ossos. Por isso conseguimos fazer movimentos tão delicados.', fig: [8.5, 64], d3: [0.092, 0.232, 0.015] },
+    { id: 'femur', nome: 'Fêmur', txt: 'O maior osso do corpo. Fica na coxa.', fig: [36, 72], d3: [-0.031, 0.17, 0.012] },
+    { id: 'patela', nome: 'Patela', txt: 'Ossinho redondo na frente do joelho, que o protege.', fig: [35.5, 79], d3: [-0.031, 0.108, 0.014] }
+  ]
+};
+const META_ORG = id => Math.min(4, ORGAOS[id].filter(o => o.fig).length);   // sempre dá para completar só pelo desenho
+
+/* percurso: a comida (ou o ar) anda no desenho no ritmo da narração.
+   Tempos medidos nas narrações originais; pts em % do desenho; chaves = [segundo, ponto do caminho] */
+const PERCURSOS = {
+  VO_PERCURSO_DO_SISTEMA: {
+    sistema: 'digestorio', chip: '👀 Acompanhe a comida no desenho',
+    trilhas: [{ cor: '#FF8A00', borda: '#7A3E00', ini: 2.7, fim: 58,
+      pts: [[50, 29.5], [50.3, 32], [50.5, 37], [51, 42.5], [55.5, 45.5], [60.5, 47.5], [59, 50.5], [54, 52], [47, 53.5], [44.5, 56], [55.5, 56.5], [45, 58.5], [56, 59.5], [45.5, 61], [40, 61.5], [35.5, 61], [34, 56.5], [35.5, 53.8], [50, 53.4], [66, 53.8], [68.3, 56.5], [68, 61.5], [63, 64.3], [54, 63.8], [49.8, 65], [49.5, 67]],
+      chaves: [[2.7, 0], [16.2, 0], [17.6, 1], [19.3, 2.3], [20.6, 5], [28.3, 5], [30.2, 6.5], [30.8, 8], [34, 10], [38, 12], [41.5, 13.5], [44.6, 15], [46.2, 16.5], [48.5, 19], [50.5, 20.5], [53.5, 22], [55.5, 24], [57.3, 25]] }],
+    falas: [[2.7, 'boca'], [17.6, 'esofago'], [20.6, 'estomago'], [30.6, 'delgado'], [35, 'pancreas'], [36.6, 'figado'], [41.3, 'delgado'], [46.3, 'grosso'], [55.5, 'anus']]
+  },
+  VO_PERCURSODOSISTEMA: {
+    sistema: 'respiratorio', chip: '👀 Acompanhe o ar no desenho',
+    trilhas: [
+      { cor: '#1E90FF', borda: '#fff', ini: 2.8, fim: 59, pts: [[50, 21], [50, 26.5], [50, 31], [50, 34.5], [50, 39], [50, 42.6], [45.5, 44.2], [41, 46.5], [38.5, 49]],
+        chaves: [[2.8, 0], [7.5, 1], [20.7, 1], [21.8, 2], [23.6, 3], [26, 4], [29.2, 5], [31, 6.5], [32.8, 8]] },
+      { cor: '#1E90FF', borda: '#fff', ini: 2.8, fim: 59, pts: [[50, 21], [50, 26.5], [50, 31], [50, 34.5], [50, 39], [50, 42.6], [54.5, 44.2], [59, 46.5], [61.5, 49]],
+        chaves: [[2.8, 0], [7.5, 1], [20.7, 1], [21.8, 2], [23.6, 3], [26, 4], [29.2, 5], [31, 6.5], [32.8, 8]] },
+      { cor: '#5B6576', borda: '#fff', ini: 59.3, fim: 70, pts: [[38.5, 49], [41, 46.5], [45.5, 44.2], [50, 42.6], [50, 39], [50, 34.5], [50, 31], [50, 26.5], [50, 19]],
+        chaves: [[59.3, 0], [61, 1.5], [62.5, 3], [64, 4], [65.2, 5], [66, 6], [67.2, 7], [69, 8]] },
+      { cor: '#5B6576', borda: '#fff', ini: 59.3, fim: 70, pts: [[61.5, 49], [59, 46.5], [54.5, 44.2], [50, 42.6], [50, 39], [50, 34.5], [50, 31], [50, 26.5], [50, 19]],
+        chaves: [[59.3, 0], [61, 1.5], [62.5, 3], [64, 4], [65.2, 5], [66, 6], [67.2, 7], [69, 8]] }
+    ],
+    falas: [[2.8, 'nariz'], [21.5, 'garganta'], [25.9, 'traqueia'], [29.1, 'bronquios'], [32.3, 'pulmao_d'], [32.4, 'pulmao_e'], [42.7, 'pulmao_d'], [46.1, 'pulmao_e'], [59.3, 'pulmao_d'], [64.2, 'traqueia'], [67.4, 'nariz']]
+  }
+};
+
+/* ---------- progresso (só neste aparelho) ---------- */
+const prog = (() => { const p = { a: {}, o: {}, m: [], d: 0 }; try { return Object.assign(p, JSON.parse(mem.get('progresso') || '{}')); } catch (e) { return p; } })();
+function salvarProg() { mem.set('progresso', JSON.stringify(prog)); }
+function progSis(s) {
+  return { a: (prog.a[s.id] || []).length, at: s.audios.length, o: Math.min((prog.o[s.id] || []).length, META_ORG(s.id)), ot: META_ORG(s.id) };
+}
+function marcarOuvido(sid, j) {
+  const l = prog.a[sid] || (prog.a[sid] = []); if (l.includes(j)) return;
+  l.push(j); salvarProg(); atualizarMissao(); checarMedalha(sid);
+}
+function marcarOrgao(sid, oid) {
+  const l = prog.o[sid] || (prog.o[sid] = []); if (l.includes(oid)) return;
+  l.push(oid); salvarProg(); atualizarMissao(); checarMedalha(sid);
+}
+const MEDALHAS = () => [...SIS.map(s => ({ id: s.id, nome: 'Medalha do ' + s.nomeTexto, curto: s.nomeTexto.replace('Sistema ', ''), cor: s.cor, fig: s.fig })),
+  { id: 'desafio', nome: 'Mestre do Desafio', curto: 'Desafio', cor: '#164194', emoji: '🏆' }];
+const MED_PY = { digestorio: '59%', respiratorio: '25%', nervoso: '0%', cardiovascular: '39%', esqueletico: '0%' };
+function medalhaHTML(m, ganha, t) {
+  return `<span class="medalha${ganha ? '' : ' bloq'}" style="--c:${m.cor};--t:${t}px;--py:${MED_PY[m.id] || '30%'}"><span class="disco"><i>${m.fig ? `<img src="${m.fig}" alt="">` : m.emoji}</i></span></span>`;
+}
+function checarMedalha(sid) {
+  if (prog.m.includes(sid)) return;
+  const s = SIS.find(x => x.id === sid); if (!s) return;
+  const p = progSis(s); if (p.a < p.at || p.o < p.ot) return;
+  ganharMedalha(sid);
+}
+function ganharMedalha(id) {
+  if (prog.m.includes(id)) return false;
+  prog.m.push(id); salvarProg(); evento('unlock_achievement', { achievement_id: 'medalha_' + id });
+  const m = MEDALHAS().find(x => x.id === id), todas = prog.m.length >= MEDALHAS().length;
+  atualizarMissao();
+  setTimeout(() => {
+    sfx('success', 0.7); confete();
+    abrirModal({ selo: 'Medalha!', titulo: m.nome, visual: medalhaHTML(m, true, 96),
+      texto: todas ? 'Você conquistou as 6 medalhas! Seu certificado de Explorador do Corpo Humano está pronto.' : `Você já tem ${prog.m.length} de ${MEDALHAS().length} medalhas. Junte todas para ganhar o certificado!`,
+      botoes: todas ? [['Ver meu certificado', '#/certificado', ''], ['Continuar', '', 'branco']] : [['Ver minhas medalhas', '#/medalhas', ''], ['Continuar', '', 'branco']] });
+    const bs = $$('#mBotoes .btn'); bs[bs.length - 1].onclick = fecharModal;
+  }, 450);
+  return true;
+}
+
+/* ---------- órgãos no desenho e no 3D ---------- */
+let orgSel = null;
+function montarOrgaos(s) {
+  orgSel = null; $('#ficha').hidden = true;
+  const vistos = prog.o[s.id] || [];
+  $('#figPins').innerHTML = ORGAOS[s.id].filter(o => o.fig).map(o =>
+    `<button class="pin${vistos.includes(o.id) ? ' visto' : ''}" data-org="${o.id}" style="left:${o.fig[0]}%;top:${o.fig[1]}%" aria-label="${o.nome}"><span class="rot">${o.nome}</span></button>`).join('');
+  $$('#figPins .pin').forEach(b => b.onclick = e => { e.stopPropagation(); escolherOrgao(b.dataset.org); });
+  $('#figTrilha').innerHTML = '';
+  atualizarMissao();
+}
+/* toque perto de um pontinho também vale (os pontinhos são pequenos para o dedo) */
+$('#figBox').addEventListener('click', e => {
+  if (!atual) return;
+  const r = $('#figBox').getBoundingClientRect(); let melhor = null, dmin = 34;
+  ORGAOS[atual.id].filter(o => o.fig).forEach(o => {
+    const d = Math.hypot(r.left + r.width * o.fig[0] / 100 - e.clientX, r.top + r.height * o.fig[1] / 100 - e.clientY);
+    if (d < dmin) { dmin = d; melhor = o; }
+  });
+  if (melhor) escolherOrgao(melhor.id);
+});
+function hotspots3D(s) {
+  const vistos = prog.o[s.id] || [];
+  return ORGAOS[s.id].filter(o => o.d3).map(o =>
+    `<button class="hs${vistos.includes(o.id) ? ' visto' : ''}" slot="hotspot-${o.id}" data-org="${o.id}" data-position="${o.d3[0]}m ${o.d3[1]}m ${o.d3[2]}m" aria-label="${o.nome}"><span class="rot">${o.nome}</span></button>`).join('');
+}
+function ligarHotspots(mv, s) {
+  mv.insertAdjacentHTML('beforeend', hotspots3D(s));
+  mv.querySelectorAll('.hs').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); escolherOrgao(b.dataset.org, true); }));
+}
+function escolherOrgao(oid, de3d) {
+  const s = atual, o = ORGAOS[s.id].find(x => x.id === oid); if (!o) return;
+  orgSel = oid; sfx('pop', 0.4);
+  $$('#figPins .pin, #mvHost .hs').forEach(b => b.classList.toggle('on', b.dataset.org === oid));
+  $$(`[data-org="${oid}"]`).forEach(b => b.classList.add('visto'));
+  $('#fichaNome').textContent = o.nome; $('#fichaTxt').textContent = o.txt; $('#ficha').hidden = false;
+  $('#fichaVerTudo').hidden = !de3d;
+  const mv = $('#mvHost model-viewer');
+  if (mv && o.d3 && de3d) {
+    mv.removeAttribute('auto-rotate');
+    mv.cameraTarget = `${o.d3[0]}m ${o.d3[1]}m ${o.d3[2]}m`; mv.cameraOrbit = 'auto auto 62%';
+  }
+  marcarOrgao(s.id, oid);
+}
+$('#fichaFechar').onclick = () => { $('#ficha').hidden = true; orgSel = null; $$('#figPins .pin, #mvHost .hs').forEach(b => b.classList.remove('on')); try { speechSynthesis.cancel(); } catch (e) {} };
+$('#fichaVerTudo').onclick = () => {
+  const mv = $('#mvHost model-viewer'); if (!mv) return;
+  mv.cameraTarget = 'auto auto auto'; mv.cameraOrbit = (atual && atual.orbita) || '20deg 80deg auto'; mv.setAttribute('auto-rotate', '');
+  $('#fichaVerTudo').hidden = true;
+};
+/* voz do celular para ler o nome e a frase (só se houver voz em português) */
+function vozPT() { try { const v = speechSynthesis.getVoices(); return v.find(x => /^pt[-_]BR/i.test(x.lang)) || v.find(x => /^pt/i.test(x.lang)) || null; } catch (e) { return null; } }
+try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; } catch (e) {}
+$('#fichaOuvir').onclick = () => {
+  if (!('speechSynthesis' in window)) { $('#fichaOuvir').hidden = true; return; }
+  const v = vozPT(); if (!v) { toast('Este celular não tem voz em português para ler o texto'); return; }
+  if (!somOn) { toast('Os sons estão desligados – toque em 🔇 para ligar'); return; }
+  pararNarracao(true);
+  const o = ORGAOS[atual.id].find(x => x.id === orgSel); if (!o) return;
+  const u = new SpeechSynthesisUtterance(o.nome + '. ' + o.txt); u.voice = v; u.lang = v.lang; u.rate = 0.95;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+};
+if (!('speechSynthesis' in window)) $('#fichaOuvir').hidden = true;
+
+/* ---------- missão (medalha) na tela do sistema ---------- */
+function atualizarMissao() {
+  const s = atual; if (!s) return;
+  const m = MEDALHAS().find(x => x.id === s.id), p = progSis(s), ganha = prog.m.includes(s.id);
+  $('#missao').innerHTML = medalhaHTML(m, ganha, 52) + `<div class="txt"><b>${ganha ? '🏅 Medalha conquistada!' : m.nome}</b>` +
+    (ganha ? `<span class="ok">Você ouviu tudo e descobriu os órgãos deste sistema.</span>` :
+      `<span class="${p.a >= p.at ? 'ok' : ''}">🎧 Ouça as curiosidades: ${p.a}/${p.at}</span><span class="${p.o >= p.ot ? 'ok' : ''}">👆 Descubra órgãos no desenho ou no 3D: ${p.o}/${p.ot}</span>`) +
+    `<a href="#/medalhas">Ver minhas medalhas</a></div>`;
+}
+
+/* ---------- percurso animado ---------- */
+let perc = null;
+const PX = 252 / 100, PY = 560 / 100;
+function posTrilha(tr, f) {
+  const n = tr.pts.length - 1; f = Math.max(0, Math.min(n, f));
+  const i = Math.min(n - 1, Math.floor(f)), k = f - i, a = tr.pts[i], b = tr.pts[i + 1];
+  return [(a[0] + (b[0] - a[0]) * k) * PX, (a[1] + (b[1] - a[1]) * k) * PY];
+}
+function cabeca(tr, t) {
+  const c = tr.chaves; if (t <= c[0][0]) return { f: c[0][1], parado: true };
+  for (let i = 1; i < c.length; i++) if (t <= c[i][0]) {
+    const [t0, f0] = c[i - 1], [t1, f1] = c[i];
+    return { f: f0 + (f1 - f0) * (t - t0) / (t1 - t0), parado: f0 === f1 };
+  }
+  return { f: c[c.length - 1][1], parado: true };
+}
+function iniciarPercurso(arquivo) {
+  const def = PERCURSOS[arquivo]; if (!def || !atual || def.sistema !== atual.id) return;
+  definirAba('desenho');
+  const svg = $('#figTrilha'); svg.setAttribute('viewBox', '0 0 252 560');
+  svg.innerHTML = def.trilhas.map((tr, i) =>
+    `<polyline points="${tr.pts.map(p => (p[0] * PX).toFixed(1) + ',' + (p[1] * PY).toFixed(1)).join(' ')}" fill="none" stroke="${tr.cor}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 6" opacity="0" data-tr="${i}"/>` +
+    [4, 3, 2, 1, 0].map(k => `<circle r="${(k ? 8 - k : 11)}" fill="${tr.cor}" stroke="${tr.borda || '#fff'}" stroke-width="${k ? 2 : 3}" opacity="0" data-tr="${i}" data-k="${k}"/>`).join('')).join('');
+  perc = { def, feitas: new Set(), raf: 0 }; $('#chipPerc').textContent = def.chip; $('#chipPerc').hidden = false; $('#figBox').classList.add('percurso');
+  const passo = () => {
+    if (!perc || !narracao) return;
+    const t = narracao.currentTime, agora = performance.now() / 1000;
+    def.trilhas.forEach((tr, i) => {
+      const vis = t >= tr.ini && t <= tr.fim, h = cabeca(tr, t);
+      svg.querySelector(`polyline[data-tr="${i}"]`).setAttribute('opacity', vis ? 0.75 : 0);
+      svg.querySelectorAll(`circle[data-tr="${i}"]`).forEach(c => {
+        const k = +c.dataset.k; let f = h.parado ? h.f : Math.max(tr.chaves[0][1], h.f - k * 0.3);
+        let [x, y] = posTrilha(tr, f);
+        if (h.parado) { x += Math.sin(agora * 5 + k * 1.7) * (3 + k); y += Math.cos(agora * 4 + k * 2.3) * (3 + k); }   // mastigando, misturando no estômago, enchendo o pulmão
+        c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1)); c.setAttribute('opacity', vis ? (1 - k * 0.16).toFixed(2) : 0);
+      });
+    });
+    def.falas.forEach(([tf, org], idx) => {
+      if (t >= tf && !perc.feitas.has(idx)) {
+        perc.feitas.add(idx);
+        const pin = $(`#figPins .pin[data-org="${org}"]`); if (!pin) return;
+        pin.classList.add('fala'); setTimeout(() => pin.classList.remove('fala'), 2600);
+      }
+    });
+    perc.raf = requestAnimationFrame(passo);
+  };
+  perc.raf = requestAnimationFrame(passo);
+}
+function pararPercurso() {
+  if (!perc) return;
+  cancelAnimationFrame(perc.raf); perc = null;
+  $('#figTrilha').innerHTML = ''; $('#chipPerc').hidden = true; $('#figBox').classList.remove('percurso');
+  $$('#figPins .pin.fala').forEach(p => p.classList.remove('fala'));
+}
+
+/* ---------- lista de sistemas com progresso ---------- */
+function renderGrade() {
+  $('#gradeSis').innerHTML = SIS.map(s => {
+    const p = progSis(s), ganha = prog.m.includes(s.id), pct = Math.round(100 * (p.a + p.o) / (p.at + p.ot));
+    return `<a class="sis" href="#/sistema/${s.id}" style="--c:${s.cor}">${ganha ? '<span class="med">🏅</span>' : ''}<img src="${s.fig}" alt="" loading="lazy" width="230" height="512"><b>${s.nome}</b>${s.sub ? `<small>${s.sub}</small>` : ''}<span class="pg" aria-label="${pct}% explorado"><i style="width:${pct}%"></i></span></a>`;
+  }).join('');
+  const n = prog.m.length, tot = MEDALHAS().length;
+  $$('.btn-med-txt').forEach(el => el.textContent = `Minhas medalhas · ${n}/${tot}`);
+}
+
+/* ---------- tela de medalhas ---------- */
+function mostrarMedalhas() {
+  const ms = MEDALHAS(), n = prog.m.length;
+  $('#medSub').textContent = n === ms.length ? 'Você conquistou todas! Seu certificado está pronto.' : `Você tem ${n} de ${ms.length}. Ouça as curiosidades e descubra os órgãos de cada sistema, e acerte 6 perguntas no desafio.`;
+  $('#medBarra').style.width = (100 * n / ms.length) + '%';
+  $('#gradeMed').innerHTML = ms.map(m => {
+    const ganha = prog.m.includes(m.id); let st;
+    if (ganha) st = '<small class="ok">Conquistada!</small>';
+    else if (m.id === 'desafio') st = `<small>Acerte 6 de 8 perguntas${prog.d ? ` (seu melhor: ${prog.d})` : ''}</small>`;
+    else { const p = progSis(SIS.find(s => s.id === m.id)); st = `<small>🎧 ${p.a}/${p.at} · 👆 ${p.o}/${p.ot}</small>`; }
+    return `<a class="cartao-med" href="${m.id === 'desafio' ? '#/desafio' : '#/sistema/' + m.id}">${medalhaHTML(m, ganha, 74)}<b>${m.curto}</b>${st}</a>`;
+  }).join('');
+  const ok = n === ms.length;
+  $('#btnCert').disabled = !ok; $('#btnCert').style.opacity = ok ? 1 : 0.5;
+  $('#btnCert').innerHTML = ok ? '📜 Ver meu certificado' : '📜 Certificado<small>Junte as 6 medalhas para liberar</small>';
+}
+$('#btnCert').onclick = () => { if (prog.m.length >= MEDALHAS().length) location.hash = '#/certificado'; };
+
+/* ---------- certificado (imagem gerada no aparelho; o nome não é salvo nem enviado) ---------- */
+const imgCache = {};
+function carregarImg(src) { return imgCache[src] || (imgCache[src] = new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = erro; i.src = src; })); }
+let certTimer = 0;
+function mostrarCertificado() { desenharCertificado(); }
+$('#certNome').addEventListener('input', () => { clearTimeout(certTimer); certTimer = setTimeout(desenharCertificado, 250); });
+async function desenharCertificado() {
+  const W = 1600, H = 1131, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  try { await Promise.all(['400', '700', '800'].map(w => document.fonts.load(`${w} 40px "Open Sans"`))); } catch (e) {}
+  const F = (w, s) => `${w} ${s}px "Open Sans", system-ui, sans-serif`;
+  g.fillStyle = '#FFFDF4'; g.fillRect(0, 0, W, H);
+  try { const d = await carregarImg(asset('doodles.webp')); g.globalAlpha = 0.18; const pat = g.createPattern(d, 'repeat'); g.fillStyle = pat; g.fillRect(0, 0, W, H); g.globalAlpha = 1; } catch (e) {}
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  g.lineWidth = 26; g.strokeStyle = '#164194'; rr(30, 30, W - 60, H - 60, 40); g.stroke();
+  g.lineWidth = 6; g.strokeStyle = '#E3B500'; rr(62, 62, W - 124, H - 124, 26); g.stroke();
+  g.textAlign = 'center'; g.fillStyle = '#0E2C6B';
+  try { const ip = await carregarImg(asset('logo_ip.webp')); const w = 480, h = w * ip.height / ip.width; g.drawImage(ip, (W - w) / 2, 96, w, h); } catch (e) {}
+  g.font = F(800, 60); g.fillText('CERTIFICADO DE EXPLORADOR', W / 2, 352);
+  g.font = F(800, 44); g.fillStyle = '#E9603A'; g.fillText('DO CORPO HUMANO', W / 2, 410);
+  g.fillStyle = '#5B6380'; g.font = F(600, 32); g.fillText('Certificamos que', W / 2, 486);
+  const nome = ($('#certNome').value || '').trim().slice(0, 40);
+  g.fillStyle = '#164194'; let tam = 76; g.font = F(800, tam); while (g.measureText(nome).width > W - 360 && tam > 36) { tam -= 4; g.font = F(800, tam); }
+  if (nome) g.fillText(nome, W / 2, 576);
+  g.strokeStyle = '#C9C3B3'; g.lineWidth = 3; g.beginPath(); g.moveTo(300, 600); g.lineTo(W - 300, 600); g.stroke();
+  g.fillStyle = '#1D2540'; g.font = F(600, 30);
+  ['explorou os 5 sistemas do corpo humano, ouviu todas as curiosidades,', 'descobriu os órgãos e venceu o Desafio do quebra-cabeça Conhecendo o Corpo Humano.']
+    .forEach((l, i) => g.fillText(l, W / 2, 660 + i * 44));
+  /* medalhas */
+  const ms = MEDALHAS(), R = 62, gap = 66, total = ms.length * R * 2 + (ms.length - 1) * gap; let x0 = (W - total) / 2 + R;
+  for (const m of ms) {
+    const cx = x0, cy = 850;
+    g.fillStyle = m.cor; g.beginPath(); g.moveTo(cx - 34, cy - R - 20); g.lineTo(cx - 6, cy - R - 20); g.lineTo(cx - 14, cy - 10); g.lineTo(cx - 46, cy - 10); g.fill();
+    g.beginPath(); g.moveTo(cx + 34, cy - R - 20); g.lineTo(cx + 6, cy - R - 20); g.lineTo(cx + 14, cy - 10); g.lineTo(cx + 46, cy - 10); g.fill();
+    const gr = g.createRadialGradient(cx - 20, cy - 22, 6, cx, cy, R); gr.addColorStop(0, '#FFF3A6'); gr.addColorStop(0.55, '#E3B500'); gr.addColorStop(1, '#A87F00');
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.fill();
+    g.save(); g.beginPath(); g.arc(cx, cy, R - 11, 0, Math.PI * 2); g.clip(); g.fillStyle = m.cor; g.fillRect(cx - R, cy - R, R * 2, R * 2);
+    if (m.fig) {
+      try { const im = await carregarImg(m.fig); const w = (R - 11) * 2, h = w * im.height / im.width, py = parseFloat(MED_PY[m.id] || '30') / 100;
+        g.fillStyle = '#fff'; g.fillRect(cx - R, cy - R, R * 2, R * 2); g.drawImage(im, cx - w / 2, cy - (R - 11) - (h - w) * py, w, h); } catch (e) {}
+    } else { g.font = F(400, 64); g.fillText(m.emoji, cx, cy + 22); }
+    g.restore();
+    g.fillStyle = '#1D2540'; g.font = F(800, 19); g.fillText(m.curto.toUpperCase(), cx, cy + R + 34);
+    x0 += R * 2 + gap;
+  }
+  /* rodapé */
+  const hoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  g.textAlign = 'left'; g.fillStyle = '#5B6380'; g.font = F(700, 24); g.fillText(hoje, 130, 1030);
+  g.font = F(600, 20); g.fillText('STEAM Interactive Play · ref. 53309', 130, 1062);
+  try { const lx = await carregarImg(asset('logo_xalingo.webp')); const w = 170, h = w * lx.height / lx.width; g.drawImage(lx, W - 130 - w, 1072 - h, w, h); } catch (e) {}
+  c.toBlob(b => { if (!b) return; const u = URL.createObjectURL(b); const im = $('#certImg'); if (im.dataset.url) URL.revokeObjectURL(im.dataset.url); im.dataset.url = u; im.src = u; im._blob = b; }, 'image/png');
+}
+$('#certSalvar').onclick = async () => {
+  const b = $('#certImg')._blob; if (!b) return;
+  evento('certificado', { acao: 'salvar' });
+  const f = new File([b], 'certificado-corpo-humano.png', { type: 'image/png' });
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Certificado de Explorador do Corpo Humano' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = $('#certImg').src; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+};
+$('#certImprimir').onclick = () => { evento('certificado', { acao: 'imprimir' }); document.body.classList.add('imprimindo'); setTimeout(() => { window.print(); document.body.classList.remove('imprimindo'); }, 60); };
 
 /* ---------- início ---------- */
 atualizarMusica(); rota();

@@ -4,12 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Interactive Play – Xalingo</title>
+<!-- Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima -->
+<script src="assets/aceite.js?v=1" data-politica="privacidade.html"></script>
 <!-- Google Analytics (GA4), mesma propriedade do catálogo: conta de forma anônima quantas pessoas entram e qual produto escolhem.
-     Sem dados pessoais e sem recursos de publicidade (página para crianças). Só liga no endereço publicado; para testar, abra com ?ga=1 -->
+     Só liga se o adulto permitir no aviso da 1ª visita. Sem dados pessoais e sem recursos de publicidade (página para crianças).
+     Só no endereço publicado; para testar, abra com ?ga=1 -->
 <script>
 (function () {
   var ID = 'G-HB9RN5N1J2';
   if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+  XalingoAceite.aoPermitir(function () {
+  if (window.gtag) return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function () { window.dataLayer.push(arguments); };
   window.gtag('js', new Date());
@@ -19,7 +24,8 @@
   // qual produto a pessoa escolheu na página de entrada
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a.card'); if (!a) return;
-    window.gtag('event', 'select_content', { content_type: 'jogo', content_id: a.getAttribute('href').replace(/\/.*$/, '') });
+    if (window.gtag) window.gtag('event', 'select_content', { content_type: 'jogo', content_id: a.getAttribute('href').replace(/\/.*$/, '') });
+  });
   });
 })();
 </script>
@@ -57,6 +63,7 @@ h2{font-size:clamp(20px,5vw,26px);font-weight:800;text-transform:uppercase;margi
 .selos span{font-size:11.5px;font-weight:800;text-transform:uppercase;background:#FFF2B3;color:#5A4A00;padding:3px 8px;border-radius:999px}
 .dica{margin-top:22px;padding:14px 16px;border-radius:16px;background:#FFF7D6;color:#5A4A00;font-size:14px;line-height:1.5}
 footer{text-align:center;color:var(--suave);font-size:12px;margin-top:26px;line-height:1.6}
+footer a{color:var(--azul);font-weight:700}
 </style>
 </head>
 <body>
@@ -72,16 +79,16 @@ footer{text-align:center;color:var(--suave);font-size:12px;margin-top:26px;line-
     <a class="card" href="corpo-humano/">
       <img src="assets/capa-corpo-humano.webp" alt="Quebra-cabeça Conhecendo o Corpo Humano" loading="lazy">
       <div class="txt">
-        <div class="selos"><span>QR code</span><span>3D</span><span>Realidade aumentada</span></div>
+        <div class="selos"><span>6+ anos</span><span>QR code</span><span>3D</span><span>Realidade aumentada</span></div>
         <b>Conhecendo o Corpo Humano</b><span class="ref">STEAM Interactive Play · ref. 53309</span>
-        <p>Escaneie o QR code do quebra-cabeça e explore os 5 sistemas do corpo com narração, modelos 3D e um desafio. O jogo da memória é liberado para todos.</p>
+        <p>Escaneie o QR code do quebra-cabeça e explore os 5 sistemas do corpo: toque nos órgãos, acompanhe o caminho da comida e do ar e ganhe medalhas e um certificado. O jogo da memória é liberado para todos.</p>
         <span class="ir">Abrir ›</span>
       </div>
     </a>
     <a class="card" href="conhecendo-os-planetas/">
       <img src="assets/capa-planetas.webp" alt="Quebra-cabeça Conhecendo os Planetas" loading="lazy">
       <div class="txt">
-        <div class="selos"><span>Câmera</span><span>3D</span><span>Realidade aumentada</span></div>
+        <div class="selos"><span>4+ anos</span><span>Câmera</span><span>3D</span><span>Realidade aumentada</span></div>
         <b>Conhecendo os Planetas</b><span class="ref">STEAM Interactive Play · ref. 53265</span>
         <p>Monte o quebra-cabeça, aponte a câmera e veja os planetas saírem do tabuleiro em 3D. Pilote a nave e complete o álbum dos astros.</p>
         <span class="ir">Abrir ›</span>
@@ -90,7 +97,7 @@ footer{text-align:center;color:var(--suave);font-size:12px;margin-top:26px;line-
   </div>
 
   <div class="dica"><b>💡 Dica:</b> abra no Safari (iPhone) ou no Chrome (Android), e não dentro do Instagram ou do WhatsApp, para a câmera funcionar. Quando o navegador perguntar, permita o uso da câmera.</div>
-  <footer>© Xalingo Brinquedos · Interactive Play<br>Contamos os acessos de forma anônima, com o Google Analytics, sem pedir nenhum dado pessoal.</footer>
+  <footer>© Xalingo Brinquedos · Interactive Play<br>Idade indicada: Conhecendo os Planetas (ref. 53265) a partir de 4 anos e Conhecendo o Corpo Humano (ref. 53309) a partir de 6 anos, sempre com um adulto por perto.<br><a href="privacidade.html">Política de privacidade</a> · <a href="#" onclick="XalingoAceite.reabrir();return false">Contagem de acessos</a></footer>
 </div>
 </body>
 </html>
