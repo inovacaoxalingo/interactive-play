@@ -296,7 +296,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       <img class="ip" src="assets/logo_ip.webp" alt="Interactive Play – Conhecendo o Corpo Humano">
       <span class="ref">STEAM Interactive Play · ref. 53309</span>
       <span class="ref idade">Indicado a partir de 6 anos · com um adulto por perto</span>
-      <p class="sub">Monte o quebra-cabeça e escaneie o QR code que fica na parte laranja para liberar os 5 sistemas do corpo humano com narração, 3D e realidade aumentada.</p>
+      <p class="sub">Monte o quebra-cabeça e escaneie o QR code que fica na parte vermelha, à direita, para liberar os 5 sistemas do corpo humano com narração, 3D e realidade aumentada.</p>
       <div class="escolha">
         <button id="btnTenho"><img src="assets/btn_tenho.webp" alt="Tenho o jogo físico"><span class="leg" id="legTenho">Escanear o QR code</span></button>
         <button id="btnNaoTenho"><img src="assets/btn_naotenho.webp" alt="Não tenho o jogo físico – jogo da memória"><span class="leg">Jogar a memória</span></button>
@@ -307,8 +307,8 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
         <button class="btn branco" data-ir="#/medalhas">🏅 <span class="btn-med-txt">Minhas medalhas</span></button>
       </div>
     </div>
-    <div class="dica" id="dicaQR"><b>💡 Onde fica o QR code?</b> Na parte laranja do quebra-cabeça, perto do Sistema Cardiovascular. Deixe bem iluminado, sem reflexo de luz em cima, e aproxime o celular até o QR ocupar boa parte do quadrado amarelo.
-      <img src="assets/onde-qr.webp" alt="Quebra-cabeça montado com o QR code destacado na parte laranja, à direita" loading="lazy" width="640" height="438"></div>
+    <div class="dica" id="dicaQR"><b>💡 Onde fica o QR code?</b> Na parte vermelha do quebra-cabeça, à direita, perto do Sistema Cardiovascular. Deixe bem iluminado, sem reflexo de luz em cima, e aproxime o celular até o QR ocupar boa parte do quadrado amarelo.
+      <img src="assets/onde-qr.webp" alt="Quebra-cabeça montado com o QR code destacado na parte vermelha, à direita" loading="lazy" width="640" height="437"></div>
 
     <div class="ajuda">
       <h3>Ajuda para pais e professores</h3>
@@ -319,7 +319,7 @@ h2{font-size:clamp(22px,5.6vw,30px);text-transform:uppercase}
       <details><summary>Privacidade</summary><p id="ajudaPrivacidade">A câmera é usada só para ler o QR code: nenhuma imagem sai do seu celular e não pedimos nenhum dado pessoal. A liberação, as medalhas e as preferências de som ficam salvas só neste aparelho. Se o adulto permitir, contamos os acessos de forma anônima, com o Google Analytics, sem propaganda. <a href="../privacidade.html">Política de privacidade</a> · <a href="#" onclick="XalingoAceite.reabrir();return false">Mudar a escolha da contagem</a></p></details>
     </div>
     <a class="outros" href="../"><span class="ico" aria-hidden="true">🧩</span><span><b>Conheça os outros produtos da linha</b><small>Interactive Play da Xalingo</small></span><span class="seta">›</span></a>
-    <p class="rodape">© Xalingo Brinquedos · STEAM Interactive Play · ref. 53309<br><span id="versao">versão 1.2 · 04/11/2026</span></p>
+    <p class="rodape">© Xalingo Brinquedos · STEAM Interactive Play · ref. 53309<br><span id="versao">versão 1.3 · 05/11/2026</span></p>
   </section>
 
   <!-- SISTEMAS -->
@@ -842,7 +842,7 @@ async function iniciarCamera(deviceId) {
     } catch (e) {}
     msgScan('Preparando o leitor…');
     await dec; if (!scanAberto) return;
-    msgScan('Aponte para o QR code', 'Ele fica na parte laranja, perto do Sistema Cardiovascular.');
+    msgScan('Aponte para o QR code', 'Ele fica na parte vermelha, perto do Sistema Cardiovascular.');
     lendo = true; let n = 0;
     const ciclo = async () => {
       if (!lendo) return;
@@ -868,7 +868,7 @@ async function iniciarCamera(deviceId) {
 $('#scanTrocar').onclick = () => { if (cameras.length < 2) return; camIdx = (camIdx + 1) % cameras.length; iniciarCamera(cameras[camIdx].deviceId); };
 function tratarLeitura(txt, origem) {
   if (codigoValido(txt)) { pararScanner(true); if (navigator.vibrate) navigator.vibrate(80); liberar(origem); return; }
-  if (Date.now() - ultimoInvalido > 2500) { ultimoInvalido = Date.now(); sfx('error', 0.4); msgScan('Este QR code não é deste quebra-cabeça', 'Procure o QR na parte laranja do Conhecendo o Corpo Humano.'); evento('qr_invalido'); }
+  if (Date.now() - ultimoInvalido > 2500) { ultimoInvalido = Date.now(); sfx('error', 0.4); msgScan('Este QR code não é deste quebra-cabeça', 'Procure o QR na parte vermelha do Conhecendo o Corpo Humano.'); evento('qr_invalido'); }
 }
 function pararCamera() {
   lendo = false; clearTimeout(loopId);
