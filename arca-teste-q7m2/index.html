@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Arca de Noé em 3D · protótipo</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#16457f">
+<style>
+@font-face{font-family:'Open Sans';src:url('assets/open-sans.woff2') format('woff2');font-weight:300 800;font-display:swap}
+:root{--mar:#16457f;--mar2:#0d2d57;--ceu:#eaf5ff;--sol:#ffc933;--madeira:#b8773d;--tinta:#1b1a1f;--papel:#fffdf8;--cinza:#5d6475}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--ceu);color:var(--tinta);font-family:'Open Sans',system-ui,sans-serif}
+button{font:inherit}
+.tela{position:fixed;inset:0;display:none}
+.tela.ativa{display:block}
+/* início */
+#inicio{overflow:auto;background:linear-gradient(#eaf5ff 0,#eaf5ff 55%,#d4ebfb 100%)}
+.miolo{max-width:560px;margin:0 auto;padding:22px 16px 40px}
+.marca{font-weight:800;font-size:13px;color:var(--mar);letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.marca span{background:var(--mar);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+h1{font-size:30px;line-height:1.08;margin:0 0 10px;color:var(--mar2);font-weight:800}
+.sub{margin:0 0 18px;font-size:16px;line-height:1.5;color:#2d3445}
+.quadro{position:relative;background:var(--papel);border-radius:14px;padding:10px;box-shadow:0 2px 0 rgba(13,45,87,.12),0 10px 28px rgba(13,45,87,.12)}
+.quadro img{display:block;width:100%;height:auto;border-radius:8px}
+ol.passos{list-style:none;counter-reset:p;margin:20px 0 22px;padding:0;display:grid;gap:10px}
+ol.passos li{counter-increment:p;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:15.5px;line-height:1.45}
+ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%;background:var(--mar);color:#fff;font-weight:800;display:grid;place-items:center;font-size:16px}
+.bt{display:block;width:100%;border:0;border-radius:16px;padding:16px;font-weight:800;font-size:18px;cursor:pointer}
+.bt.prim{background:var(--mar);color:#fff;box-shadow:0 5px 0 var(--mar2)}
+.bt.prim:active{transform:translateY(3px);box-shadow:0 2px 0 var(--mar2)}
+.bt.sec{background:transparent;color:var(--mar);border:2px solid var(--mar);margin-top:12px;font-size:16px;padding:13px}
+.nota{font-size:13px;color:var(--cinza);line-height:1.5;margin:18px 0 0}
+.erro{background:#fff1ef;border:1px solid #f3b6ad;color:#7a2418;border-radius:12px;padding:12px;font-size:14.5px;line-height:1.45;margin:14px 0 0;display:none}
+/* câmera */
+#camera{background:#000;overflow:hidden}
+#video,#ar{position:absolute;inset:0;width:100%;height:100%}
+#video{object-fit:cover}
+#ar{pointer-events:none}
+.guia{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,calc(80vh*1.464));aspect-ratio:1.464;border:3px dashed rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none}
+.guia.some{opacity:0}
+.topo{position:absolute;left:0;right:0;top:0;padding:max(12px,env(safe-area-inset-top)) 12px 0;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.topo>*{pointer-events:auto}
+.voltar{border:0;background:rgba(255,255,255,.92);color:var(--mar2);font-weight:800;border-radius:999px;padding:9px 14px;font-size:15px;cursor:pointer}
+.status{flex:1;max-width:420px;margin:0 auto;background:rgba(13,45,87,.86);color:#fff;border-radius:16px;padding:10px 14px;font-weight:700;font-size:15px;line-height:1.35;text-align:center}
+.status small{display:block;font-weight:600;opacity:.85;font-size:13px;margin-top:2px}
+.barra{position:absolute;left:0;right:0;bottom:0;padding:12px 12px max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;pointer-events:none}
+.barra button{pointer-events:auto;border:0;border-radius:14px;padding:13px 16px;font-weight:800;font-size:15.5px;cursor:pointer;background:rgba(255,255,255,.94);color:var(--mar2);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.barra button.prim{background:var(--sol);color:var(--mar2)}
+.barra button[hidden]{display:none}
+.progresso{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(320px,70vw);height:8px;border-radius:8px;background:rgba(255,255,255,.35);overflow:hidden;display:none}
+.progresso i{display:block;height:100%;width:0;background:var(--sol);transition:width .2s}
+/* 3D */
+#ver3d{background:linear-gradient(#bfe3ff,#e9f6ff 60%)}
+#cena{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.dica3d{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));background:rgba(13,45,87,.78);color:#fff;font-size:13.5px;font-weight:600;border-radius:999px;padding:7px 14px;white-space:nowrap;pointer-events:none}
+/* depuração (?debug=1) */
+#dbg{position:absolute;right:8px;bottom:90px;width:min(46vw,360px);background:rgba(0,0,0,.7);color:#bdf;font:11px/1.35 ui-monospace,monospace;border-radius:8px;padding:6px;display:none;z-index:5}
+#dbg canvas{width:100%;display:block;margin-top:4px;background:#fff}
+#dbg .cores{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
+#dbg .cores i{width:14px;height:14px;display:block;border-radius:2px}
+:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<section id="inicio" class="tela ativa">
+  <div class="miolo">
+    <p class="marca"><span>Protótipo</span> Arca Toys · quebra-cabeça para colorir</p>
+    <h1>Pinte a arca e veja ela em 3D</h1>
+    <p class="sub">A câmera reconhece o quebra-cabeça e monta a arca de Noé em 3D com as cores que você pintou.</p>
+    <div class="quadro"><img src="assets/desenho.webp" alt="Desenho da arca de Noé para colorir" width="900" height="615"></div>
+    <ol class="passos">
+      <li>Pinte a arca com canetinhas: o casco, a casinha e o telhado.</li>
+      <li>Monte o quebra-cabeça e deixe num lugar bem iluminado.</li>
+      <li>Aponte o celular deitado para o quebra-cabeça inteiro e segure parado.</li>
+    </ol>
+    <button class="bt prim" id="bCamera" type="button">Abrir a câmera</button>
+    <button class="bt sec" id="bExemplo" type="button">Ver um exemplo pintado</button>
+    <p class="erro" id="erro"></p>
+    <p class="nota">A imagem da câmera é usada só neste aparelho para ler as cores. Nenhuma foto é enviada ou guardada.</p>
+  </div>
+</section>
+
+<section id="camera" class="tela">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="ar"></canvas>
+  <div class="guia" id="guia"></div>
+  <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><span style="width:72px"></span></div>
+  <div class="progresso" id="prog"><i></i></div>
+  <div class="barra">
+    <button id="bDeNovo" type="button" hidden>Ler as cores de novo</button>
+    <button id="bVer3d" class="prim" type="button" hidden>Ver em 3D</button>
+  </div>
+  <div id="dbg"></div>
+</section>
+
+<section id="ver3d" class="tela">
+  <canvas id="cena"></canvas>
+  <div class="topo"><button class="voltar" id="vVoltar" type="button">‹ Voltar</button><span></span><span></span></div>
+  <div class="dica3d">Arraste para girar · dois dedos para aproximar</div>
+  <div class="barra"><button id="bFoto" type="button">Salvar imagem</button><button id="bOutra" type="button" class="prim">Ler outra pintura</button></div>
+</section>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const $ = s => document.querySelector(s);
+const DEBUG = /[?&]debug=1/.test(location.search);
+const TELAS = ['inicio', 'camera', 'ver3d'];
+function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); }
+function status(t, s) { $('#status').innerHTML = t + (s ? '<small>' + s + '</small>' : ''); }
+
+// ---------- dados do desenho ----------
+let DADOS = null, ATLAS_IDX = null;
+async function carregarDados() {
+  if (DADOS) return;
+  const [d, png] = await Promise.all([fetch('assets/dados.json').then(r => r.json()), fetch('assets/atlas_idx.png').then(r => r.blob())]);
+  const bmp = await createImageBitmap(png, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' });
+  const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(bmp, 0, 0);
+  ATLAS_IDX = x.getImageData(0, 0, c.width, c.height).data; DADOS = d;
+}
+
+// ---------- álgebra: homografia por mínimos quadrados (com pontos normalizados) ----------
+function resolver(A, b) { // Gauss com pivô
+  const n = b.length; const M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]]; const v = M[c][c]; if (Math.abs(v) < 1e-12) return null;
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / v; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((r, i) => r[n] / r[i]);
+}
+function normaliza(P) {
+  let mx = 0, my = 0; P.forEach(p => { mx += p[0]; my += p[1]; }); mx /= P.length; my /= P.length;
+  let d = 0; P.forEach(p => { d += Math.hypot(p[0] - mx, p[1] - my); }); d = d / P.length || 1; const s = Math.SQRT2 / d;
+  return { T: [s, 0, -s * mx, 0, s, -s * my, 0, 0, 1], P: P.map(p => [(p[0] - mx) * s, (p[1] - my) * s]) };
+}
+function mul3(a, b) { const r = new Array(9); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) r[3*i+j] = a[3*i]*b[j] + a[3*i+1]*b[3+j] + a[3*i+2]*b[6+j]; return r; }
+function inv3(m) {
+  const [a, b, c, d, e, f, g, h, i] = m, A = e*i - f*h, B = -(d*i - f*g), C = d*h - e*g, det = a*A + b*B + c*C;
+  return [A/det, -(b*i - c*h)/det, (b*f - c*e)/det, B/det, (a*i - c*g)/det, -(a*f - c*d)/det, C/det, -(a*h - b*g)/det, (a*e - b*d)/det];
+}
+function aplica(H, x, y) { const w = H[6]*x + H[7]*y + H[8]; return [(H[0]*x + H[1]*y + H[2]) / w, (H[3]*x + H[4]*y + H[5]) / w]; }
+function dlt(src, dst) {
+  const a = normaliza(src), b = normaliza(dst); const AtA = Array.from({ length: 8 }, () => new Array(8).fill(0)), Atb = new Array(8).fill(0);
+  for (let k = 0; k < src.length; k++) {
+    const [x, y] = a.P[k], [u, v] = b.P[k];
+    const r1 = [x, y, 1, 0, 0, 0, -u*x, -u*y], r2 = [0, 0, 0, x, y, 1, -v*x, -v*y];
+    for (let i = 0; i < 8; i++) { Atb[i] += r1[i]*u + r2[i]*v; for (let j = 0; j < 8; j++) AtA[i][j] += r1[i]*r1[j] + r2[i]*r2[j]; }
+  }
+  const h = resolver(AtA, Atb); if (!h) return null;
+  return mul3(inv3(b.T), mul3([...h, 1], a.T));
+}
+function homografiaRobusta(src, dst) {
+  let idx = src.map((_, i) => i), H = null, rms = 0;
+  for (let it = 0; it < 3; it++) {
+    H = dlt(idx.map(i => src[i]), idx.map(i => dst[i])); if (!H) return null;
+    const e = src.map((p, i) => { const q = aplica(H, p[0], p[1]); return Math.hypot(q[0] - dst[i][0], q[1] - dst[i][1]); });
+    const ord = idx.map(i => e[i]).sort((x, y) => x - y), med = ord[Math.floor(ord.length / 2)] || 0;
+    const lim = Math.max(1.5, 3 * med); const novo = src.map((_, i) => i).filter(i => e[i] <= lim);
+    rms = Math.sqrt(novo.reduce((s, i) => s + e[i]*e[i], 0) / novo.length);
+    if (novo.length < 10) return null; idx = novo;
+  }
+  return { H, n: idx.length, rms };
+}
+
+// ---------- câmera + reconhecimento (MindAR, olhando o quadro inteiro e só o traço preto) ----------
+let Controller = null, ctrl = null, stream = null, VW = 0, VH = 0, NW = 0, NH = 0, cv = null, cx = null, ativo = false;
+let cvFull = null, cxFull = null;
+const video = $('#video');
+async function montarControle() {
+  VW = video.videoWidth; VH = video.videoHeight;
+  const s = 720 / Math.max(VW, VH); NW = Math.round(VW * s); NH = Math.round(VH * s);
+  cv = document.createElement('canvas'); cv.width = NW; cv.height = NH; cx = cv.getContext('2d', { willReadFrequently: true });
+  cvFull = document.createElement('canvas'); cvFull.width = VW; cvFull.height = VH; cxFull = cvFull.getContext('2d', { willReadFrequently: true });
+  if (!Controller) ({ Controller } = await import('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js'));
+  ctrl = new Controller({ inputWidth: NW, inputHeight: NH, maxTrack: 1, debugMode: true });
+  await ctrl.addImageTargets('assets/alvo.mind');
+  const cd = ctrl.cropDetector; cd.detector = new cd.detector.constructor(NW, NH, false); cd.detect = t => cd.detector.detect(t); cd.detectMoving = cd.detect;
+  $('#guia').style.width = ''; $('#guia').classList.toggle('retrato', VH > VW);
+}
+let V8 = null, T8 = null, L8 = null;
+function desenharQuadro(guardarCheio) {
+  cx.drawImage(video, 0, 0, NW, NH);
+  if (guardarCheio) cxFull.drawImage(video, 0, 0, VW, VH);
+  // mapa de traço: só a linha preta fica escura; a tinta da canetinha vira branco
+  const im = cx.getImageData(0, 0, NW, NH), d = im.data, n = NW * NH;
+  if (!V8 || V8.length !== n) { V8 = new Uint8Array(n); T8 = new Uint8Array(n); L8 = new Uint8Array(n); }
+  for (let i = 0, j = 0; i < n; i++, j += 4) { const r = d[j], g = d[j+1], b = d[j+2]; V8[i] = r > g ? (r > b ? r : b) : (g > b ? g : b); }
+  const R = 4;
+  for (let y = 0; y < NH; y++) { const o = y * NW; for (let x = 0; x < NW; x++) { let m = 0; const a = x - R < 0 ? 0 : x - R, z = x + R >= NW ? NW - 1 : x + R; for (let k = a; k <= z; k++) if (V8[o+k] > m) m = V8[o+k]; T8[o+x] = m; } }
+  for (let y = 0; y < NH; y++) { const a = y - R < 0 ? 0 : y - R, z = y + R >= NH ? NH - 1 : y + R; for (let x = 0; x < NW; x++) { let m = 0; for (let k = a; k <= z; k++) { const v = T8[k*NW+x]; if (v > m) m = v; } L8[y*NW+x] = m; } }
+  for (let i = 0, j = 0; i < n; i++, j += 4) { const v = V8[i]; let o = 255; if (v <= 150) { const rr = v / (L8[i] || 1); o = rr <= 0.35 ? 0 : rr >= 0.6 ? 255 : (rr - 0.35) * 1020; } d[j] = d[j+1] = d[j+2] = o; }
+  cx.putImageData(im, 0, 0);
+}
+function paresDaDeteccao(dbg) {
+  let melhor = null, ki = -1;
+  (dbg && dbg.frames || []).forEach((f, i) => { const m = f && f.inlierMatches2; if (m && (!melhor || m.length > melhor.length)) { melhor = m; ki = i; } });
+  if (!melhor) return null; const sc = DADOS.escalas[ki];
+  return { src: melhor.map(p => [(p.keypoint.x + 0.5) / sc, (p.keypoint.y + 0.5) / sc]), dst: melhor.map(p => [p.querypoint.x, p.querypoint.y]) };
+}
+
+// ---------- leitura das cores ----------
+function lerPixel(img, w, h, u, v, raio = 1) { // média 3x3 (ou só o pixel, nas partes finas)
+  const x0 = Math.round(u), y0 = Math.round(v); let r = 0, g = 0, b = 0, n = 0;
+  for (let dy = -raio; dy <= raio; dy++) for (let dx = -raio; dx <= raio; dx++) { const x = x0 + dx, y = y0 + dy; if (x < 0 || y < 0 || x >= w || y >= h) continue; const i = 4 * (y * w + x); r += img[i]; g += img[i+1]; b += img[i+2]; n++; }
+  return n ? [r / n, g / n, b / n] : null;
+}
+const mediana = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+function amostrarFoto(Hd) { // Hd: desenho (2048) -> pixel do vídeo
+  const img = cxFull.getImageData(0, 0, VW, VH).data;
+  const ler = (x, y, raio = 1) => { const [u, v] = aplica(Hd, x, y); return lerPixel(img, VW, VH, u, v, raio); };
+  return { regioes: DADOS.amostras.map((ps, r) => ps.map(([x, y]) => ler(x, y, DADOS.espessura[r] < 6 ? 0 : 1)).filter(Boolean)), fundo: DADOS.fundo.map(([x, y]) => [x, y, ler(x, y)]).filter(p => p[2]), preto: DADOS.preto.map(([x, y]) => ler(x, y)).filter(Boolean) };
+}
+function calcularCores(fotos) {
+  // preto do traço e branco do papel (por área, para compensar luz desigual)
+  const pretos = fotos.flatMap(f => f.preto); const K = [0, 1, 2].map(c => mediana(pretos.map(p => p[c])));
+  const fundo = fotos.flatMap(f => f.fundo); const lum = p => (p[0] + p[1] + p[2]) / 3, sat = p => (Math.max(...p) - Math.min(...p)) / (Math.max(...p) || 1);
+  const cand = fundo.filter(f => sat(f[2]) < 0.16 && lum(f[2]) > lum(K) + 50).sort((a, b) => lum(b[2]) - lum(a[2]));
+  const topo = (cand.length >= 10 ? cand.slice(0, Math.max(5, Math.round(cand.length * 0.25))) : [...fundo].sort((a, b) => lum(b[2]) - lum(a[2])).slice(0, 12));
+  const Wg = [0, 1, 2].map(c => topo.reduce((s, f) => s + f[2][c], 0) / topo.length);
+  const CX = 4, CY = 3, celula = []; for (let j = 0; j < CY; j++) for (let i = 0; i < CX; i++) {
+    const x0 = i * 2048 / CX, x1 = x0 + 2048 / CX, y0 = j * 1399 / CY, y1 = y0 + 1399 / CY;
+    const c = cand.filter(f => f[0] >= x0 && f[0] < x1 && f[1] >= y0 && f[1] < y1 && lum(f[2]) > 0.65 * lum(Wg));
+    const t = c.slice(0, Math.max(3, Math.round(c.length * 0.3)));
+    celula.push(c.length >= 3 ? [0, 1, 2].map(k => t.reduce((s, f) => s + f[2][k], 0) / t.length) : Wg);
+  }
+  const branco = (x, y) => { // interpolação bilinear entre os centros das células
+    const fx = Math.min(CX - 1, Math.max(0, x / (2048 / CX) - 0.5)), fy = Math.min(CY - 1, Math.max(0, y / (1399 / CY) - 0.5));
+    const i0 = Math.floor(fx), j0 = Math.floor(fy), i1 = Math.min(CX - 1, i0 + 1), j1 = Math.min(CY - 1, j0 + 1), a = fx - i0, b = fy - j0;
+    return [0, 1, 2].map(k => (celula[j0*CX+i0][k]*(1-a) + celula[j0*CX+i1][k]*a)*(1-b) + (celula[j1*CX+i0][k]*(1-a) + celula[j1*CX+i1][k]*a)*b);
+  };
+  const cores = DADOS.amostras.map((ps, r) => {
+    const vals = [[], [], []];
+    fotos.forEach(f => f.regioes[r].forEach((p, k) => { const [x, y] = ps[k] || ps[0]; const Wl = branco(x, y);
+      for (let c = 0; c < 3; c++) { const k0 = 0.3 * K[c]; vals[c].push(Math.min(1.05, Math.max(0, (p[c] - k0) / Math.max(20, Wl[c] - k0)))); } }));
+    // o traço puxa para o escuro quando a leitura escorrega um pouco: descarta os 40% mais escuros
+    const ord = vals[0].map((_, i) => i).sort((i, j) => (vals[0][j] + vals[1][j] + vals[2][j]) - (vals[0][i] + vals[1][i] + vals[2][i]));
+    const fica = ord.slice(0, Math.max(1, Math.ceil(ord.length * 0.6)));
+    let c = vals.map(v => mediana(fica.map(i => v[i])));
+    if (Math.min(...c) > 0.84 && (Math.max(...c) - Math.min(...c)) < 0.1) return [246, 243, 236]; // sem pintura: fica o branco do MDF
+    const m = (c[0] + c[1] + c[2]) / 3; c = c.map(v => Math.min(1, Math.max(0, m + (v - m) * 1.12))); // canetinha na foto sai mais apagada
+    return c.map(v => Math.round(v * 255));
+  });
+  // tiras muito finas (3 a 4 px no desenho) pegam a cor da moldura ao lado: a leitura delas não é confiável
+  const IGUAL = { 95: 89, 113: 102, 124: 107 };
+  for (const [fina, larga] of Object.entries(IGUAL)) { const a = DADOS.regioes.indexOf(+fina), b = DADOS.regioes.indexOf(+larga); if (a >= 0 && b >= 0) cores[a] = cores[b]; }
+  return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round) };
+}
+
+// ---------- pintura do atlas e a arca em 3D ----------
+const COR_JANELA = [46, 34, 28], COR_TINTA = [26, 24, 26];
+function pintarAtlas(cores) {
+  const [W, H] = DADOS.atlas; const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); const im = x.createImageData(W, H), d = im.data, A = ATLAS_IDX;
+  for (let i = 0; i < W * H; i++) {
+    const j = 4 * i, k = A[j], a = A[j+1] / 255, col = k === DADOS.janela ? COR_JANELA : (cores[k] || [200, 200, 200]);
+    d[j] = col[0] * (1 - a) + COR_TINTA[0] * a; d[j+1] = col[1] * (1 - a) + COR_TINTA[1] * a; d[j+2] = col[2] * (1 - a) + COR_TINTA[2] * a; d[j+3] = 255;
+  }
+  x.putImageData(im, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true;
+  return t;
+}
+const S = 1 / 1000, X0 = 1042, Y0 = 1120; // unidade 3D = 1000 px do desenho; origem no meio do casco, na linha d'água
+const P3 = (xd, yd, z) => [(xd - X0) * S, (Y0 - yd) * S, z * S];
+function corDe(cores, idx, f = 1) { const c = cores[idx] || [180, 140, 90]; return new THREE.Color().setRGB(c[0] / 255 * f, c[1] / 255 * f, c[2] / 255 * f, THREE.SRGBColorSpace); }
+function geo(pos, uv, ind) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(ind); g.computeVertexNormals(); return g; }
+function quad(pos, uv, ind, a, b, c, d, ua, ub, uc, ud) { const o = pos.length / 3; pos.push(...a, ...b, ...c, ...d); if (uv) uv.push(...ua, ...ub, ...uc, ...ud); ind.push(o, o+1, o+2, o, o+2, o+3); }
+function criarArca(cores) {
+  const [AW, AH] = DADOS.atlas, F = DADOS.faces, tex = pintarAtlas(cores);
+  const mTex = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0, side: THREE.DoubleSide });
+  const mat = (idx, f) => new THREE.MeshStandardMaterial({ color: corDe(cores, idx, f), roughness: 0.9, side: THREE.DoubleSide });
+  const C = DADOS.cores, arca = new THREE.Group();
+  // casco: perfil do desenho, largura arredondada (fina no fundo, pontuda na proa)
+  const PF = DADOS.casco.perfil, xmin = PF[0][0], xmax = PF[PF.length - 1][0], NV = 14, WM = 205;
+  const larg = (x, v) => { const u = (x - xmin) / (xmax - xmin); const proa = Math.pow(Math.sin(Math.PI / 2 * Math.min(1, u / 0.24)), 0.75); const popa = Math.pow(Math.min(1, (1 - u) / 0.11), 0.5);
+    return WM * Math.max(0.05, proa * popa) * (0.16 + 0.84 * Math.pow(Math.sin(v * Math.PI / 2), 0.55)); };
+  const [cx0, cy0] = F.casco; const uvC = (x, y) => [(cx0 + x - DADOS.casco.rect[0]) / AW, (cy0 + y - DADOS.casco.rect[1]) / AH];
+  const pos = [], uv = [], ind = [], NI = PF.length;
+  for (const lado of [1, -1]) {
+    const o = pos.length / 3;
+    for (let i = 0; i < NI; i++) for (let j = 0; j <= NV; j++) { const [x, yt, yb] = PF[i], v = j / NV, y = yb + (yt - yb) * v; pos.push(...P3(x, y, lado * larg(x, v))); uv.push(...uvC(x, y)); }
+    for (let i = 0; i < NI - 1; i++) for (let j = 0; j < NV; j++) { const a = o + i * (NV + 1) + j, b = a + NV + 1; if (lado > 0) ind.push(a, b, b + 1, a, b + 1, a + 1); else ind.push(a, b + 1, b, a, a + 1, b + 1); }
+  }
+  arca.add(new THREE.Mesh(geo(pos, uv, ind), mTex));
+  // convés (em cima) e quilha (embaixo) + as duas pontas
+  const fita = (j, idx, f) => { const p = [], q = []; for (let i = 0; i < NI; i++) { const [x, yt, yb] = PF[i], v = j / NV, y = yb + (yt - yb) * v, w = larg(x, v); p.push(...P3(x, y, w), ...P3(x, y, -w)); }
+    for (let i = 0; i < NI - 1; i++) { const a = 2 * i; q.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } return new THREE.Mesh(geo(p, null, q), mat(idx, f)); };
+  arca.add(fita(NV, C.conves, 0.82)); arca.add(fita(0, C.quilha, 0.6));
+  for (const i of [0, NI - 1]) { const p = [], q = []; const [x, yt, yb] = PF[i]; for (let j = 0; j <= NV; j++) { const v = j / NV, y = yb + (yt - yb) * v, w = larg(x, v); p.push(...P3(x, y, w), ...P3(x, y, -w)); }
+    for (let j = 0; j < NV; j++) { const a = 2 * j; q.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } arca.add(new THREE.Mesh(geo(p, null, q), mat(C.conves, 0.7))); }
+  // cabine: paredes com as janelas, frontões com a porta
+  const cab = DADOS.cabine, xa = cab.x0, xb = cab.x1, base = cab.base, bei = cab.beiral, D = 165, apice = 345;
+  { const p = [], u = [], q = []; const [lx, ly, lw, lh] = F.lateral; const U = t => (lx + t * lw) / AW, Vb = (ly + lh) / AH, Vt = ly / AH;
+    quad(p, u, q, P3(xa, base, D), P3(xb, base, D), P3(xb, bei, D), P3(xa, bei, D), [U(0), Vb], [U(1), Vb], [U(1), Vt], [U(0), Vt]);
+    quad(p, u, q, P3(xb, base, -D), P3(xa, base, -D), P3(xa, bei, -D), P3(xb, bei, -D), [U(0), Vb], [U(1), Vb], [U(1), Vt], [U(0), Vt]);
+    arca.add(new THREE.Mesh(geo(p, u, q), mTex)); }
+  { const [gx, gy, gw, gh] = F.frontao, G = (fx, fy) => [(gx + fx * gw) / AW, (gy + Math.min(1, fy) * gh) / AH];
+    const fa = (apice - 330) / 430, fb = (546 - 330) / 430, fbase = 1;
+    for (const [X, sinal] of [[xa, -1], [xb, 1]]) { const p = [], u = [], q = [];
+      const zE = sinal < 0 ? -D : D, zD = -zE; // esquerda/direita de quem olha a ponta
+      p.push(...P3(X, base, zE), ...P3(X, base, zD), ...P3(X, bei, zD), ...P3(X, apice, 0), ...P3(X, bei, zE));
+      u.push(...G(0, fbase), ...G(1, fbase), ...G(1, fb), ...G(0.5, fa), ...G(0, fb));
+      q.push(0, 1, 2, 0, 2, 4, 4, 2, 3); arca.add(new THREE.Mesh(geo(p, u, q), mTex)); } }
+  // telhado: duas águas com espessura, beiral e cumeeira
+  { const OH = 40, OX = 42, T = 16, cume = 318, zE = D + OH, yE = 334 + (bei - 334) * zE / D - T; // altura do topo na beirada
+    const [tx, ty, tw, th] = F.telhado, U = t => (tx + t * tw) / AW, Vr = ty / AH, Ve = (ty + th) / AH;
+    const xi = xa - OX, xf = xb + OX;
+    for (const s of [1, -1]) {
+      const p = [], u = [], q = [];
+      const a = P3(xi, cume, 0), b = P3(xf, cume, 0), c = P3(xf, yE, s * zE), d = P3(xi, yE, s * zE);
+      if (s > 0) quad(p, u, q, d, c, b, a, [U(0), Ve], [U(1), Ve], [U(1), Vr], [U(0), Vr]); else quad(p, u, q, c, d, a, b, [U(0), Ve], [U(1), Ve], [U(1), Vr], [U(0), Vr]);
+      arca.add(new THREE.Mesh(geo(p, u, q), mTex));
+      const dn = (v) => [v[0], v[1] - T * S, v[2]];
+      const pb = [], qb = []; quad(pb, null, qb, dn(a), dn(b), dn(c), dn(d)); arca.add(new THREE.Mesh(geo(pb, null, qb), mat(C.forro, 0.75)));
+      const pf = [], qf = []; quad(pf, null, qf, d, c, dn(c), dn(d)); arca.add(new THREE.Mesh(geo(pf, null, qf), mat(C.fascia, 0.95)));
+      for (const [e1, e2] of [[a, d], [b, c]]) { const pr = [], qr = []; quad(pr, null, qr, e1, e2, dn(e2), dn(e1)); arca.add(new THREE.Mesh(geo(pr, null, qr), mat(C.beiral, 0.95))); }
+    }
+    const cumeeira = new THREE.Mesh(new THREE.BoxGeometry((xf - xi) * S, 12 * S, 22 * S), mat(C.beiral, 0.9));
+    cumeeira.position.set(((xi + xf) / 2 - X0) * S, (Y0 - cume + 4) * S, 0); arca.add(cumeeira);
+  }
+  arca.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return arca;
+}
+function luzes(cena) { // ver em 3D: céu em cima, sol de lado
+  cena.add(new THREE.HemisphereLight(0xffffff, 0x9a8a70, 2.2));
+  const sol = new THREE.DirectionalLight(0xfff6e8, 2.6); sol.position.set(-1.2, 2.2, 1.8); cena.add(sol); return sol;
+}
+function luzesAR(cena) { // por cima da câmera: luz vinda de quem segura o celular
+  cena.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const l = new THREE.DirectionalLight(0xffffff, 2.4); l.position.set(-0.4, 0.8, 1); cena.add(l);
+}
+
+// ---------- realidade aumentada por cima da câmera ----------
+let rAR = null, cenaAR = null, camAR = null, ancora = null, arcaAR = null, poseAlvo = null, poseVista = false, ultimaVez = 0;
+function prepararAR() {
+  if (rAR) return;
+  rAR = new THREE.WebGLRenderer({ canvas: $('#ar'), alpha: true, antialias: true, preserveDrawingBuffer: DEBUG });
+  rAR.setPixelRatio(Math.min(2, devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
+  cenaAR = new THREE.Scene(); camAR = new THREE.Camera(); luzesAR(cenaAR);
+  ancora = new THREE.Group(); ancora.matrixAutoUpdate = false; ancora.visible = false; cenaAR.add(ancora);
+  const [mw, mh] = DADOS.alvo;
+  const tapa = new THREE.Mesh(new THREE.PlaneGeometry(mw * 1.3, mh * 1.3), new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide }));
+  tapa.position.set(mw / 2, mh / 2, 0); tapa.renderOrder = -1; ancora.add(tapa); // esconde o que fica "abaixo" do quebra-cabeça
+  const agua = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: 0x3d9be0, transparent: true, opacity: 0.35, depthWrite: false }));
+  agua.scale.set(420, 150, 1); agua.position.set(509, 482, -0.5); ancora.add(agua); ancora.userData.agua = agua;
+}
+function colocarArcaAR(arca) {
+  if (arcaAR) { ancora.remove(arcaAR); }
+  const g = new THREE.Group(), k = 488.28 * 0.92; // 1 unidade 3D = 1000 px do desenho = 488 px do alvo
+  // eixo da arca: X comprimento -> x do quebra-cabeça; Y para cima -> sai do quebra-cabeça (-z); Z para quem olha -> +y
+  g.matrixAutoUpdate = false; g.matrix.set(k, 0, 0, 509, 0, 0, k, 482, 0, -k, 0, 0, 0, 0, 0, 1);
+  g.add(arca); arcaAR = g; ancora.add(g);
+}
+function projecaoAR() {
+  const Wc = innerWidth, Hc = innerHeight, sc = Math.max(Wc / VW, Hc / VH), k = sc * VW / NW, ox = (Wc - VW * sc) / 2, oy = (Hc - VH * sc) / 2;
+  const f = (NH / 2) / Math.tan(22.5 * Math.PI / 180), cxK = NW / 2, cyK = NH / 2, n = 10, fa = 100000;
+  const a = 2 * k * f / Wc, b = 2 * (k * cxK + ox) / Wc - 1, d = 2 * k * f / Hc, c = 1 - 2 * (k * cyK + oy) / Hc;
+  camAR.projectionMatrix.set(a, 0, -b, 0, 0, d, -c, 0, 0, 0, -(fa + n) / (fa - n), -2 * fa * n / (fa - n), 0, 0, -1, 0);
+  camAR.projectionMatrixInverse.copy(camAR.projectionMatrix).invert();
+}
+const mAlvo = new THREE.Matrix4(), pA = new THREE.Vector3(), qA = new THREE.Quaternion(), sA = new THREE.Vector3(), pV = new THREE.Vector3(), qV = new THREE.Quaternion(), sV = new THREE.Vector3(1, 1, 1);
+function definirPose(T) {
+  if (DEBUG) window.__arcaT = T;
+  mAlvo.set(T[0][0], T[0][1], T[0][2], T[0][3], -T[1][0], -T[1][1], -T[1][2], -T[1][3], -T[2][0], -T[2][1], -T[2][2], -T[2][3], 0, 0, 0, 1);
+  mAlvo.decompose(pA, qA, sA); if (!poseVista) { pV.copy(pA); qV.copy(qA); sV.copy(sA); } poseVista = true; ultimaVez = performance.now();
+}
+function desenharAR() {
+  if (!rAR || !$('#camera').classList.contains('ativa')) return;
+  rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
+  if (poseVista) { pV.lerp(pA, 0.3); qV.slerp(qA, 0.3); sV.lerp(sA, 0.3); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
+  const recente = performance.now() - ultimaVez < 1400; ancora.visible = !!arcaAR && poseVista && recente;
+  if (arcaAR) { const t = performance.now() / 1000; arcaAR.children[0].position.y = 0.012 * Math.sin(t * 1.6); arcaAR.children[0].rotation.x = 0.025 * Math.sin(t * 1.1); }
+  rAR.render(cenaAR, camAR);
+}
+
+// ---------- fluxo da câmera ----------
+let fotos = [], estavel = 0, ultimaH = null, lendo = true, coresAtuais = null, arcaAtual = null;
+const PRECISA = 3;
+async function abrirCamera() {
+  $('#erro').style.display = 'none';
+  try {
+    await carregarDados();
+    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+  } catch (e) {
+    $('#erro').textContent = e && e.name === 'NotAllowedError' ? 'A câmera foi bloqueada. Permita o uso da câmera nas configurações do navegador e tente de novo.' : 'Não foi possível abrir a câmera neste aparelho. Use o botão "Ver um exemplo pintado" para conhecer o 3D.';
+    $('#erro').style.display = 'block'; return;
+  }
+  mostrar('camera'); status('Preparando o reconhecimento…');
+  video.srcObject = stream; await video.play().catch(() => {});
+  for (let i = 0; i < 100 && !video.videoWidth; i++) await new Promise(r => setTimeout(r, 50));
+  await montarControle(); prepararAR();
+  ativo = true; recomecar(); passo(); animar();
+}
+function recomecar() {
+  fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#guia').classList.remove('some');
+  $('#prog').style.display = 'none'; $('#prog i').style.width = '0';
+  status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
+}
+function fecharCamera() { ativo = false; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
+async function passo() {
+  if (!ativo) return;
+  if (video.videoWidth && (video.videoWidth !== VW || video.videoHeight !== VH)) { await montarControle(); }
+  const t0 = performance.now();
+  desenharQuadro(lendo);
+  let achou = false, info = '';
+  try {
+    const { featurePoints } = await ctrl.detect(cv);
+    const m = await ctrl.match(featurePoints, 0);
+    if (m.modelViewTransform) {
+      definirPose(m.modelViewTransform); achou = true;
+      if (lendo) {
+        const pr = paresDaDeteccao(m.debugExtra), hr = pr && pr.src.length >= 12 ? homografiaRobusta(pr.src, pr.dst) : null;
+        info = hr ? `pares ${hr.n} · erro ${hr.rms.toFixed(2)}px` : 'poucos pares';
+        if (hr && hr.rms < 2.5) {
+          // alvo (1000) -> quadro reduzido -> vídeo; e desenho (2048) -> alvo
+          const Hv = mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], hr.H), Hd = mul3(Hv, [DADOS.alvo[0] / DADOS.largura, 0, 0, 0, DADOS.alvo[0] / DADOS.largura, 0, 0, 0, 1]);
+          const cantos = [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hd, x, y));
+          const mexeu = ultimaH ? Math.max(...cantos.map((c, i) => Math.hypot(c[0] - ultimaH[i][0], c[1] - ultimaH[i][1]))) / VW : 1;
+          ultimaH = cantos;
+          if (mexeu < 0.03) estavel++; else estavel = 0;
+          if (estavel >= 1) { fotos.push(amostrarFoto(Hd)); window.__arcaH = { Hd, cantos, n: hr.n, rms: hr.rms }; }
+          $('#prog').style.display = 'block'; $('#prog i').style.width = Math.round(100 * fotos.length / PRECISA) + '%';
+          status(fotos.length ? 'Lendo as cores…' : 'Achei! Segure parado…', 'Não mexa o celular por um instante');
+          if (fotos.length >= PRECISA) terminarLeitura();
+        }
+      }
+    }
+  } catch (e) { info = 'erro ' + e.message; }
+  if (!achou && lendo) { estavel = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
+  if (!achou && !lendo && performance.now() - ultimaVez > 1500) status('Aponte de novo para o quebra-cabeça', 'A arca aparece em cima dele');
+  if (DEBUG) mostrarDepuracao(info, performance.now() - t0);
+  setTimeout(passo, lendo ? 0 : 30); // depois da leitura só acompanha o quebra-cabeça
+}
+function terminarLeitura() {
+  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; window.__arcaCores = r;
+  arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual);
+  $('#guia').classList.add('some'); $('#prog').style.display = 'none';
+  $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
+  status('Pronto! Olhe a arca em cima do quebra-cabeça', 'Ou toque em "Ver em 3D" para girar');
+}
+function animar() { if (!ativo) return; desenharAR(); requestAnimationFrame(animar); }
+function mostrarDepuracao(info, ms) {
+  const el = $('#dbg'); el.style.display = 'block';
+  if (!el.firstChild) el.innerHTML = '<div id="dtx"></div><canvas id="dcv"></canvas><div class="cores" id="dco"></div>';
+  $('#dtx').textContent = `${VW}x${VH} → ${NW}x${NH} · ${Math.round(ms)}ms · ${info} · fotos ${fotos.length}`;
+  const dc = $('#dcv'); dc.width = NW / 2; dc.height = NH / 2; dc.getContext('2d').drawImage(cv, 0, 0, NW / 2, NH / 2);
+  if (coresAtuais && !$('#dco').childElementCount) $('#dco').innerHTML = coresAtuais.map(c => `<i style="background:rgb(${c})"></i>`).join('');
+}
+
+// ---------- ver em 3D (sem câmera) ----------
+let r3 = null, cena3 = null, cam3 = null, ctl3 = null, arca3 = null, mar3 = null, loop3 = false;
+function abrir3D(cores) {
+  mostrar('ver3d');
+  if (!r3) {
+    r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: true, preserveDrawingBuffer: true }); r3.setPixelRatio(Math.min(2, devicePixelRatio));
+    r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
+    cena3 = new THREE.Scene(); cena3.background = new THREE.Color(0xcfeaff); cena3.fog = new THREE.Fog(0xcfeaff, 6, 16);
+    cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 50); cam3.position.set(-0.75, 0.55, 1.75);
+    const sol = luzes(cena3); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
+    const g = new THREE.PlaneGeometry(30, 30, 90, 90); g.rotateX(-Math.PI / 2);
+    mar3 = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x2f86d6, roughness: 0.35, metalness: 0.05, flatShading: true })); mar3.receiveShadow = true;
+    mar3.userData.base = Float32Array.from(g.attributes.position.array); cena3.add(mar3);
+    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.2, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.49; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; });
+  }
+  if (arca3) cena3.remove(arca3); mexeu3 = false; enquadrar();
+  arca3 = criarArca(cores); cena3.add(arca3);
+  if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
+}
+let mexeu3 = false;
+function enquadrar() { // cabe a arca inteira na tela, deitada ou em pé
+  if (mexeu3) return; const R = 0.78, vf = cam3.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam3.aspect);
+  const dist = R / Math.sin(Math.min(vf, hf) / 2); const dir = new THREE.Vector3(-0.42, 0.3, 1).normalize();
+  cam3.position.copy(ctl3.target).addScaledVector(dir, dist); ctl3.update();
+}
+function anim3(tms) {
+  if (!$('#ver3d').classList.contains('ativa')) { loop3 = false; return; }
+  const t = tms / 1000, c = $('#cena'); const w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * r3.getPixelRatio()) || c.height !== Math.round(h * r3.getPixelRatio())) { r3.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); enquadrar(); }
+  const p = mar3.geometry.attributes.position, b = mar3.userData.base;
+  for (let i = 0; i < p.count; i++) { const x = b[3*i], z = b[3*i+2]; p.array[3*i+1] = 0.035 * Math.sin(x * 2.1 + t * 1.3) + 0.025 * Math.sin(z * 2.7 + t * 0.9); }
+  p.needsUpdate = true; mar3.geometry.computeVertexNormals();
+  if (arca3) { arca3.position.y = 0.015 * Math.sin(t * 1.4); arca3.rotation.z = 0.02 * Math.sin(t * 0.9); arca3.rotation.x = 0.015 * Math.sin(t * 1.2); }
+  ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
+}
+function coresExemplo() {
+  // pintura de exemplo, como uma criança faria: cada tábua de uma cor
+  const pal = [[226, 52, 48], [246, 133, 36], [250, 208, 50], [96, 186, 72], [28, 142, 84], [54, 162, 226], [40, 82, 170], [134, 70, 176], [233, 98, 160], [146, 92, 50], [196, 138, 84]];
+  let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  return DADOS.regioes.map(() => pal[Math.floor(rnd() * pal.length)]);
+}
+
+// ---------- botões ----------
+$('#bCamera').onclick = abrirCamera;
+$('#bExemplo').onclick = async () => { await carregarDados(); abrir3D(coresExemplo()); };
+$('#cVoltar').onclick = fecharCamera;
+$('#bDeNovo').onclick = recomecar;
+$('#bVer3d').onclick = () => { if (coresAtuais) { ativo = false; abrir3D(coresAtuais); } };
+$('#vVoltar').onclick = () => { if (stream) { mostrar('camera'); ativo = true; passo(); animar(); } else mostrar('inicio'); };
+$('#bOutra').onclick = () => { if (stream) { mostrar('camera'); ativo = true; recomecar(); passo(); animar(); } else abrirCamera(); };
+$('#bFoto').onclick = () => { const a = document.createElement('a'); a.download = 'minha-arca.png'; a.href = $('#cena').toDataURL('image/png'); a.click(); };
+window.__arca = { carregarDados, criarArca, abrir3D, coresExemplo, get dados() { return DADOS; } };
+</script>
+</body>
+</html>
