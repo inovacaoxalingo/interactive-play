@@ -113,7 +113,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.7 · 06/11/2026';
+const VERSAO = '0.8 · 06/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -295,6 +295,21 @@ function amostrarFoto(Hd) { // Hd: desenho (2048) -> pixel do vídeo
   const ler = (x, y, raio = 1) => { const [u, v] = aplica(Hd, x, y); return lerPixel(img, VW, VH, u, v, raio); };
   return { regioes: DADOS.amostras.map((ps, r) => ps.map(([x, y]) => ler(x, y, DADOS.espessura[r] < 6 ? 0 : 1)).filter(Boolean)), fundo: DADOS.fundo.map(([x, y]) => [x, y, ler(x, y)]).filter(p => p[2]), preto: DADOS.preto.map(([x, y]) => ler(x, y)).filter(Boolean) };
 }
+function corDaTinta(pts) { // pontos 0..1 de uma parte: devolve a cor da canetinha (0..1) ou null se ficou sem pintura
+    // canetinha deixa riscos com papel aparecendo: separa os pontos em papel, traço preto e tinta; se pelo menos 1/4 é tinta, a parte foi pintada
+    if (!pts.length) return null;
+    const ehPapel = p => Math.min(...p) > 0.8 && Math.max(...p) - Math.min(...p) < 0.12, ehEscuro = p => Math.max(...p) < 0.28 && Math.max(...p) - Math.min(...p) < 0.1;
+    const muitoEscuro = pts.filter(ehEscuro).length > pts.length / 2; // pintada de preto (e não o traço)
+    const tinta = pts.filter(p => !ehPapel(p) && (muitoEscuro || !ehEscuro(p)));
+    if (tinta.length < Math.max(2, 0.25 * pts.length)) return null; // sem pintura
+    const dom = corDominante(tinta.map(p => ({ c: p, peso: 1 })), 0); let c = dom ? dom.c : [0, 1, 2].map(k => mediana(tinta.map(p => p[k])));
+    { // riscos ralos saem desbotados na média: a cor da canetinha é a ponta mais forte do mesmo tom
+      const ld = paraLab(c), cd = Math.hypot(ld[1], ld[2]);
+      if (cd > 12) { const mesmo = tinta.map(p => ({ p, l: paraLab(p) })).filter(({ l }) => { const cr = Math.hypot(l[1], l[2]); return cr > 4 && (l[1] * ld[1] + l[2] * ld[2]) / (cr * cd) > 0.92; })
+          .sort((A, B) => Math.hypot(B.l[1], B.l[2]) - Math.hypot(A.l[1], A.l[2]));
+        if (mesmo.length >= 3) { const top = mesmo.slice(0, Math.max(2, Math.ceil(mesmo.length * 0.5))); c = [0, 1, 2].map(k => top.reduce((s, q) => s + q.p[k], 0) / top.length); } } }
+    return c;
+}
 function calcularCores(fotos) {
   // preto do traço e branco do papel (por área, para compensar luz desigual)
   const pretos = fotos.flatMap(f => f.preto); const K = [0, 1, 2].map(c => mediana(pretos.map(p => p[c])));
@@ -317,18 +332,8 @@ function calcularCores(fotos) {
     const vals = [[], [], []];
     fotos.forEach(f => f.regioes[r].forEach((p, k) => { const [x, y] = ps[k] || ps[0]; const Wl = branco(x, y);
       for (let c = 0; c < 3; c++) { const k0 = 0.3 * K[c]; vals[c].push(Math.min(1.05, Math.max(0, (p[c] - k0) / Math.max(20, Wl[c] - k0)))); } }));
-    // canetinha deixa riscos com papel aparecendo: separa os pontos em papel, traço preto e tinta; se pelo menos 1/4 é tinta, a parte foi pintada
-    const pts = vals[0].map((_, i) => [vals[0][i], vals[1][i], vals[2][i]]); if (!pts.length) return [246, 243, 236];
-    const ehPapel = p => Math.min(...p) > 0.8 && Math.max(...p) - Math.min(...p) < 0.12, ehEscuro = p => Math.max(...p) < 0.28 && Math.max(...p) - Math.min(...p) < 0.1;
-    const muitoEscuro = pts.filter(ehEscuro).length > pts.length / 2; // pintada de preto (e não o traço)
-    const tinta = pts.filter(p => !ehPapel(p) && (muitoEscuro || !ehEscuro(p)));
-    if (tinta.length < Math.max(2, 0.25 * pts.length)) return [246, 243, 236]; // sem pintura: fica o branco do MDF
-    const dom = corDominante(tinta.map(p => ({ c: p, peso: 1 })), 0); let c = dom ? dom.c : [0, 1, 2].map(k => mediana(tinta.map(p => p[k])));
-    { // riscos ralos saem desbotados na média: a cor da canetinha é a ponta mais forte do mesmo tom
-      const ld = paraLab(c), cd = Math.hypot(ld[1], ld[2]);
-      if (cd > 12) { const mesmo = tinta.map(p => ({ p, l: paraLab(p) })).filter(({ l }) => { const cr = Math.hypot(l[1], l[2]); return cr > 4 && (l[1] * ld[1] + l[2] * ld[2]) / (cr * cd) > 0.92; })
-          .sort((A, B) => Math.hypot(B.l[1], B.l[2]) - Math.hypot(A.l[1], A.l[2]));
-        if (mesmo.length >= 3) { const top = mesmo.slice(0, Math.max(2, Math.ceil(mesmo.length * 0.5))); c = [0, 1, 2].map(k => top.reduce((s, q) => s + q.p[k], 0) / top.length); } } }
+    const c0 = corDaTinta(vals[0].map((_, i) => [vals[0][i], vals[1][i], vals[2][i]])); if (!c0) return [246, 243, 236]; // sem pintura: fica o branco do MDF
+    let c = c0;
     const m = (c[0] + c[1] + c[2]) / 3; c = c.map(v => Math.min(1, Math.max(0, m + (v - m) * 1.12))); // canetinha na foto sai mais apagada
     return c.map(v => Math.round(v * 255));
   });
@@ -340,8 +345,24 @@ function calcularCores(fotos) {
   for (const [nome, T] of Object.entries(TEXF || {})) { const t = DADOS.texturas[nome], [x0, y0, x1, y1] = t.caixa, w = t.w, h = t.h, rgb = new Float32Array(w * h * 3), ok = new Uint8Array(w * h); let n = 0;
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = j * w + i; if (!T.n[k]) continue; const Wl = branco(x0 + (i + 0.5) / w * (x1 - x0), y0 + (j + 0.5) / h * (y1 - y0)), v = [0, 0, 0];
       for (let c = 0; c < 3; c++) { const k0 = 0.3 * K[c]; v[c] = Math.min(1, Math.max(0, (T.soma[3 * k + c] / T.n[k] - k0) / Math.max(20, Wl[c] - k0))); }
-      const m = (v[0] + v[1] + v[2]) / 3; for (let c = 0; c < 3; c++) rgb[3 * k + c] = Math.min(1, Math.max(0, m + (v[c] - m) * 1.12)) * PAPEL[c]; ok[k] = 1; n++; }
-    if (n < 0.05 * w * h) continue; fecharFuros(rgb, ok, w, h);
+      for (let c = 0; c < 3; c++) rgb[3 * k + c] = v[c] * PAPEL[c]; ok[k] = 1; n++; }
+    if (n < 0.05 * w * h) continue;
+    // pintura lisa: a parede vira listras de cor única (as falhas do papel e as manchas escuras somem)
+    const B = 4, nb = Math.ceil(w / B), cols = [];
+    for (let b = 0; b < nb; b++) { const pts = []; for (let x = b * B; x < Math.min(w, (b + 1) * B); x++) for (let y = 0; y < h; y++) { const k = y * w + x; if (ok[k]) pts.push([rgb[3 * k] / PAPEL[0], rgb[3 * k + 1] / PAPEL[1], rgb[3 * k + 2] / PAPEL[2]]); }
+      cols.push(pts.length >= 6 ? { pts, c: corDaTinta(pts) } : { pts, c: undefined }); }
+    const dist = (a, b) => { if (!a || !b) return a === b ? 0 : 99; const A = paraLab(a), Bq = paraLab(b); return Math.hypot((A[0] - Bq[0]) * 0.5, A[1] - Bq[1], A[2] - Bq[2]); };
+    let faixas = [];
+    for (let b = 0; b < nb; b++) { const cb = cols[b]; const ult = faixas[faixas.length - 1];
+      if (cb.c === undefined) { if (ult) { ult.b1 = b; ult.pts.push(...cb.pts); } else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: undefined }); continue; }
+      if (ult && (ult.c === undefined || dist(ult.c, cb.c) < 20)) { ult.b1 = b; ult.pts.push(...cb.pts); if (ult.c === undefined) ult.c = cb.c; }
+      else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: cb.c }); }
+    for (let pass = 0; pass < 3; pass++) for (let i = 0; i < faixas.length && faixas.length > 1; i++) { const f = faixas[i]; if (f.b1 - f.b0 + 1 >= 3) continue; // listra fininha demais: junta com a vizinha mais parecida
+      const a = faixas[i - 1], z = faixas[i + 1], alvo = !a ? z : !z ? a : (dist(a.c, f.c) <= dist(z.c, f.c) ? a : z);
+      alvo.b0 = Math.min(alvo.b0, f.b0); alvo.b1 = Math.max(alvo.b1, f.b1); alvo.pts.push(...f.pts); faixas.splice(i, 1); i--; }
+    for (const f of faixas) { let c = f.pts.length ? corDaTinta(f.pts) : null; let o;
+      if (c) { const m = (c[0] + c[1] + c[2]) / 3; o = c.map(v => Math.round(255 * Math.min(1, Math.max(0, m + (v - m) * 1.12)))); } else o = PAPEL;
+      for (let x = f.b0 * B; x < Math.min(w, (f.b1 + 1) * B); x++) for (let y = 0; y < h; y++) { const k = y * w + x; rgb[3 * k] = o[0]; rgb[3 * k + 1] = o[1]; rgb[3 * k + 2] = o[2]; } }
     const cv2 = document.createElement('canvas'); cv2.width = w; cv2.height = h; const x = cv2.getContext('2d'), im = x.createImageData(w, h);
     for (let k = 0; k < w * h; k++) { im.data[4 * k] = rgb[3 * k]; im.data[4 * k + 1] = rgb[3 * k + 1]; im.data[4 * k + 2] = rgb[3 * k + 2]; im.data[4 * k + 3] = 255; }
     x.putImageData(im, 0, 0); texturas[nome] = cv2; }
