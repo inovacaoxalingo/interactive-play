@@ -413,9 +413,10 @@ function desenharAR() {
   if (!rAR || !$('#camera').classList.contains('ativa')) return;
   rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
   if (poseVista) { pV.lerp(pA, 0.3); qV.slerp(qA, 0.3); sV.lerp(sA, 0.3); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
-  const recente = performance.now() - ultimaVez < 1400; ancora.visible = !!arcaAR && poseVista && recente;
+  const recente = performance.now() - ultimaVez < 4000; ancora.visible = !!arcaAR && poseVista && recente; // se o reconhecimento falhar alguns quadros, a arca fica no último lugar
   if (arcaAR) { const t = performance.now() / 1000; arcaAR.children[0].position.y = 0.012 * Math.sin(t * 1.6); arcaAR.children[0].rotation.x = 0.025 * Math.sin(t * 1.1); }
   rAR.render(cenaAR, camAR);
+  if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
 
 // ---------- fluxo da câmera ----------
@@ -443,37 +444,80 @@ function recomecar() {
   status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
 }
 function fecharCamera() { ativo = false; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
+// ---------- reconhecimento em ângulo ----------
+// 1) sem posição recente: tenta o quadro como está e "esticado" na vertical (como se o celular estivesse mais de cima)
+// 2) com posição recente: endireita o quadro com a última posição antes de procurar — assim segue firme mesmo bem inclinado
+let cvR = null, cxR = null, Hc = null, tHc = 0, ciclo = 0;
+const HIPOTESES = [1, 1.45, 1.9];
+function pinta(destCx, fonteL, mapa) { // mapa(x, y) -> [xs, ys] no quadro de traço; branco fora
+  const im = destCx.createImageData(NW, NH), d = im.data;
+  for (let y = 0, j = 0; y < NH; y++) for (let x = 0; x < NW; x++, j += 4) {
+    const p = mapa(x, y); let v = 255;
+    if (p) { const xs = p[0] | 0, ys = p[1] | 0; if (xs >= 0 && ys >= 0 && xs < NW && ys < NH) v = fonteL[ys * NW + xs]; }
+    d[j] = d[j+1] = d[j+2] = v; d[j+3] = 255;
+  }
+  destCx.putImageData(im, 0, 0);
+}
+let LT = null; // traço do quadro atual (só o canal cinza)
+function guardarTraco() { const d = cx.getImageData(0, 0, NW, NH).data; if (!LT || LT.length !== NW * NH) LT = new Uint8Array(NW * NH); for (let i = 0, j = 0; i < LT.length; i++, j += 4) LT[i] = d[j]; }
+async function detectar(fonte) {
+  const { featurePoints } = await ctrl.detect(fonte); const m = await ctrl.match(featurePoints, 0);
+  if (!m.modelViewTransform) return null;
+  const pr = paresDaDeteccao(m.debugExtra); const h = pr && pr.src.length >= 10 ? homografiaRobusta(pr.src, pr.dst) : null; if (h) h.mvt = m.modelViewTransform; return h;
+}
+function poseDaHomografia(H) { // posição 3D a partir da homografia, com a mesma câmera usada para desenhar
+  const f = (NH / 2) / Math.tan(22.5 * Math.PI / 180), cxK = NW / 2, cyK = NH / 2;
+  const M = mul3([1 / f, 0, -cxK / f, 0, 1 / f, -cyK / f, 0, 0, 1], H);
+  const c = k => [M[k], M[3 + k], M[6 + k]], n = v => Math.hypot(...v);
+  let r1 = c(0), r2 = c(1), t = c(2); const l = 2 / (n(r1) + n(r2)); r1 = r1.map(v => v * l); r2 = r2.map(v => v * l); t = t.map(v => v * l);
+  if (t[2] < 0) { r1 = r1.map(v => -v); r2 = r2.map(v => -v); t = t.map(v => -v); }
+  const a = n(r1); r1 = r1.map(v => v / a); const dp = r1[0]*r2[0] + r1[1]*r2[1] + r1[2]*r2[2]; r2 = r2.map((v, i) => v - dp * r1[i]); const b = n(r2); r2 = r2.map(v => v / b);
+  const r3 = [r1[1]*r2[2] - r1[2]*r2[1], r1[2]*r2[0] - r1[0]*r2[2], r1[0]*r2[1] - r1[1]*r2[0]];
+  return [[r1[0], r2[0], r3[0], t[0]], [r1[1], r2[1], r3[1], t[1]], [r1[2], r2[2], r3[2], t[2]]];
+}
+async function acharAlvo() {
+  guardarTraco();
+  const [mw, mh] = DADOS.alvo;
+  if (Hc && performance.now() - tHc < 1500) { // endireita com a última posição
+    const sr = Math.min(0.86 * NW / mw, 0.86 * NH / mh), ox = (NW - mw * sr) / 2, oy = (NH - mh * sr) / 2, R = [sr, 0, ox, 0, sr, oy, 0, 0, 1];
+    const G = mul3(Hc, inv3(R));
+    pinta(cxR, LT, (x, y) => { const w = G[6]*x + G[7]*y + G[8]; return w > 0 ? [(G[0]*x + G[1]*y + G[2]) / w, (G[3]*x + G[4]*y + G[5]) / w] : null; });
+    const r = await detectar(cvR); if (r) return { H: mul3(G, r.H), n: r.n, rms: r.rms, modo: 'seguindo' };
+  }
+  const s = HIPOTESES[ciclo++ % HIPOTESES.length], cy = NH / 2;
+  let fonte = cv; if (s !== 1) { pinta(cxR, LT, (x, y) => [x, cy + (y - cy) / s]); fonte = cvR; }
+  const r = await detectar(fonte); if (!r) return null;
+  return { H: mul3([1, 0, 0, 0, 1 / s, cy * (1 - 1 / s), 0, 0, 1], r.H), n: r.n, rms: r.rms * Math.max(1, 1 / s), modo: 'procurando ×' + s, mvt: r.mvt };
+}
 async function passo() {
   if (!ativo) return;
   if (video.videoWidth && (video.videoWidth !== VW || video.videoHeight !== VH)) { await montarControle(); }
+  if (!cvR || cvR.width !== NW || cvR.height !== NH) { cvR = document.createElement('canvas'); cvR.width = NW; cvR.height = NH; cxR = cvR.getContext('2d', { willReadFrequently: true }); Hc = null; }
   const t0 = performance.now();
   desenharQuadro(lendo);
   let achou = false, info = '';
   try {
-    const { featurePoints } = await ctrl.detect(cv);
-    const m = await ctrl.match(featurePoints, 0);
-    if (m.modelViewTransform) {
-      definirPose(m.modelViewTransform); achou = true;
-      if (lendo) {
-        const pr = paresDaDeteccao(m.debugExtra), hr = pr && pr.src.length >= 12 ? homografiaRobusta(pr.src, pr.dst) : null;
-        info = hr ? `pares ${hr.n} · erro ${hr.rms.toFixed(2)}px` : 'poucos pares';
-        if (hr && hr.rms < 2.5) {
-          // alvo (1000) -> quadro reduzido -> vídeo; e desenho (2048) -> alvo
-          const Hv = mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], hr.H), Hd = mul3(Hv, [DADOS.alvo[0] / DADOS.largura, 0, 0, 0, DADOS.alvo[0] / DADOS.largura, 0, 0, 0, 1]);
-          const cantos = [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hd, x, y));
-          const mexeu = ultimaH ? Math.max(...cantos.map((c, i) => Math.hypot(c[0] - ultimaH[i][0], c[1] - ultimaH[i][1]))) / VW : 1;
-          ultimaH = cantos;
-          if (mexeu < 0.03) estavel++; else estavel = 0;
-          if (estavel >= 1) { fotos.push(amostrarFoto(Hd)); window.__arcaH = { Hd, cantos, n: hr.n, rms: hr.rms }; }
-          $('#prog').style.display = 'block'; $('#prog i').style.width = Math.round(100 * fotos.length / PRECISA) + '%';
-          status(fotos.length ? 'Lendo as cores…' : 'Achei! Segure parado…', 'Não mexa o celular por um instante');
-          if (fotos.length >= PRECISA) terminarLeitura();
-        }
+    const a = await acharAlvo();
+    if (a && a.rms < 3) {
+      Hc = a.H; tHc = performance.now(); const Tp = poseDaHomografia(Hc); definirPose(Tp); achou = true; if (DEBUG) window.__arcaDbg = { T: Tp, H: Hc, modo: a.modo, mvt: a.mvt, NW, NH };
+      info = `${a.modo} · pares ${a.n} · erro ${a.rms.toFixed(2)}px`;
+      if (lendo && a.rms < 2.5) {
+        // alvo (1000) -> quadro reduzido -> vídeo; e desenho (2048) -> alvo
+        const Hv = mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], Hc), Hd = mul3(Hv, [DADOS.alvo[0] / DADOS.largura, 0, 0, 0, DADOS.alvo[0] / DADOS.largura, 0, 0, 0, 1]);
+        const cantos = [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hd, x, y));
+        const mexeu = ultimaH ? Math.max(...cantos.map((c, i) => Math.hypot(c[0] - ultimaH[i][0], c[1] - ultimaH[i][1]))) / VW : 1;
+        ultimaH = cantos;
+        if (mexeu < 0.03) estavel++; else estavel = 0;
+        if (estavel >= 1) { fotos.push(amostrarFoto(Hd)); window.__arcaH = { Hd, cantos, n: a.n, rms: a.rms, modo: a.modo }; }
+        $('#prog').style.display = 'block'; $('#prog i').style.width = Math.round(100 * fotos.length / PRECISA) + '%';
+        status(fotos.length ? 'Lendo as cores…' : 'Achei! Segure parado…', 'Não mexa o celular por um instante');
+        if (fotos.length >= PRECISA) terminarLeitura();
       }
-    }
+    } else if (a) info = `${a.modo} · erro alto ${a.rms.toFixed(1)}`;
   } catch (e) { info = 'erro ' + e.message; }
   if (!achou && lendo) { estavel = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
-  if (!achou && !lendo && performance.now() - ultimaVez > 1500) status('Aponte de novo para o quebra-cabeça', 'A arca aparece em cima dele');
+  if (!achou && !lendo && performance.now() - ultimaVez > 4000) status('Aponte de novo para o quebra-cabeça', 'A arca aparece em cima dele');
+  if (achou && !lendo) status('Pronto! Olhe a arca em cima do quebra-cabeça', 'Ou toque em "Ver em 3D" para girar');
   if (DEBUG) mostrarDepuracao(info, performance.now() - t0);
   setTimeout(passo, lendo ? 0 : 30); // depois da leitura só acompanha o quebra-cabeça
 }
