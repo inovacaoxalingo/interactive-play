@@ -80,6 +80,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
     <button class="bt sec" id="bExemplo" type="button">Ver um exemplo pintado</button>
     <p class="erro" id="erro"></p>
     <p class="nota">A imagem da câmera é usada só neste aparelho para ler as cores. Nenhuma foto é enviada ou guardada.</p>
+    <p class="nota" id="versao"></p>
   </div>
 </section>
 
@@ -107,9 +108,18 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
+const VERSAO = '0.5 · 05/11/2026';
+// qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
+const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
+  const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
+const RAZAO_3D = [1, 1.25, 2], RAZAO_AR = [0.75, 1, 1.5];
+function medidorFPS() { let n = 0, t0 = 0; return (agora, aoBaixar) => { if (!t0) t0 = agora; n++; const dt = agora - t0;
+  if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > 0 && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
+const fps3D = medidorFPS(), fpsAR = medidorFPS();
 const TELAS = ['inicio', 'camera', 'ver3d'];
 function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); }
 function status(t, s) { $('#status').innerHTML = t + (s ? '<small>' + s + '</small>' : ''); }
@@ -319,7 +329,7 @@ const AMBIENTE = { mapa: null };
 function contorno(mesh, esp = 0.005) { // contorno preto de desenho: cópia por trás, empurrada para fora
   const m = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide });
   m.onBeforeCompile = s => { s.vertexShader = s.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${esp.toFixed(4)};`); };
-  const o = new THREE.Mesh(mesh.geometry, m); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); o.scale.copy(mesh.scale); o.userData.contorno = true; return o;
+  const o = new THREE.Mesh(mesh.geometry, m); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); o.scale.copy(mesh.scale); o.userData.contorno = true; o.userData.esp = esp; return o;
 }
 function contornoCaixa(mesh, esp = 0.004) { // para caixas: a mesma caixa um pouco maior (os cantos fecham certinho)
   const p = mesh.geometry.parameters, g = new THREE.BoxGeometry(p.width + 2 * esp, p.height + 2 * esp, p.depth + 2 * esp);
@@ -412,7 +422,23 @@ function criarArca(cores) {
     const cume = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, LR + 0.02, 18), ponta); cume.rotation.z = Math.PI / 2; cume.position.set(XC, YR + 0.03, 0); poe(cume, 0.004);
   }
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
+  otimizar(arca);
   return raiz;
+}
+function otimizar(arca) { // junta as peças que usam o mesmo material: a arca passa de ~150 para ~30 desenhos por quadro
+  arca.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(arca.matrixWorld).invert(), grupos = new Map(); let antes = 0;
+  arca.children.slice().forEach(m => {
+    if (!m.isMesh) return; antes++; if (Array.isArray(m.material)) return; // caixas com várias cores ficam como estão
+    const mt = m.material, chave = [mt.type, mt.side, mt.color ? mt.color.getHexString() : '', mt.map ? mt.map.uuid : '', mt.bumpMap ? mt.bumpMap.uuid : '', m.userData.contorno ? 'c' + (m.userData.esp || 0) : 'n'].join('|');
+    let g = m.geometry.clone(); g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld)); if (g.index) g = g.toNonIndexed();
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    if (!g.attributes.normal) g.computeVertexNormals();
+    Object.keys(g.attributes).forEach(k => { if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k); }); g.clearGroups();
+    if (!grupos.has(chave)) grupos.set(chave, { mt, geos: [], contorno: !!m.userData.contorno }); grupos.get(chave).geos.push(g); arca.remove(m);
+  });
+  for (const { mt, geos, contorno } of grupos.values()) { const g = geos.length > 1 ? mergeGeometries(geos, false) : geos[0]; const m = new THREE.Mesh(g, mt);
+    if (contorno) m.userData.contorno = true; else { m.castShadow = true; m.receiveShadow = true; } arca.add(m); }
+  window.__pecas = { antes, depois: arca.children.length };
 }
 function texturaSombra() { // mancha de sombra macia (para o 3D por cima do quebra-cabeça)
   const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
@@ -447,7 +473,7 @@ let rAR = null, cenaAR = null, camAR = null, ancora = null, arcaAR = null, poseA
 function prepararAR() {
   if (rAR) return;
   rAR = new THREE.WebGLRenderer({ canvas: $('#ar'), alpha: true, antialias: true, preserveDrawingBuffer: DEBUG });
-  rAR.setPixelRatio(Math.min(1.5, devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
+  rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
   cenaAR = new THREE.Scene(); camAR = new THREE.Camera(); luzesAR(cenaAR);
   ancora = new THREE.Group(); ancora.matrixAutoUpdate = false; ancora.visible = false; cenaAR.add(ancora);
   const [mw, mh] = DADOS.alvo;
@@ -455,6 +481,7 @@ function prepararAR() {
   tapa.position.set(mw / 2, mh / 2, 0); tapa.renderOrder = -1; ancora.add(tapa); // esconde o que fica "abaixo" do quebra-cabeça
   const sombra = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: texturaSombra(), transparent: true, depthWrite: false }));
   sombra.scale.set(600, 230, 1); sombra.position.set(509, 482, -0.5); ancora.add(sombra); // sombra macia da arca sobre o quebra-cabeça
+  const ond = criarOndinhas(); ond.scale.set(980, 420, 1); ond.position.set(509, 482, -0.8); ancora.add(ond); ancora.userData.ondinhas = ond;
   ambiente(rAR, cenaAR);
 }
 function colocarArcaAR(arca) {
@@ -472,17 +499,35 @@ function projecaoAR() {
   camAR.projectionMatrixInverse.copy(camAR.projectionMatrix).invert();
 }
 const mAlvo = new THREE.Matrix4(), pA = new THREE.Vector3(), qA = new THREE.Quaternion(), sA = new THREE.Vector3(), pV = new THREE.Vector3(), qV = new THREE.Quaternion(), sV = new THREE.Vector3(1, 1, 1);
+// filtro "One Euro": parado fica firme (sem tremer), mexendo responde rápido
+class UmEuro { constructor(minC, beta, dC = 1) { this.minC = minC; this.beta = beta; this.dC = dC; this.x = null; this.dx = 0; }
+  a(c, dt) { const tau = 1 / (2 * Math.PI * c); return 1 / (1 + tau / dt); }
+  f(x, dt) { if (this.x === null) { this.x = x; this.dx = 0; return x; } const dx = (x - this.x) / dt; this.dx += (dx - this.dx) * this.a(this.dC, dt);
+    this.x += (x - this.x) * this.a(this.minC + this.beta * Math.abs(this.dx), dt); return this.x; }
+  zera() { this.x = null; } }
+const filtroP = [0, 1, 2].map(() => new UmEuro(0.9, 0.004)), filtroQ = [0, 1, 2, 3].map(() => new UmEuro(1.1, 0.6));
+const zeraFiltro = () => { filtroP.forEach(f => f.zera()); filtroQ.forEach(f => f.zera()); };
+let tPose = 0, pendente = null, saltos = 0;
 function definirPose(T) {
   if (DEBUG) window.__arcaT = T;
   mAlvo.set(T[0][0], T[0][1], T[0][2], T[0][3], -T[1][0], -T[1][1], -T[1][2], -T[1][3], -T[2][0], -T[2][1], -T[2][2], -T[2][3], 0, 0, 0, 1);
-  mAlvo.decompose(pA, qA, sA); if (!poseVista) { pV.copy(pA); qV.copy(qA); sV.copy(sA); } poseVista = true; ultimaVez = performance.now();
+  const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); mAlvo.decompose(p, q, s);
+  const agora = performance.now(), dt = Math.min(0.5, Math.max(0.016, (agora - tPose) / 1000));
+  if (poseVista && agora - ultimaVez < 1500) { // salto isolado (leitura errada de um quadro): só aceita se o próximo confirmar
+    const salto = p.distanceTo(pA) / Math.max(1, pA.length()), giro = q.angleTo(qA);
+    if (salto > 0.18 || giro > 0.45) { if (!pendente || pendente.distanceTo(p) / Math.max(1, p.length()) > 0.08) { pendente = p.clone(); saltos++; return; } zeraFiltro(); }
+  } else zeraFiltro();
+  pendente = null; if (q.dot(qA) < 0) q.set(-q.x, -q.y, -q.z, -q.w);
+  const pv = [p.x, p.y, p.z].map((v, i) => filtroP[i].f(v, dt)), qv = [q.x, q.y, q.z, q.w].map((v, i) => filtroQ[i].f(v, dt));
+  pA.set(pv[0], pv[1], pv[2]); qA.set(qv[0], qv[1], qv[2], qv[3]).normalize(); sA.copy(s);
+  if (!poseVista) { pV.copy(pA); qV.copy(qA); sV.copy(sA); } poseVista = true; ultimaVez = agora; tPose = agora;
 }
 function desenharAR() {
   if (!rAR || !$('#camera').classList.contains('ativa')) return;
   rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
-  if (poseVista) { pV.lerp(pA, 0.3); qV.slerp(qA, 0.3); sV.lerp(sA, 0.3); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
+  if (poseVista) { pV.lerp(pA, 0.35); qV.slerp(qA, 0.35); sV.lerp(sA, 0.35); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
   const recente = performance.now() - ultimaVez < 4000; ancora.visible = !!arcaAR && poseVista && recente; // se o reconhecimento falhar alguns quadros, a arca fica no último lugar
-  if (arcaAR) { const t = performance.now() / 1000; arcaAR.children[0].position.y = 0.012 * Math.sin(t * 1.6); arcaAR.children[0].rotation.x = 0.025 * Math.sin(t * 1.1); }
+  if (arcaAR) { const t = performance.now() / 1000; balancar(arcaAR.children[0], t, 0.8); if (ancora.userData.ondinhas) ancora.userData.ondinhas.material.uniforms.uT.value = t; }
   rAR.render(cenaAR, camAR);
   if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
@@ -515,7 +560,7 @@ function fecharCamera() { ativo = false; if (stream) stream.getTracks().forEach(
 // ---------- reconhecimento em ângulo ----------
 // 1) sem posição recente: tenta o quadro como está e "esticado" na vertical (como se o celular estivesse mais de cima)
 // 2) com posição recente: endireita o quadro com a última posição antes de procurar — assim segue firme mesmo bem inclinado
-let cvR = null, cxR = null, Hc = null, tHc = 0, ciclo = 0;
+let cvR = null, cxR = null, Hc = null, tHc = 0, ciclo = 0; const EST = [];
 const HIPOTESES = [1, 1.45, 1.9];
 function pinta(destCx, fonteL, mapa) { // mapa(x, y) -> [xs, ys] no quadro de traço; branco fora
   const im = destCx.createImageData(NW, NH), d = im.data;
@@ -565,7 +610,7 @@ async function passo() {
   desenharQuadro(lendo);
   let achou = false, info = '';
   try {
-    const a = await acharAlvo();
+    const a = await acharAlvo(); EST.push({ ms: performance.now() - t0, ok: !!(a && a.rms < 3), modo: a ? a.modo : '' }); if (EST.length > 40) EST.shift(); if (a) EST.ultimo = a;
     if (a && a.rms < 3) {
       Hc = a.H; tHc = performance.now(); const Tp = poseDaHomografia(Hc); definirPose(Tp); achou = true; if (DEBUG) window.__arcaDbg = { T: Tp, H: Hc, modo: a.modo, mvt: a.mvt, NW, NH };
       info = `${a.modo} · pares ${a.n} · erro ${a.rms.toFixed(2)}px`;
@@ -596,13 +641,109 @@ function terminarLeitura() {
   $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
   status('Pronto! Olhe a arca em cima do quebra-cabeça', 'Ou toque em "Ver em 3D" para girar');
 }
-function animar() { if (!ativo) return; desenharAR(); requestAnimationFrame(animar); }
+function animar() { if (!ativo) return; desenharAR(); fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); }
+function resumoEst() { const ok = EST.filter(e => e.ok).length, ms = EST.reduce((s, e) => s + e.ms, 0) / Math.max(1, EST.length);
+  return { acerto: EST.length ? Math.round(100 * ok / EST.length) : 0, ms: Math.round(ms), n: EST.length }; }
 function mostrarDepuracao(info, ms) {
   const el = $('#dbg'); el.style.display = 'block';
-  if (!el.firstChild) el.innerHTML = '<div id="dtx"></div><canvas id="dcv"></canvas><div class="cores" id="dco"></div>';
-  $('#dtx').textContent = `${VW}x${VH} → ${NW}x${NH} · ${Math.round(ms)}ms · ${info} · fotos ${fotos.length}`;
-  const dc = $('#dcv'); dc.width = NW / 2; dc.height = NH / 2; dc.getContext('2d').drawImage(cv, 0, 0, NW / 2, NH / 2);
+  if (!el.firstChild) { el.innerHTML = '<div id="dtx"></div><canvas id="dcv"></canvas><div class="cores" id="dco"></div><button id="bDiag" type="button" style="margin-top:6px;width:100%;border:0;border-radius:8px;padding:8px;font-weight:800;background:#ffc933;color:#0d2d57">Salvar diagnóstico</button>'; $('#bDiag').onclick = salvarDiagnostico; }
+  const r = resumoEst();
+  $('#dtx').textContent = `v${VERSAO} · ${VW}x${VH} → ${NW}x${NH} · ${Math.round(ms)}ms · ${info} · acerto ${r.acerto}% · fps ${window.__fps || '?'} · qualidade ${QUAL.nivel} · fotos ${fotos.length} · saltos ${saltos}`;
+  const dc = $('#dcv'); dc.width = NW / 2; dc.height = NH / 2; const x = dc.getContext('2d'); x.drawImage(cv, 0, 0, NW / 2, NH / 2);
+  if (Hc && performance.now() - tHc < 1500) { const [mw, mh] = DADOS.alvo; x.strokeStyle = '#18c964'; x.lineWidth = 2; x.beginPath(); [[0, 0], [mw, 0], [mw, mh], [0, mh]].forEach(([a, b], i) => { const [u, v] = aplica(Hc, a, b); i ? x.lineTo(u / 2, v / 2) : x.moveTo(u / 2, v / 2); }); x.closePath(); x.stroke(); }
   if (coresAtuais && !$('#dco').childElementCount) $('#dco').innerHTML = coresAtuais.map(c => `<i style="background:rgb(${c})"></i>`).join('');
+}
+function salvarDiagnostico() { // uma imagem só, para mandar por WhatsApp: foto, traço, contorno achado, cores lidas e números
+  const W = 1280, fw = W, fh = Math.round(W * VH / VW), c = document.createElement('canvas'); c.width = W; c.height = fh + 420;
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  const temFoto = window.__arcaH && fotos.length; x.drawImage(temFoto ? cvFull : video, 0, 0, fw, fh);
+  const H = Hc && performance.now() - tHc < 3000 ? Hc : null;
+  if (H) { const [mw, mh] = DADOS.alvo, k = fw / NW; x.strokeStyle = '#18c964'; x.lineWidth = 4; x.beginPath(); [[0, 0], [mw, 0], [mw, mh], [0, mh]].forEach(([a, b], i) => { const [u, v] = aplica(H, a, b); i ? x.lineTo(u * k, v * k) : x.moveTo(u * k, v * k); }); x.closePath(); x.stroke(); }
+  x.drawImage(cv, 0, fh + 10, 480, Math.round(480 * NH / NW));
+  const r = resumoEst(), u = EST.ultimo || {}, cr = window.__arcaCores || {};
+  const linhas = [`Arca Toys · protótipo v${VERSAO} · gerado em ${new Date().toLocaleString('pt-BR')}`, navigator.userAgent.slice(0, 110), `câmera ${VW}x${VH} · reconhecimento ${NW}x${NH} · qualidade ${QUAL.nivel} · fps ${window.__fps || '?'}`,
+    `acerto ${r.acerto}% em ${r.n} tentativas · ${r.ms} ms por tentativa · saltos descartados ${saltos}`, `último: ${u.modo || '-'} · pares ${u.n || '-'} · erro ${u.rms ? u.rms.toFixed(2) : '-'} px`,
+    `fotos lidas ${fotos.length} · branco ${cr.branco || '-'} · preto ${cr.preto || '-'}`, `peças 3D ${window.__pecas ? window.__pecas.antes + ' → ' + window.__pecas.depois : '-'}`];
+  x.fillStyle = '#1d1b20'; x.font = '600 17px system-ui, sans-serif'; linhas.forEach((l, i) => x.fillText(l, 500, fh + 34 + i * 26));
+  if (coresAtuais) coresAtuais.forEach((cc, i) => { const cx0 = 500 + (i % 16) * 47, cy0 = fh + 228 + Math.floor(i / 16) * 58; x.fillStyle = `rgb(${cc})`; x.fillRect(cx0, cy0, 40, 34); x.strokeStyle = '#999'; x.lineWidth = 1; x.strokeRect(cx0, cy0, 40, 34); x.fillStyle = '#555'; x.font = '11px system-ui'; x.fillText(String(DADOS.regioes[i]), cx0 + 6, cy0 + 48); });
+  const a = document.createElement('a'); a.download = 'arca-diagnostico-' + Date.now() + '.png'; a.href = c.toDataURL('image/png'); a.click();
+}
+
+// ---------- o mar: ondas, espuma, céu e o balanço da arca ----------
+// as mesmas ondas no desenho (GPU) e no balanço da arca (JS): direção, comprimento, altura, velocidade
+const ONDAS = [[[1, 0.25], 3.1, 0.034, 0.9], [[-0.45, 1], 1.9, 0.02, 1.25], [[0.75, -0.65], 1.15, 0.011, 1.7], [[0.15, 1], 0.62, 0.005, 2.4]];
+function alturaMar(x, z, t) { let h = 0; for (const [[dx, dz], L, A, v] of ONDAS) { const n = Math.hypot(dx, dz); h += A * Math.sin((2 * Math.PI / L) * (dx * x + dz * z) / n + t * v); } return h; }
+const GLSL_ONDAS = ONDAS.map(([[dx, dz], L, A, v]) => { const n = Math.hypot(dx, dz); return `h += ${A.toFixed(4)} * sin(${(2 * Math.PI / L).toFixed(4)} * (${(dx / n).toFixed(4)} * p.x + ${(dz / n).toFixed(4)} * p.y) + uT * ${v.toFixed(3)});`; }).join('\n');
+const MAR_PADRAO = { perto: [38, 128, 212], longe: [104, 182, 236] };
+function corMar(cores, ids, padrao) { // usa a cor que a criança pintou no mar; se ficou sem pintura, azul
+  const cs = ids.map(id => corR(cores, id)).filter(c => !(c[0] === PAPEL[0] && c[1] === PAPEL[1] && c[2] === PAPEL[2]));
+  if (!cs.length) return padrao; return [0, 1, 2].map(k => Math.round(cs.reduce((s, c) => s + c[k], 0) / cs.length));
+}
+function criarMar(cores) {
+  const g = new THREE.PlaneGeometry(26, 26, 170, 170); g.rotateX(-Math.PI / 2);
+  const u = {
+    uT: { value: 0 }, uPerto: { value: cor3(corMar(cores, [347, 357], MAR_PADRAO.perto)) }, uLonge: { value: cor3(corMar(cores, [330, 331, 355], MAR_PADRAO.longe)) },
+    uCeu: { value: new THREE.Color(0xd8efff) }, uNevoa: { value: new THREE.Color(0xcfe9ff) }, uSol: { value: new THREE.Vector3(-1.2, 2.2, 1.8).normalize() },
+    uCam: { value: new THREE.Vector3() }, uArca: { value: new THREE.Vector2(0, 0) },
+  };
+  const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: `
+    uniform float uT; varying vec3 vW; varying float vH;
+    void main() { vec4 w = modelMatrix * vec4(position, 1.0); vec2 p = w.xz; float h = 0.0;
+      ${GLSL_ONDAS}
+      w.y += h; vW = w.xyz; vH = h; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `
+    uniform float uT; uniform vec3 uPerto, uLonge, uCeu, uNevoa, uSol, uCam; uniform vec2 uArca; varying vec3 vW; varying float vH;
+    void main() {
+      vec3 n = normalize(cross(dFdx(vW), dFdy(vW))); if (n.y < 0.0) n = -n;   // facetas de brinquedo
+      vec3 v = normalize(uCam - vW); float d = length(vW - uCam);
+      vec3 base = mix(uPerto, uLonge, smoothstep(2.0, 9.0, length(vW.xz)));
+      base *= mix(0.8, 1.15, smoothstep(-0.05, 0.05, vH));                     // vale mais escuro, crista mais clara
+      float luz = max(dot(n, uSol), 0.0); luz = floor(luz * 4.0 + 0.5) / 4.0;   // luz em degraus, jeito de desenho
+      vec3 c = base * (0.7 + 0.38 * luz);
+      c = mix(c, uCeu, pow(1.0 - max(dot(n, v), 0.0), 5.0) * 0.3);            // reflexo do céu de longe
+      c += vec3(1.0) * step(0.985, max(dot(reflect(-uSol, n), v), 0.0)) * 0.35;  // brilho do sol em pontinhos
+      float onda = vH + 0.008 * sin(vW.x * 9.0 + uT * 1.7) * sin(vW.z * 7.0 - uT * 1.3);
+      c = mix(c, vec3(0.97, 0.99, 1.0), smoothstep(0.05, 0.058, onda) * 0.85);   // espuma só na pontinha das cristas
+      vec2 q = (vW.xz - uArca) / vec2(0.9, 0.42); c *= 1.0 - 0.2 * exp(-dot(q, q)); // sombra macia da arca
+      c = mix(c, uNevoa, smoothstep(5.0, 14.0, d));
+      gl_FragColor = vec4(c, 1.0);
+      #include <colorspace_fragment>
+    }` });
+  const mesh = new THREE.Mesh(g, m); mesh.userData.u = u; return mesh;
+}
+function criarCeu() { // degradê do horizonte para o alto, com brilho do sol
+  const m = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, uniforms: { uSol: { value: new THREE.Vector3(-1.2, 2.2, 1.8).normalize() } },
+    vertexShader: 'varying vec3 vD; void main() { vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform vec3 uSol; varying vec3 vD;
+      void main() { float y = max(vD.y, 0.0); vec3 c = mix(vec3(0.81, 0.91, 1.0), vec3(0.36, 0.62, 0.92), pow(y, 0.55));
+        c += vec3(1.0, 0.93, 0.75) * pow(max(dot(vD, uSol), 0.0), 18.0) * 0.45; gl_FragColor = vec4(c, 1.0);
+        #include <colorspace_fragment>
+      }` });
+  return new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), m);
+}
+function criarNuvens() { // nuvenzinhas fofas lá longe (como as do desenho)
+  const g = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, envMapIntensity: 0.3 });
+  [[-6, 2.6, -9, 1.1], [3.5, 3.1, -10, 1.3], [8, 2.2, -6, 0.9], [-9, 2.0, -3, 0.8]].forEach(([x, y, z, s]) => {
+    const n = new THREE.Group(); [[0, 0, 0, 0.7], [0.65, -0.1, 0.1, 0.52], [-0.6, -0.12, 0, 0.5], [0.2, 0.28, -0.05, 0.5]].forEach(([a, b, c, r]) => { const e = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), m); e.position.set(a, b, c); e.scale.y = 0.72; n.add(e); });
+    n.position.set(x, y, z); n.scale.setScalar(s); g.add(n); });
+  return g;
+}
+const balanco = { y: 0, rx: 0, rz: 0 };
+function balancar(obj, t, forca = 1) { // a arca acompanha as ondas, bem de leve
+  const hc = alturaMar(0, 0, t), hp = alturaMar(-0.62, 0, t), hs = alturaMar(0.62, 0, t), hb = alturaMar(0, 0.26, t), he = alturaMar(0, -0.26, t);
+  const alvoY = (hc * 2 + hp + hs + hb + he) / 6 * 0.75 * forca, alvoRz = Math.atan2(hs - hp, 1.24) * 0.55 * forca, alvoRx = -Math.atan2(hb - he, 0.52) * 0.45 * forca;
+  balanco.y += (alvoY - balanco.y) * 0.08; balanco.rz += (alvoRz - balanco.rz) * 0.06; balanco.rx += (alvoRx - balanco.rx) * 0.06;
+  obj.position.y = balanco.y; obj.rotation.z = balanco.rz; obj.rotation.x = balanco.rx;
+}
+function criarOndinhas() { // por cima do quebra-cabeça: ondinhas saindo do casco (em px do alvo)
+  const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 } },
+    vertexShader: 'varying vec2 vU; void main() { vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uT; varying vec2 vU;
+      void main() { vec2 p = (vU - 0.5) * 2.0; float d = length(p);
+        float r = fract(d * 3.0 - uT * 0.35); float anel = smoothstep(0.0, 0.08, r) * smoothstep(0.28, 0.08, r);
+        float a = anel * smoothstep(0.45, 0.55, d) * (1.0 - smoothstep(0.72, 1.0, d)) * 0.8;
+        gl_FragColor = vec4(0.92, 0.97, 1.0, a); }` });
+  return new THREE.Mesh(new THREE.PlaneGeometry(1, 1), m);
 }
 
 // ---------- ver em 3D (sem câmera) ----------
@@ -610,17 +751,16 @@ let r3 = null, cena3 = null, cam3 = null, ctl3 = null, arca3 = null, mar3 = null
 function abrir3D(cores) {
   mostrar('ver3d');
   if (!r3) {
-    r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: true, preserveDrawingBuffer: true }); r3.setPixelRatio(Math.min(2, devicePixelRatio));
+    r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: true, preserveDrawingBuffer: true }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
-    cena3 = new THREE.Scene(); cena3.background = new THREE.Color(0xcfeaff); cena3.fog = new THREE.Fog(0xcfeaff, 6, 16); ambiente(r3, cena3);
-    cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 50); cam3.position.set(-0.75, 0.55, 1.75);
-    const sol = luzes(cena3); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
-    const g = new THREE.PlaneGeometry(30, 30, 90, 90); g.rotateX(-Math.PI / 2);
-    mar3 = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x2a7fd0, roughness: 0.4, metalness: 0, flatShading: true, envMapIntensity: 0.15 })); mar3.receiveShadow = true;
-    mar3.userData.base = Float32Array.from(g.attributes.position.array); cena3.add(mar3);
+    cena3 = new THREE.Scene(); cena3.fog = new THREE.Fog(0xcfe9ff, 7, 18); ambiente(r3, cena3);
+    cena3.add(criarCeu()); cena3.add(criarNuvens());
+    cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 60); cam3.position.set(-0.75, 0.55, 1.75);
+    const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.nivel > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
-    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.49; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; });
+    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; });
   }
+  if (mar3) cena3.remove(mar3); mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) cena3.remove(arca3); mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
   if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
@@ -635,21 +775,22 @@ function anim3(tms) {
   if (!$('#ver3d').classList.contains('ativa')) { loop3 = false; return; }
   const t = tms / 1000, c = $('#cena'); const w = c.clientWidth, h = c.clientHeight;
   if (c.width !== Math.round(w * r3.getPixelRatio()) || c.height !== Math.round(h * r3.getPixelRatio())) { r3.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); enquadrar(); }
-  const p = mar3.geometry.attributes.position, b = mar3.userData.base;
-  for (let i = 0; i < p.count; i++) { const x = b[3*i], z = b[3*i+2]; p.array[3*i+1] = 0.035 * Math.sin(x * 2.1 + t * 1.3) + 0.025 * Math.sin(z * 2.7 + t * 0.9); }
-  p.needsUpdate = true; mar3.geometry.computeVertexNormals();
-  if (arca3) { arca3.position.y = 0.015 * Math.sin(t * 1.4); arca3.rotation.z = 0.02 * Math.sin(t * 0.9); arca3.rotation.x = 0.015 * Math.sin(t * 1.2); }
-  const esp = cena3.userData.espuma; if (esp) { esp.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.4); esp.scale.setScalar(1 + 0.02 * Math.sin(t * 1.4 + 1)); }
+  const u = mar3.userData.u; u.uT.value = t; u.uCam.value.copy(cam3.position);
+  if (arca3) balancar(arca3, t);
+  const esp = cena3.userData.espuma; if (esp) { esp.position.y = balanco.y * 0.6; esp.rotation.z = balanco.rz * 0.5; esp.material.opacity = 0.8 + 0.2 * Math.sin(t * 1.3); }
+  fps3D(tms, () => { r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio)); if (QUAL.nivel === 0) cena3.userData.sol.castShadow = false; });
   ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
 }
 function coresExemplo() {
   // pintura de exemplo, como uma criança faria: cada tábua de uma cor
   const pal = [[226, 52, 48], [246, 133, 36], [250, 208, 50], [96, 186, 72], [28, 142, 84], [54, 162, 226], [40, 82, 170], [134, 70, 176], [233, 98, 160], [146, 92, 50], [196, 138, 84]];
   let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  return DADOS.regioes.map(() => pal[Math.floor(rnd() * pal.length)]);
+  const mar = { 347: [40, 120, 210], 357: [30, 100, 190], 330: [90, 170, 230], 331: [90, 170, 230], 355: [70, 150, 220] };
+  return DADOS.regioes.map(id => mar[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
 // ---------- botões ----------
+$('#versao').textContent = 'Protótipo · versão ' + VERSAO;
 $('#bCamera').onclick = abrirCamera;
 $('#bExemplo').onclick = async () => { await carregarDados(); abrir3D(coresExemplo()); };
 $('#cVoltar').onclick = fecharCamera;
