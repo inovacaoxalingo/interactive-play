@@ -110,10 +110,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.9 · 06/11/2026';
+const VERSAO = '0.10 · 06/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -133,6 +136,7 @@ let DADOS = null;
 async function carregarDados() {
   if (DADOS) return;
   DADOS = await fetch('assets/dados.json').then(r => r.json());
+  carregarPersonagens(); // os bichos (Tripo) chegam em paralelo; a arca não espera por eles
   MASCARAS = {}; // onde a foto vira textura (parede e frontão da cabine): 1 = dentro da parte, longe das linhas
   await Promise.all(Object.entries(DADOS.texturas || {}).map(async ([nome, t]) => { try {
     const im = new Image(); im.src = `assets/masc_${nome}.png`; await im.decode();
@@ -412,6 +416,44 @@ function calcularCores(fotos) {
   return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0, texturas, tiras };
 }
 
+// ---------- personagens (modelos do Tripo, em partes; cada parte pega a cor da região correspondente do desenho) ----------
+let PERSONAGENS = null, BIN_P = null;
+async function carregarPersonagens() {
+  if (PERSONAGENS) return;
+  try { const d = await fetch('assets/noe.json').then(r => r.json());
+    const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
+    BIN_P = new Uint16Array(await new Response(new Blob([bruto]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); PERSONAGENS = d;
+  } catch (e) { PERSONAGENS = {}; }
+}
+const ESF_OLHO = new THREE.SphereGeometry(1, 16, 12);
+function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; mapa: parte -> região do desenho (ou cor fixa)
+  const pega = ([i, n]) => BIN_P.subarray(i / 2, i / 2 + n), raiz = new THREE.Group(), pad = { roughness: 0.55, metalness: 0, envMapIntensity: 0.45 };
+  const corParte = p => { const m = mapa[p]; return Array.isArray(m) ? m : (m !== undefined ? corR(cores, m) : PAPEL); };
+  for (const pc of d.pecas) {
+    const q = pega(pc.v), pos = new Float32Array(q.length);
+    for (let i = 0; i < q.length; i++) pos[i] = (pc.lo[i % 3] + q[i] / 65535 * pc.esc) * escala;
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const nomes = Object.keys(pc.partes), idx = []; let ini = 0;
+    nomes.forEach((p, k) => { const a = pega(pc.partes[p]); for (let i = 0; i < a.length; i++) idx.push(a[i]); geo.addGroup(ini, a.length, k); ini += a.length; });
+    geo.setIndex(idx); geo.computeVertexNormals();
+    const mats = nomes.map(p => p === 'tinta' ? new THREE.MeshBasicMaterial({ color: 0x1d1b20 }) : new THREE.MeshStandardMaterial({ color: cor3(corParte(p)), ...pad }));
+    const corpo = new THREE.Mesh(geo, mats); corpo.castShadow = true; corpo.receiveShadow = true; raiz.add(corpo);
+    const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide });
+    cont.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${(0.0075 * escala).toFixed(5)};`); };
+    raiz.add(new THREE.Mesh(geo, cont));
+    const nor = geo.attributes.normal.array, S = pega(pc.linhas), lp = new Float32Array(S.length * 3);
+    for (let i = 0; i < S.length; i++) { const v = S[i]; for (let c = 0; c < 3; c++) lp[3 * i + c] = pos[3 * v + c] + nor[3 * v + c] * 0.0015 * escala; }
+    const linha = w => { const m = new LineMaterial({ color: 0x1d1b20, linewidth: w * escala, worldUnits: true }); m.resolution.set(innerWidth, innerHeight); return m; };
+    if (S.length) { const lg = new LineSegmentsGeometry(); lg.setPositions(lp); raiz.add(new LineSegments2(lg, linha(0.0055))); }
+    for (const r of pc.riscos) { const a = []; for (let i = 0; i < r.length - 1; i++) a.push(...r[i].map(v => v * escala), ...r[i + 1].map(v => v * escala)); const lg = new LineSegmentsGeometry(); lg.setPositions(a); raiz.add(new LineSegments2(lg, linha(0.008))); }
+    for (const [x, y, z, r, nx, ny, nz] of pc.olhos) {
+      const o = new THREE.Group(); o.position.set(x * escala, y * escala, z * escala); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(nx, ny, nz)); raiz.add(o);
+      const e = new THREE.Mesh(ESF_OLHO, new THREE.MeshStandardMaterial({ color: 0x1d1b20, roughness: 0.25 })); e.scale.set(r * escala, r * 1.25 * escala, r * 0.5 * escala); o.add(e);
+      const br = new THREE.Mesh(ESF_OLHO, new THREE.MeshBasicMaterial({ color: 0xffffff })); br.scale.setScalar(r * 0.33 * escala); br.position.set(r * 0.35 * escala, r * 0.45 * escala, r * 0.42 * escala); o.add(br);
+    }
+  }
+  return raiz;
+}
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
 const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
 const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
@@ -585,6 +627,9 @@ function criarArca(cores) {
       m.position.set(XC, ye + dy / 2, s * ze / 2).addScaledVector(n, T / 2); poe(m, 0.005); }
     const cume = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, LR + 0.02, 18), ponta); cume.rotation.z = Math.PI / 2; cume.position.set(XC, YR + 0.03, 0); poe(cume, 0.004);
   }
+  // Noé no convés da proa (na frente da cabine não cabe: o beiral do telhado pega na cabeça dele), virado um pouco para quem olha
+  if (PERSONAGENS && PERSONAGENS.noe_t && DADOS.noe) { const mapa = { ...DADOS.noe, cajado: [170, 115, 60], pes: [150, 95, 55] };
+    const xn = -0.53, un = 0.5 + xn / CL, noe = montarPersonagem(PERSONAGENS.noe_t, mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.01); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
