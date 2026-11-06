@@ -113,7 +113,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.8 · 06/11/2026';
+const VERSAO = '0.9 · 06/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -293,11 +293,14 @@ const mediana = a => { const s = [...a].sort((x, y) => x - y); return s.length ?
 function amostrarFoto(Hd) { // Hd: desenho (2048) -> pixel do vídeo
   const img = dadosCheio();
   const ler = (x, y, raio = 1) => { const [u, v] = aplica(Hd, x, y); return lerPixel(img, VW, VH, u, v, raio); };
-  return { regioes: DADOS.amostras.map((ps, r) => ps.map(([x, y]) => ler(x, y, DADOS.espessura[r] < 6 ? 0 : 1)).filter(Boolean)), fundo: DADOS.fundo.map(([x, y]) => [x, y, ler(x, y)]).filter(p => p[2]), preto: DADOS.preto.map(([x, y]) => ler(x, y)).filter(Boolean) };
+  const T = DADOS.tiras, lerTira = pts => { const o = []; for (let i = 0; i < pts.length; i += 2) o.push(ler(pts[i], pts[i + 1], 0)); return o; };
+  return { tiras: T ? { borda: lerTira(T.borda), faixas: T.faixas.map(lerTira) } : null,
+    regioes: DADOS.amostras.map((ps, r) => ps.map(([x, y]) => ler(x, y, DADOS.espessura[r] < 6 ? 0 : 1)).filter(Boolean)), fundo: DADOS.fundo.map(([x, y]) => [x, y, ler(x, y)]).filter(p => p[2]), preto: DADOS.preto.map(([x, y]) => ler(x, y)).filter(Boolean) };
 }
 function corDaTinta(pts) { // pontos 0..1 de uma parte: devolve a cor da canetinha (0..1) ou null se ficou sem pintura
     // canetinha deixa riscos com papel aparecendo: separa os pontos em papel, traço preto e tinta; se pelo menos 1/4 é tinta, a parte foi pintada
     if (!pts.length) return null;
+    if (pts.length > 500) { const passo = pts.length / 500, a = []; for (let i = 0; i < 500; i++) a.push(pts[Math.floor(i * passo)]); pts = a; } // a conta de grupos cresce com o quadrado: 500 pontos já bastam
     const ehPapel = p => Math.min(...p) > 0.8 && Math.max(...p) - Math.min(...p) < 0.12, ehEscuro = p => Math.max(...p) < 0.28 && Math.max(...p) - Math.min(...p) < 0.1;
     const muitoEscuro = pts.filter(ehEscuro).length > pts.length / 2; // pintada de preto (e não o traço)
     const tinta = pts.filter(p => !ehPapel(p) && (muitoEscuro || !ehEscuro(p)));
@@ -309,6 +312,34 @@ function corDaTinta(pts) { // pontos 0..1 de uma parte: devolve a cor da canetin
           .sort((A, B) => Math.hypot(B.l[1], B.l[2]) - Math.hypot(A.l[1], A.l[2]));
         if (mesmo.length >= 3) { const top = mesmo.slice(0, Math.max(2, Math.ceil(mesmo.length * 0.5))); c = [0, 1, 2].map(k => top.reduce((s, q) => s + q.p[k], 0) / top.length); } } }
     return c;
+}
+// largura mínima de uma listra: 1 cm no quebra-cabeça (410 mm = 2048 px do desenho). As linhas pretas entre as tábuas comem ~1,5 mm
+// de cada listra, então a parte pintada que sobra de uma listra de 1 cm tem uns 7 mm: esse é o mínimo medido
+const PX_MM = 2048 / 410, LISTRA_CM = +(new URLSearchParams(location.search).get('listra') || 1), LISTRA_PX = Math.max(4, (LISTRA_CM * 10 - 3) * PX_MM);
+const distLab = (a, b) => { if (!a || !b) return a === b ? 0 : 99; const A = paraLab(a), Bq = paraLab(b); return Math.hypot((A[0] - Bq[0]) * 0.5, A[1] - Bq[1], A[2] - Bq[2]); };
+const mesmaTinta = (a, b) => { if (distLab(a, b) < 20) return true; if (!a || !b) return false; // mesma canetinha, só mais forte ou mais rala: mesmo tom
+  const A = paraLab(a), Bq = paraLab(b), ca = Math.hypot(A[1], A[2]), cb = Math.hypot(Bq[1], Bq[2]); if (ca < 18 || cb < 18) return false;
+  let d = Math.abs(Math.atan2(A[2], A[1]) - Math.atan2(Bq[2], Bq[1])) * 180 / Math.PI; if (d > 180) d = 360 - d; return d < 13; };
+function listrasLisas(cols, minB) { // cols: [{pts, c}] lado a lado (c undefined = sem leitura ali). Junta em listras de cor única
+  let faixas = [];
+  for (let b = 0; b < cols.length; b++) { const cb = cols[b]; const ult = faixas[faixas.length - 1];
+    if (cb.c === undefined) { if (ult && ult.c === undefined) { ult.b1 = b; } else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: undefined }); continue; }
+    if (ult && ult.c !== undefined && mesmaTinta(ult.c, cb.c)) { ult.b1 = b; ult.pts.push(...cb.pts); }
+    else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: cb.c }); }
+  // trechos sem leitura (escondidos atrás dos bichos, linhas): metade vai para cada vizinho
+  for (let i = 0; i < faixas.length && faixas.length > 1; i++) { const f = faixas[i]; if (f.c !== undefined) continue;
+    const a = faixas[i - 1], z = faixas[i + 1];
+    if (a && z) { const m = Math.floor((f.b0 + f.b1) / 2); a.b1 = m; z.b0 = m + 1; } else if (a) a.b1 = f.b1; else z.b0 = f.b0;
+    faixas.splice(i, 1); i--; }
+  const juntaIguais = () => { faixas.forEach(f => { if (f.pts.length >= 4) f.c = corDaTinta(f.pts); }); for (let i = 1; i < faixas.length; i++) { const a = faixas[i - 1], z = faixas[i]; if (mesmaTinta(a.c, z.c)) { a.b1 = z.b1; a.pts.push(...z.pts); faixas.splice(i, 1); i--; } } };
+  juntaIguais();
+  for (let pass = 0; pass < 3; pass++) for (let i = 0; i < faixas.length && faixas.length > 1; i++) { const f = faixas[i]; if (f.b1 - f.b0 + 1 >= minB) continue; // listra fininha demais: junta com a vizinha mais parecida
+    const a = faixas[i - 1], z = faixas[i + 1], alvo = !a ? z : !z ? a : (distLab(a.c, f.c) <= distLab(z.c, f.c) ? a : z);
+    alvo.b0 = Math.min(alvo.b0, f.b0); alvo.b1 = Math.max(alvo.b1, f.b1); alvo.pts.push(...f.pts); faixas.splice(i, 1); i--; }
+  juntaIguais();
+  return faixas.map(f => { const c = f.pts.length ? corDaTinta(f.pts) : null; let o;
+    if (c) { const m = (c[0] + c[1] + c[2]) / 3; o = c.map(v => Math.round(255 * Math.min(1, Math.max(0, m + (v - m) * 1.12)))); } else o = PAPEL;
+    return { b0: f.b0, b1: f.b1, cor: o }; });
 }
 function calcularCores(fotos) {
   // preto do traço e branco do papel (por área, para compensar luz desigual)
@@ -348,24 +379,23 @@ function calcularCores(fotos) {
       for (let c = 0; c < 3; c++) rgb[3 * k + c] = v[c] * PAPEL[c]; ok[k] = 1; n++; }
     if (n < 0.05 * w * h) continue;
     // pintura lisa: a parede vira listras de cor única (as falhas do papel e as manchas escuras somem)
-    const B = 4, nb = Math.ceil(w / B), cols = [];
+    const B = 4, nb = Math.ceil(w / B), cols = [], pxB = B * (x1 - x0) / w; // px do desenho por coluna
     for (let b = 0; b < nb; b++) { const pts = []; for (let x = b * B; x < Math.min(w, (b + 1) * B); x++) for (let y = 0; y < h; y++) { const k = y * w + x; if (ok[k]) pts.push([rgb[3 * k] / PAPEL[0], rgb[3 * k + 1] / PAPEL[1], rgb[3 * k + 2] / PAPEL[2]]); }
       cols.push(pts.length >= 6 ? { pts, c: corDaTinta(pts) } : { pts, c: undefined }); }
-    const dist = (a, b) => { if (!a || !b) return a === b ? 0 : 99; const A = paraLab(a), Bq = paraLab(b); return Math.hypot((A[0] - Bq[0]) * 0.5, A[1] - Bq[1], A[2] - Bq[2]); };
-    let faixas = [];
-    for (let b = 0; b < nb; b++) { const cb = cols[b]; const ult = faixas[faixas.length - 1];
-      if (cb.c === undefined) { if (ult) { ult.b1 = b; ult.pts.push(...cb.pts); } else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: undefined }); continue; }
-      if (ult && (ult.c === undefined || dist(ult.c, cb.c) < 20)) { ult.b1 = b; ult.pts.push(...cb.pts); if (ult.c === undefined) ult.c = cb.c; }
-      else faixas.push({ b0: b, b1: b, pts: [...cb.pts], c: cb.c }); }
-    for (let pass = 0; pass < 3; pass++) for (let i = 0; i < faixas.length && faixas.length > 1; i++) { const f = faixas[i]; if (f.b1 - f.b0 + 1 >= 3) continue; // listra fininha demais: junta com a vizinha mais parecida
-      const a = faixas[i - 1], z = faixas[i + 1], alvo = !a ? z : !z ? a : (dist(a.c, f.c) <= dist(z.c, f.c) ? a : z);
-      alvo.b0 = Math.min(alvo.b0, f.b0); alvo.b1 = Math.max(alvo.b1, f.b1); alvo.pts.push(...f.pts); faixas.splice(i, 1); i--; }
-    for (const f of faixas) { let c = f.pts.length ? corDaTinta(f.pts) : null; let o;
-      if (c) { const m = (c[0] + c[1] + c[2]) / 3; o = c.map(v => Math.round(255 * Math.min(1, Math.max(0, m + (v - m) * 1.12)))); } else o = PAPEL;
-      for (let x = f.b0 * B; x < Math.min(w, (f.b1 + 1) * B); x++) for (let y = 0; y < h; y++) { const k = y * w + x; rgb[3 * k] = o[0]; rgb[3 * k + 1] = o[1]; rgb[3 * k + 2] = o[2]; } }
+    for (const f of listrasLisas(cols, Math.ceil(LISTRA_PX / pxB))) for (let x = f.b0 * B; x < Math.min(w, (f.b1 + 1) * B); x++) for (let y = 0; y < h; y++) { const k = y * w + x; rgb[3 * k] = f.cor[0]; rgb[3 * k + 1] = f.cor[1]; rgb[3 * k + 2] = f.cor[2]; }
     const cv2 = document.createElement('canvas'); cv2.width = w; cv2.height = h; const x = cv2.getContext('2d'), im = x.createImageData(w, h);
     for (let k = 0; k < w * h; k++) { im.data[4 * k] = rgb[3 * k]; im.data[4 * k + 1] = rgb[3 * k + 1]; im.data[4 * k + 2] = rgb[3 * k + 2]; im.data[4 * k + 3] = 255; }
     x.putImageData(im, 0, 0); texturas[nome] = cv2; }
+  // borda e faixas do casco: a cor muda ao longo do comprimento (trechos pintados de cores diferentes)
+  let tiras = null;
+  if (DADOS.tiras && fotos.length && fotos[0].tiras) { const T = DADOS.tiras, PASSO_U = 10, nb = Math.ceil((T.x1 - T.x0) / PASSO_U);
+    const tira = (pts, lidos) => { const cols = Array.from({ length: nb }, () => ({ pts: [] }));
+      fotos.forEach(f => { const L = lidos(f); for (let i = 0, k = 0; i < pts.length; i += 2, k++) { const p = L[k]; if (!p) continue; const x = pts[i], y = pts[i + 1], Wl = branco(x, y);
+        const b = Math.min(nb - 1, Math.max(0, Math.floor((x - T.x0) / PASSO_U)));
+        cols[b].pts.push([0, 1, 2].map(c => { const k0 = 0.3 * K[c]; return Math.min(1.05, Math.max(0, (p[c] - k0) / Math.max(20, Wl[c] - k0))); })); } });
+      cols.forEach(c => { c.c = c.pts.length >= 4 ? corDaTinta(c.pts) : undefined; });
+      return listrasLisas(cols, Math.ceil(LISTRA_PX / PASSO_U)).map(f => [f.b0 / nb, (f.b1 + 1) / nb, f.cor]); };
+    tiras = { borda: tira(T.borda, f => f.tiras.borda), faixas: T.faixas.map((pts, i) => tira(pts, f => f.tiras.faixas[i])) }; }
   // a água: a cor que mais aparece pintada no mar, ponto a ponto (cada ponto vale a área da parte dele)
   const itens = []; let total = 0;
   (DADOS.mar || []).forEach(id => { const r = DADOS.regioes.indexOf(id); if (r < 0) return; const ps = DADOS.amostras[r], area = (DADOS.area || [])[r] || 1; total += area;
@@ -379,7 +409,7 @@ function calcularCores(fotos) {
       itens.push({ c, peso: area / lidos.length }); }); });
   const dom = corDominante(itens, total); let mar = null;
   if (dom) { const m = (dom.c[0] + dom.c[1] + dom.c[2]) / 3; mar = dom.c.map(v => Math.round(255 * Math.min(1, Math.max(0, m + (v - m) * 1.12)))); }
-  return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0, texturas };
+  return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0, texturas, tiras };
 }
 
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
@@ -404,7 +434,9 @@ const ALT_FAIXA = [0.19, 0.21, 0.2, 0.2, 0.2]; // altura de cada faixa do casco,
 function texCasco(cores) {
   return dupla(2048, 512, (x, W, H, rel) => {
     let y = 0;
-    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i]; segs.forEach(([u0, u1, idx]) => preenche(x, rel, DADOS.regioes[idx] === 211 ? corR(cores, 244) : (cores[idx] || PAPEL), u0 * W - 1, y, (u1 - u0) * W + 2, h + 1)); // a 211 é a borda: vai no corrimão
+    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i], lidas = cores.tiras && cores.tiras.faixas[i]; // lidas: trecho a trecho, do jeito que foi pintado
+      if (lidas && lidas.length) lidas.forEach(([u0, u1, c]) => preenche(x, rel, c, u0 * W - 1, y, (u1 - u0) * W + 2, h + 1));
+      else segs.forEach(([u0, u1, idx]) => preenche(x, rel, DADOS.regioes[idx] === 211 ? corR(cores, 244) : (cores[idx] || PAPEL), u0 * W - 1, y, (u1 - u0) * W + 2, h + 1)); // a 211 é a borda: vai no corrimão
       for (let k = 0; k < 9; k++) { const u = (k + 0.5 + (i % 2) * 0.5) / 9; traco(x, rel, 4, [u * W, y + 6, u * W, y + h - 6], 0.22); } // emendas das tábuas
       y += h; });
     y = 0; for (let i = 0; i < DADOS.faixas.length - 1; i++) { y += H * ALT_FAIXA[i]; traco(x, rel, 8, [0, y, W, y]); }
@@ -414,6 +446,12 @@ function texCasco(cores) {
       else { preenche(x, false, cores[idx] || PAPEL, cx - w / 2, cy - h / 2, w, h); preenche(x, false, ESCURO, cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44); }
       retangulo(x, rel, 8, cx - w / 2, cy - h / 2, w, h); retangulo(x, rel, 6, cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44); });
   });
+}
+function texBorda(cores) { // a borda de cima do casco, trecho a trecho (proa -> popa)
+  const c = document.createElement('canvas'); c.width = 512; c.height = 4; const x = c.getContext('2d'), b = cores.tiras && cores.tiras.borda;
+  if (b && b.length) b.forEach(([u0, u1, cor]) => { x.fillStyle = rgb(cor); x.fillRect(Math.floor(u0 * 512), 0, Math.ceil((u1 - u0) * 512) + 1, 4); });
+  else { x.fillStyle = rgb(corR(cores, 211)); x.fillRect(0, 0, 512, 4); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; return t;
 }
 const JANELAS_LADO = [[0.29, 102, 109], [0.71, 107, 117]]; // posição na parede, moldura, vidro (janelas da esquerda e da direita do desenho)
 function texParede(cores) {
@@ -491,20 +529,21 @@ function criarArca(cores) {
       for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = o + i * (NV + 1) + j, b = a + NV + 1; if (lado > 0) ind.push(a, b, b + 1, a, b + 1, a + 1); else ind.push(a, b + 1, b, a, a + 1, b + 1); } }
     poe(new THREE.Mesh(geo(pos, uv, ind), matT(texCasco(cores), { side: THREE.DoubleSide })), 0.007); }
   // borda, parede de dentro e convés de tábuas
-  { const ENC = 0.86, FUNDO = 0.055, tp = [], ti = [], dp = [], di = [], cp = [], cu = [], ci = [];
+  { const ENC = 0.86, FUNDO = 0.055, tp = [], tu = [], ti = [], dp = [], di = [], cp = [], cu = [], ci = [], tb = texBorda(cores);
     for (let i = 0; i <= NU; i++) { const u = i / NU, yt = bordaY(u), fora = cascoPonto(u, 1, 1), x = fora[0], z = fora[2], zi = z * ENC;
-      tp.push(x, yt, z, x, yt, zi, x, yt, -zi, x, yt, -z);
+      tp.push(x, yt, z, x, yt, zi, x, yt, -zi, x, yt, -z); tu.push(u, 0.5, u, 0.5, u, 0.5, u, 0.5);
       dp.push(x, yt, zi, x, yt - FUNDO, zi, x, yt, -zi, x, yt - FUNDO, -zi);
       cp.push(x, yt - FUNDO, zi, x, yt - FUNDO, -zi); cu.push(u, 0, u, 1);
       if (i < NU) { const a = 4 * i, b = a + 4; ti.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3);
         di.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3); const c = 2 * i, d = c + 2; ci.push(c, d, c + 1, c + 1, d, d + 1); } }
-    poe(new THREE.Mesh(geo(tp, null, ti), mat(corR(cores, 211), 0.95, { side: THREE.DoubleSide })));
+    poe(new THREE.Mesh(geo(tp, tu, ti), new THREE.MeshStandardMaterial({ map: tb, color: cor3([255, 255, 255], 0.95), ...pad, side: THREE.DoubleSide })));
     poe(new THREE.Mesh(geo(dp, null, di), mat(corR(cores, 285), 0.82, { side: THREE.DoubleSide })));
     const tc = texConves(); tc.map.wrapS = tc.bump.wrapS = THREE.RepeatWrapping; tc.map.repeat.set(3, 1); tc.bump.repeat.set(3, 1);
     poe(new THREE.Mesh(geo(cp, cu, ci), matT(tc, { side: THREE.DoubleSide })));
     // corrimão arredondado dos dois lados
     for (const lado of [1, -1]) { const pts = []; for (let i = 2; i <= NU - 2; i += 2) { const u = i / NU, f = cascoPonto(u, 1, lado); pts.push(new THREE.Vector3(f[0], bordaY(u) + 0.004, f[2] * 0.97)); }
-      poe(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.013, 10, false), mat(corR(cores, 211), 0.85)), 0.004); } }
+      const tt = tb.clone(); tt.repeat.set(1 - 4 / NU, 1); tt.offset.set(2 / NU, 0); tt.needsUpdate = true; // o tubo vai de u = 2/NU a 1 - 2/NU
+      poe(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.013, 10, false), new THREE.MeshStandardMaterial({ map: tt, color: cor3([255, 255, 255], 0.85), ...pad })), 0.004); } }
   // mastros da proa e da popa (a peça escura do desenho), com uma bolinha na ponta
   for (const u of [0, 1]) { const sx = u ? 1 : -1, base = cascoPonto(u, 0, 1), top = cascoPonto(u, 1, 1);
     const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(base[0] - sx * 0.004, base[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.006, (base[1] + top[1]) / 2, 0), new THREE.Vector3(top[0] + sx * 0.02, top[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.06, top[1] + 0.09, 0)]);
@@ -549,6 +588,19 @@ function criarArca(cores) {
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
+}
+// arco-íris pintado: as 6 faixas do desenho (de fora para dentro), em meia-volta, com o traço preto aparecendo entre elas
+const ARCO_D = { cx: 1476, r0: 428, passo: 35.6 }; // centro (x) e raio de fora no desenho, largura de cada faixa (px do desenho)
+function criarArco(cores, escala) { // escala: unidades 3D por px do desenho. Sem nenhuma faixa pintada, não tem arco-íris
+  const ids = DADOS.arco || [], cs = ids.map(id => corR(cores, id)), pintada = c => Math.abs(c[0] - PAPEL[0]) + Math.abs(c[1] - PAPEL[1]) + Math.abs(c[2] - PAPEL[2]) > 12;
+  if (!ids.length || !cs.some(pintada) || /arco=0/.test(location.search)) return null;
+  const g = new THREE.Group(), meia = (r1, r2, prof) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r2, 0, Math.PI, false); sh.absarc(0, 0, r1, Math.PI, 0, true);
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: prof, bevelEnabled: false, curveSegments: 56 }); geo.translate(0, 0, -prof / 2); return geo; };
+  const R0 = ARCO_D.r0 * escala, P = ARCO_D.passo * escala, prof = P * 0.55, linha = P * 0.1, faixas = [];
+  const fundo = new THREE.Mesh(meia(R0 - 6 * P - linha, R0 + linha, prof * 0.8), new THREE.MeshBasicMaterial({ color: 0x1d1b20 })); fundo.position.z = -prof * 0.2; g.add(fundo);
+  cs.forEach((c, i) => { const m = new THREE.Mesh(meia(R0 - (i + 1) * P + linha / 2, R0 - i * P - linha / 2, prof), new THREE.MeshLambertMaterial({ color: cor3(c), emissive: cor3(c, 0.3) }));
+    g.add(m); faixas.push(m); });
+  g.userData.faixas = faixas; g.userData.fundo = fundo; return g;
 }
 function otimizar(arca) { // junta as peças que usam o mesmo material: a arca passa de ~150 para ~30 desenhos por quadro
   arca.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(arca.matrixWorld).invert(), grupos = new Map(); let antes = 0;
@@ -612,7 +664,10 @@ function colocarArcaAR(arca, cores) {
   g.matrixAutoUpdate = false; g.matrix.set(k, 0, 0, cx, 0, 0, k, cy, 0, -k, 0, 0, 0, 0, 0, 1);
   marAR = criarAquario(cores); espumaAR = criarEspuma(); espumaAR.renderOrder = 5;
   const boia = new THREE.Group(); boia.add(arca); boia.add(espumaAR); // a arca e a espuma sobem junto com a água
-  g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca; ancora.add(g); tSubida = performance.now();
+  g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca;
+  const e = DADOS.alvo[0] / 2048 / k, arco = criarArco(cores, e); // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
+  if (arco) { arco.position.set((ARCO_D.cx * DADOS.alvo[0] / 2048 - cx) / k, 0, retanguloAR().z0 + 0.22); g.add(arco); g.userData.arco = arco; }
+  ancora.add(g); tSubida = performance.now();
 }
 function projecaoAR() {
   const Wc = innerWidth, Hc = innerHeight, sc = Math.max(Wc / VW, Hc / VH), k = sc * VW / NW, ox = (Wc - VW * sc) / 2, oy = (Hc - VH * sc) / 2;
@@ -663,7 +718,11 @@ function desenharAR() {
     ancora.updateMatrixWorld(true); u.uCamL.value.set(0, 0, 0).applyMatrix4(mInv.copy(marAR.matrixWorld).invert());
     const boia = arcaAR.userData.boia, arca = arcaAR.userData.arca; balancar(arca, t, 0.85 * nivel, alturaAR);
     boia.position.y = ALTURA_AGUA * nivel; const sc = aparece < 1 ? 0.6 + 0.4 * ease(aparece) + 0.06 * Math.sin(aparece * Math.PI) : 1;
-    boia.scale.setScalar(Math.max(0.001, sc)); boia.visible = aparece > 0; espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5; }
+    boia.scale.setScalar(Math.max(0.001, sc)); boia.visible = aparece > 0;
+    const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; // as faixas abrem uma a uma, de fora para dentro
+      arco.userData.faixas.forEach((f, i) => { const a = ease((dt - 1500 - i * 120) / 600); f.scale.setScalar(Math.max(0.001, a)); f.visible = a > 0; algum = algum || a > 0; });
+      const a0 = ease((dt - 1500) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum; }
+    espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5; }
   rAR.render(cenaAR, camAR);
   if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
@@ -882,7 +941,7 @@ async function passo() {
 }
 function terminarLeitura() {
   criarMolde(); // a mesma foto e posição da última leitura viram o molde do acompanhamento
-  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; window.__arcaCores = r;
+  lendo = false; const t0c = performance.now(); const r = calcularCores(fotos); if (DEBUG) console.warn('tempo cores ms', Math.round(performance.now() - t0c)); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras; window.__arcaCores = r;
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
@@ -1176,6 +1235,8 @@ function abrir3D(cores) {
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
+  if (cena3.userData.arco) { cena3.remove(cena3.userData.arco); descartar(cena3.userData.arco); cena3.userData.arco = null; }
+  { const arco = criarArco(cores, 2.3 / ARCO_D.r0); if (arco) { arco.position.set(3.4, -0.3, -6.5); arco.rotation.y = -0.35; arco.traverse(o => { if (o.material) o.material.fog = false; }); cena3.add(arco); cena3.userData.arco = arco; } }
   if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
 }
 let mexeu3 = false;
@@ -1198,7 +1259,8 @@ function coresExemplo() {
   // pintura de exemplo, como uma criança faria: cada tábua de uma cor
   const pal = [[226, 52, 48], [246, 133, 36], [250, 208, 50], [96, 186, 72], [28, 142, 84], [54, 162, 226], [40, 82, 170], [134, 70, 176], [233, 98, 160], [146, 92, 50], [196, 138, 84]];
   let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const mar = { 347: [40, 120, 210], 357: [30, 100, 190], 330: [90, 170, 230], 331: [90, 170, 230], 355: [70, 150, 220], 358: [40, 120, 210], 359: [30, 100, 190], 348: [250, 208, 50], 349: [96, 186, 72], 354: [70, 150, 220] };
+  const arco = { 2: [226, 52, 48], 3: [246, 133, 36], 6: [250, 208, 50], 11: [96, 186, 72], 13: [40, 82, 170], 14: [134, 70, 176] };
+  const mar = { ...arco, 347: [40, 120, 210], 357: [30, 100, 190], 330: [90, 170, 230], 331: [90, 170, 230], 355: [70, 150, 220], 358: [40, 120, 210], 359: [30, 100, 190], 348: [250, 208, 50], 349: [96, 186, 72], 354: [70, 150, 220] };
   return DADOS.regioes.map(id => mar[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
