@@ -106,6 +106,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
@@ -249,130 +250,196 @@ function calcularCores(fotos) {
 }
 
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
-const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [196, 146, 92];
+const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
 const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
 function corR(cores, id) { const i = DADOS.regioes.indexOf(id); return (i >= 0 && cores[i]) || PAPEL; }
 function cor3(c, f = 1) { return new THREE.Color().setRGB(c[0] / 255 * f, c[1] / 255 * f, c[2] / 255 * f, THREE.SRGBColorSpace); }
-function textura(w, h, desenha) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); desenha(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
-function caixa2d(x, x0, y0, w, h, cor, linha = 6) { x.fillStyle = rgb(cor); x.fillRect(x0, y0, w, h); x.lineWidth = linha; x.strokeStyle = TINTA; x.strokeRect(x0, y0, w, h); }
+// cada textura sai em dupla: a pintura (cores + traço) e o relevo (sulcos das tábuas), desenhados pela mesma função
+function dupla(w, h, desenha) {
+  const faz = rel => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.lineCap = 'round'; desenha(x, w, h, rel); return c; };
+  const map = new THREE.CanvasTexture(faz(false)); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8;
+  const bump = new THREE.CanvasTexture(faz(true)); bump.anisotropy = 4;
+  return { map, bump };
+}
+const preenche = (x, rel, cor, ...r) => { x.fillStyle = rel ? '#fff' : rgb(cor); x.fillRect(...r); };
+function traco(x, rel, w, pts, forte = 1) { // linha preta na pintura, sulco no relevo
+  x.strokeStyle = rel ? `rgba(0,0,0,${Math.min(1, forte * 1.6)})` : (forte < 1 ? `rgba(29,27,32,${forte})` : TINTA); x.lineWidth = rel ? w * 1.5 : w;
+  x.beginPath(); x.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) x.lineTo(pts[i], pts[i + 1]); x.stroke();
+}
+function retangulo(x, rel, w, x0, y0, rw, rh) { x.strokeStyle = rel ? '#000' : TINTA; x.lineWidth = rel ? w * 1.5 : w; x.strokeRect(x0, y0, rw, rh); }
 const ALT_FAIXA = [0.19, 0.21, 0.2, 0.2, 0.2]; // altura de cada faixa do casco, de cima para baixo
 function texCasco(cores) {
-  return textura(2048, 512, (x, W, H) => {
+  return dupla(2048, 512, (x, W, H, rel) => {
     let y = 0;
-    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i]; segs.forEach(([u0, u1, idx]) => { x.fillStyle = rgb(cores[idx] || PAPEL); x.fillRect(u0 * W - 1, y, (u1 - u0) * W + 2, h + 1); }); y += h; });
-    x.strokeStyle = TINTA; x.lineCap = 'round'; x.lineWidth = 8; y = 0;
-    for (let i = 0; i < DADOS.faixas.length - 1; i++) { y += H * ALT_FAIXA[i]; x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); }
-    x.lineWidth = 6; [[0.1, 0.29, 0.11], [0.36, 0.3, 0.12], [0.72, 0.5, 0.09], [0.18, 0.69, 0.1], [0.55, 0.69, 0.08]].forEach(([u, v, l]) => { x.beginPath(); x.moveTo(u * W, v * H); x.lineTo((u + l) * W, v * H + 5); x.stroke(); });
-    DADOS.janelasCasco.forEach(([u, idx]) => { const w = 150, h = 118, cx = u * W, cy = H * 0.4; caixa2d(x, cx - w / 2, cy - h / 2, w, h, cores[idx] || PAPEL, 8); caixa2d(x, cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44, [56, 40, 32], 6); });
+    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i]; segs.forEach(([u0, u1, idx]) => preenche(x, rel, cores[idx] || PAPEL, u0 * W - 1, y, (u1 - u0) * W + 2, h + 1));
+      for (let k = 0; k < 9; k++) { const u = (k + 0.5 + (i % 2) * 0.5) / 9; traco(x, rel, 4, [u * W, y + 6, u * W, y + h - 6], 0.22); } // emendas das tábuas
+      y += h; });
+    y = 0; for (let i = 0; i < DADOS.faixas.length - 1; i++) { y += H * ALT_FAIXA[i]; traco(x, rel, 8, [0, y, W, y]); }
+    [[0.1, 0.29, 0.11], [0.36, 0.3, 0.12], [0.72, 0.5, 0.09], [0.18, 0.69, 0.1], [0.55, 0.69, 0.08]].forEach(([u, v, l]) => traco(x, rel, 5, [u * W, v * H, (u + l) * W, v * H + 5], 0.6));
+    DADOS.janelasCasco.forEach(([u, idx]) => { const w = 150, h = 118, cx = u * W, cy = H * 0.4;
+      if (rel) { x.fillStyle = '#fff'; x.fillRect(cx - w / 2, cy - h / 2, w, h); x.fillStyle = '#222'; x.fillRect(cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44); }
+      else { preenche(x, false, cores[idx] || PAPEL, cx - w / 2, cy - h / 2, w, h); preenche(x, false, ESCURO, cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44); }
+      retangulo(x, rel, 8, cx - w / 2, cy - h / 2, w, h); retangulo(x, rel, 6, cx - w / 2 + 24, cy - h / 2 + 22, w - 48, h - 44); });
   });
 }
+const JANELAS_LADO = [[0.29, 102, 109], [0.71, 107, 117]]; // posição na parede, moldura, vidro (janelas da esquerda e da direita do desenho)
 function texParede(cores) {
-  return textura(1024, 340, (x, W, H) => {
-    x.fillStyle = rgb(corR(cores, 92)); x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(29,27,32,.28)'; x.lineWidth = 3; for (let y = 68; y < H; y += 68) { x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); }
-    [[0.29, 102, 109], [0.71, 107, 117]].forEach(([u, mold, vid]) => { const w = 168, h = 186, cx = u * W, cy = H * 0.46;
-      caixa2d(x, cx - w / 2, cy - h / 2, w, h, corR(cores, mold), 8); caixa2d(x, cx - w / 2 + 26, cy - h / 2 + 26, w - 52, h - 52, corR(cores, vid), 6);
-      x.lineWidth = 5; x.beginPath(); x.moveTo(cx + w / 2 - 48, cy - h / 2 + 28); x.lineTo(cx + w / 2 - 48, cy + h / 2 - 28); x.stroke(); });
+  return dupla(1024, 340, (x, W, H, rel) => {
+    preenche(x, rel, corR(cores, 92), 0, 0, W, H);
+    for (let yy = 56; yy < H; yy += 56) { traco(x, rel, 3, [0, yy, W, yy], 0.3); for (let k = 0; k < 6; k++) { const u = ((k + (yy / 56) % 2 * 0.5) / 6) * W; traco(x, rel, 2, [u, yy - 56, u, yy], 0.18); } }
+    JANELAS_LADO.forEach(([u, , vid]) => { const w = 120, h = 136, cx = u * W, cy = H * 0.46;
+      if (rel) { x.fillStyle = '#555'; x.fillRect(cx - w / 2, cy - h / 2, w, h); } else preenche(x, false, corR(cores, vid), cx - w / 2, cy - h / 2, w, h);
+      retangulo(x, rel, 5, cx - w / 2, cy - h / 2, w, h); traco(x, rel, 5, [cx + w / 2 - 24, cy - h / 2, cx + w / 2 - 24, cy + h / 2]); });
   });
 }
+const TABUAS_FRONTAO = [87, 19, 19, 19, 19, 31];
 function texFrontao(cores, porta) {
-  return textura(512, 600, (x, W, H) => {
-    const tab = [87, 19, 19, 19, 19, 31], tw = W / tab.length;
-    tab.forEach((id, i) => { x.fillStyle = rgb(corR(cores, id)); x.fillRect(i * tw - 1, 0, tw + 2, H); });
-    x.strokeStyle = TINTA; x.lineWidth = 6; for (let i = 1; i < tab.length; i++) { x.beginPath(); x.moveTo(i * tw, 0); x.lineTo(i * tw, H); x.stroke(); }
-    if (porta) { const w = W * 0.44, h = H * 0.47, x0 = (W - w) / 2, y0 = H - h; caixa2d(x, x0, y0, w, h + 12, corR(cores, 89), 8); caixa2d(x, x0 + 24, y0 + 24, w - 48, h - 12, corR(cores, 94), 6); }
-    else { const r = W * 0.13, cx = W / 2, cy = H * 0.45; x.lineWidth = 8; x.fillStyle = rgb(corR(cores, 89)); x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); x.stroke(); x.lineWidth = 6; x.fillStyle = rgb(corR(cores, 94)); x.beginPath(); x.arc(cx, cy, r * 0.6, 0, 7); x.fill(); x.stroke(); }
+  return dupla(512, 600, (x, W, H, rel) => {
+    const tw = W / TABUAS_FRONTAO.length;
+    TABUAS_FRONTAO.forEach((id, i) => preenche(x, rel, corR(cores, id), i * tw - 1, 0, tw + 2, H));
+    for (let i = 1; i < TABUAS_FRONTAO.length; i++) traco(x, rel, 6, [i * tw, 0, i * tw, H]);
+    if (porta) { const w = W * 0.38, h = H * 0.43, x0 = (W - w) / 2, y0 = H - h;
+      if (rel) { x.fillStyle = '#666'; x.fillRect(x0, y0, w, h); } else preenche(x, false, corR(cores, 94), x0, y0, w, h);
+      for (let k = 1; k < 3; k++) traco(x, rel, 4, [x0 + k * w / 3, y0 + 6, x0 + k * w / 3, H], 0.45);
+      retangulo(x, rel, 6, x0, y0, w, h + 10); }
   });
 }
 function texTelhado(cores) {
-  return textura(1024, 420, (x, W, H) => {
-    x.fillStyle = rgb(corR(cores, 16)); x.fillRect(0, 0, W, H);
-    x.strokeStyle = TINTA; x.lineWidth = 6; x.lineCap = 'round';
-    for (let k = 1; k < 5; k++) { const y = k * H / 5; let u = (k % 2) * 0.1 + 0.02; let n = k; while (u < 0.98) { n = (n * 7 + 3) % 11; const l = 0.16 + n * 0.02; x.beginPath(); x.moveTo(u * W, y); x.lineTo(Math.min(0.98, u + l) * W, y); x.stroke(); u += l + 0.07; } }
+  return dupla(1024, 420, (x, W, H, rel) => {
+    preenche(x, rel, corR(cores, 16), 0, 0, W, H);
+    for (let k = 1; k < 6; k++) { const y = k * H / 6; traco(x, rel, 6, [0, y, W, y], 0.9);
+      let u = (k % 2) * 0.07; while (u < 1) { u += 0.14; traco(x, rel, 4, [u * W, y - H / 6 + 4, u * W, y - 4], 0.35); } }
   });
 }
-const materiaisContorno = new Map();
-function contorno(mesh, esp = 0.006) { // contorno preto de desenho: cópia por trás, um pouco maior
+function texConves() {
+  return dupla(1024, 256, (x, W, H, rel) => { preenche(x, rel, MADEIRA, 0, 0, W, H);
+    for (let k = 1; k < 8; k++) { const y = k * H / 8; traco(x, rel, 3, [0, y, W, y], 0.35); let u = (k % 2) * 0.1; while (u < 1) { u += 0.2; traco(x, rel, 2, [u * W, y - H / 8, u * W, y], 0.25); } } });
+}
+const AMBIENTE = { mapa: null };
+function contorno(mesh, esp = 0.005) { // contorno preto de desenho: cópia por trás, empurrada para fora
   const m = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide });
   m.onBeforeCompile = s => { s.vertexShader = s.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${esp.toFixed(4)};`); };
-  const o = new THREE.Mesh(mesh.geometry, m); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); o.scale.copy(mesh.scale); o.renderOrder = -0.5; return o;
+  const o = new THREE.Mesh(mesh.geometry, m); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); o.scale.copy(mesh.scale); o.userData.contorno = true; return o;
 }
-function contornoCaixa(mesh, esp = 0.006) { // para caixas: a mesma caixa um pouco maior (os cantos fecham certinho)
+function contornoCaixa(mesh, esp = 0.004) { // para caixas: a mesma caixa um pouco maior (os cantos fecham certinho)
   const p = mesh.geometry.parameters, g = new THREE.BoxGeometry(p.width + 2 * esp, p.height + 2 * esp, p.depth + 2 * esp);
-  const o = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide })); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); return o;
+  const o = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide })); o.position.copy(mesh.position); o.rotation.copy(mesh.rotation); o.userData.contorno = true; return o;
 }
 function geo(pos, uv, ind) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(ind); g.computeVertexNormals(); return g; }
-// casco: as duas pontas sobem (formato de arca), fundo arredondado
-const CL = 1.42, CB = 0.27;
-function cascoPonto(u, v, lado, enc = 1) {
-  const s = 2 * u - 1, x = s * CL / 2;
-  const meia = CB * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(s), 2.4)), 0.55);
-  const yq = -0.13 + 0.17 * Math.pow(Math.abs(s), 3), yt = 0.22 + 0.13 * s * s;
-  return [x, yq + (yt - yq) * v, lado * Math.max(0.006, meia * enc * Math.pow(Math.sin(v * Math.PI / 2), 0.5))];
+// casco: barriga cheia, as duas pontas sobem bem (formato de arca), borda levemente aberta
+const CL = 1.44, CB = 0.29;
+const quilhaY = s => -0.13 + 0.21 * Math.pow(Math.abs(s), 3.2);
+const bordaY = u => { const s = 2 * u - 1; return 0.22 + 0.15 * s * s + 0.07 * Math.pow(s, 8); };
+function meiaBoca(s) { return CB * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(s), 2.1)), 0.5); }
+function cascoPonto(u, v, lado) {
+  const s = 2 * u - 1, yq = quilhaY(s), yt = bordaY(u);
+  const sec = Math.pow(Math.sin(v * Math.PI / 2), 0.45) * (1 + 0.05 * v * v * v); // fundo redondo, borda abre um pouco
+  return [s * CL / 2, yq + (yt - yq) * v, lado * Math.max(0.008, meiaBoca(s) * sec)];
 }
-const bordaY = u => { const s = 2 * u - 1; return 0.22 + 0.13 * s * s; };
+function linhaDagua() { // contorno do casco na altura da água (para a espuma)
+  const pts = [];
+  for (let i = 0; i <= 120; i++) { const u = i / 120, s = 2 * u - 1, yq = quilhaY(s), yt = bordaY(u); if (yq >= -0.002) continue;
+    const v = -yq / (yt - yq), z = cascoPonto(u, v, 1)[2]; pts.push([s * CL / 2, z]); }
+  return pts;
+}
 function criarArca(cores) {
-  const raiz = new THREE.Group(), arca = new THREE.Group(); raiz.add(arca); const pad = { roughness: 0.82, metalness: 0 };
+  const raiz = new THREE.Group(), arca = new THREE.Group(); raiz.add(arca);
+  const pad = { roughness: 0.5, metalness: 0, envMapIntensity: 0.45 };
   const mat = (c, f = 1, extra = {}) => new THREE.MeshStandardMaterial({ color: cor3(c, f), ...pad, ...extra });
-  const NU = 80, NV = 16;
+  const matT = (t, extra = {}) => new THREE.MeshStandardMaterial({ map: t.map, bumpMap: t.bump, bumpScale: 0.9, ...pad, ...extra });
+  const poe = (m, contornar = 0) => { arca.add(m); if (contornar) arca.add(m.geometry.type === 'BoxGeometry' ? contornoCaixa(m, contornar) : contorno(m, contornar)); return m; };
+  const NU = 96, NV = 18;
   // laterais do casco com as faixas pintadas
   { const pos = [], uv = [], ind = [];
     for (const lado of [1, -1]) { const o = pos.length / 3;
-      for (let i = 0; i <= NU; i++) for (let j = 0; j <= NV; j++) { const u = i / NU, v = j / NV; pos.push(...cascoPonto(u, v, lado)); uv.push(lado > 0 ? u : u, v); }
+      for (let i = 0; i <= NU; i++) for (let j = 0; j <= NV; j++) { const u = i / NU, v = j / NV; pos.push(...cascoPonto(u, v, lado)); uv.push(u, v); }
       for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = o + i * (NV + 1) + j, b = a + NV + 1; if (lado > 0) ind.push(a, b, b + 1, a, b + 1, a + 1); else ind.push(a, b + 1, b, a, a + 1, b + 1); } }
-    const m = new THREE.Mesh(geo(pos, uv, ind), new THREE.MeshStandardMaterial({ map: texCasco(cores), ...pad, side: THREE.DoubleSide })); arca.add(m); arca.add(contorno(m, 0.008)); }
-  // borda de cima, parede de dentro e convés
-  { const ENC = 0.84, FUNDO = 0.05, topo = [], dentro = [], conves = [];
-    const P = (a, b, c) => [a, b, c];
-    const tp = [], ti = [], dp = [], di = [], cp = [], ci = [];
-    for (let i = 0; i <= NU; i++) { const u = i / NU, yt = bordaY(u);
-      const fora = cascoPonto(u, 1, 1), z = fora[2], zi = z * ENC;
-      tp.push(fora[0], yt, z, fora[0], yt, zi, fora[0], yt, -zi, fora[0], yt, -z);
-      dp.push(fora[0], yt, zi, fora[0], yt - FUNDO, zi, fora[0], yt, -zi, fora[0], yt - FUNDO, -zi);
-      cp.push(fora[0], yt - FUNDO, zi, fora[0], yt - FUNDO, -zi);
+    poe(new THREE.Mesh(geo(pos, uv, ind), matT(texCasco(cores), { side: THREE.DoubleSide })), 0.007); }
+  // borda, parede de dentro e convés de tábuas
+  { const ENC = 0.86, FUNDO = 0.055, tp = [], ti = [], dp = [], di = [], cp = [], cu = [], ci = [];
+    for (let i = 0; i <= NU; i++) { const u = i / NU, yt = bordaY(u), fora = cascoPonto(u, 1, 1), x = fora[0], z = fora[2], zi = z * ENC;
+      tp.push(x, yt, z, x, yt, zi, x, yt, -zi, x, yt, -z);
+      dp.push(x, yt, zi, x, yt - FUNDO, zi, x, yt, -zi, x, yt - FUNDO, -zi);
+      cp.push(x, yt - FUNDO, zi, x, yt - FUNDO, -zi); cu.push(u, 0, u, 1);
       if (i < NU) { const a = 4 * i, b = a + 4; ti.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3);
         di.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3); const c = 2 * i, d = c + 2; ci.push(c, d, c + 1, c + 1, d, d + 1); } }
-    arca.add(new THREE.Mesh(geo(tp, null, ti), mat(corR(cores, 219), 0.95, { side: THREE.DoubleSide })));
-    arca.add(new THREE.Mesh(geo(dp, null, di), mat(corR(cores, 285), 0.85, { side: THREE.DoubleSide })));
-    arca.add(new THREE.Mesh(geo(cp, null, ci), mat(MADEIRA, 0.9, { side: THREE.DoubleSide }))); }
-  // mastros da proa e da popa (a peça escura do desenho)
+    poe(new THREE.Mesh(geo(tp, null, ti), mat(corR(cores, 219), 0.95, { side: THREE.DoubleSide })));
+    poe(new THREE.Mesh(geo(dp, null, di), mat(corR(cores, 285), 0.82, { side: THREE.DoubleSide })));
+    const tc = texConves(); tc.map.wrapS = tc.bump.wrapS = THREE.RepeatWrapping; tc.map.repeat.set(3, 1); tc.bump.repeat.set(3, 1);
+    poe(new THREE.Mesh(geo(cp, cu, ci), matT(tc, { side: THREE.DoubleSide })));
+    // corrimão arredondado dos dois lados
+    for (const lado of [1, -1]) { const pts = []; for (let i = 2; i <= NU - 2; i += 2) { const u = i / NU, f = cascoPonto(u, 1, lado); pts.push(new THREE.Vector3(f[0], bordaY(u) + 0.004, f[2] * 0.97)); }
+      poe(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.013, 10, false), mat(corR(cores, 219), 0.85)), 0.004); } }
+  // mastros da proa e da popa (a peça escura do desenho), com uma bolinha na ponta
   for (const u of [0, 1]) { const sx = u ? 1 : -1, base = cascoPonto(u, 0, 1), top = cascoPonto(u, 1, 1);
-    const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(base[0] - sx * 0.005, base[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.004, (base[1] + top[1]) / 2, 0), new THREE.Vector3(top[0] + sx * 0.02, top[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.055, top[1] + 0.085, 0)]);
-    const m = new THREE.Mesh(new THREE.TubeGeometry(curva, 30, 0.017, 10, false), mat(corR(cores, 171))); arca.add(m); arca.add(contorno(m, 0.006)); }
-  // cabine: paredes com janelas, frente com porta, fundo com janela redonda
-  const LC = 0.76, DC = 0.175, Y0 = bordaY(0.5) - 0.05, YW = Y0 + 0.27, YR = YW + 0.21, XC = 0.02;
-  { const g = new THREE.BoxGeometry(LC, YW - Y0, 2 * DC), parede = new THREE.MeshStandardMaterial({ map: texParede(cores), ...pad });
-    const ponta = mat(corR(cores, 19)), tampa = mat(MADEIRA, 0.8);
-    const cab = new THREE.Mesh(g, [ponta, ponta, tampa, tampa, parede, parede]); cab.position.set(XC, (Y0 + YW) / 2, 0); arca.add(cab); arca.add(contornoCaixa(cab, 0.006));
-    for (const [sx, porta] of [[-1, true], [1, false]]) { // frontões (pentágono inteiro, por cima da ponta da caixa)
+    const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(base[0] - sx * 0.004, base[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.006, (base[1] + top[1]) / 2, 0), new THREE.Vector3(top[0] + sx * 0.02, top[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.06, top[1] + 0.09, 0)]);
+    const cor = corR(cores, 171);
+    poe(new THREE.Mesh(new THREE.TubeGeometry(curva, 36, 0.019, 12, false), mat(cor)), 0.005);
+    const bola = new THREE.Mesh(new THREE.SphereGeometry(0.027, 20, 14), mat(cor)); bola.position.copy(curva.getPoint(1)); poe(bola, 0.005); }
+  // cabine
+  const LC = 0.78, DC = 0.18, Y0 = bordaY(0.5) - 0.055, YW = Y0 + 0.28, YR = YW + 0.22, XC = 0.02;
+  { const tp = texParede(cores), parede = matT(tp), ponta = mat(corR(cores, 19)), tampa = mat(MADEIRA, 0.8);
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(LC, YW - Y0, 2 * DC), [ponta, ponta, tampa, tampa, parede, parede]); cab.position.set(XC, (Y0 + YW) / 2, 0); poe(cab, 0.005);
+    // molduras 3D das janelas, com peitoril
+    const altP = YW - Y0;
+    for (const lado of [1, -1]) JANELAS_LADO.forEach(([u, mold]) => {
+      const x = lado > 0 ? XC - LC / 2 + u * LC : XC + LC / 2 - u * LC, y = YW - 0.46 * altP, w = 0.168 / 1.024 * LC, h = 0.186 / 0.34 * altP, t = 0.022, d = 0.016, z = lado * (DC + d / 2), cm = mat(corR(cores, mold));
+      for (const [bx, by, bw, bh] of [[x, y + h / 2 - t / 2, w, t], [x, y - h / 2 + t / 2, w, t], [x - w / 2 + t / 2, y, t, h], [x + w / 2 - t / 2, y, t, h]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, d), cm); b.position.set(bx, by, z); poe(b, 0.003); }
+      const pe = new THREE.Mesh(new THREE.BoxGeometry(w + 0.03, 0.016, d + 0.022), cm); pe.position.set(x, y - h / 2 - 0.004, lado * (DC + (d + 0.022) / 2)); poe(pe, 0.003); });
+    // frontões: porta na frente (proa), janela redonda atrás (popa)
+    for (const [sx, porta] of [[-1, true], [1, false]]) {
       const X = XC + sx * (LC / 2 + 0.002), V = y => (y - Y0) / (YR - Y0), U = z => sx < 0 ? 0.5 + z / (2 * DC) : 0.5 - z / (2 * DC);
-      const pts = [[-DC, Y0], [DC, Y0], [DC, YW], [0, YR], [-DC, YW]];
-      const pos = [], uv = []; pts.forEach(([z, y]) => { pos.push(X, y, z); uv.push(U(z), V(y)); });
-      const m = new THREE.Mesh(geo(pos, uv, [0, 1, 2, 0, 2, 4, 4, 2, 3]), new THREE.MeshStandardMaterial({ map: texFrontao(cores, porta), ...pad, side: THREE.DoubleSide })); arca.add(m); }
-    const tri = new THREE.Shape([new THREE.Vector2(-DC, YW), new THREE.Vector2(DC, YW), new THREE.Vector2(0, YR)]);
-    const pr = new THREE.ExtrudeGeometry(tri, { depth: LC, bevelEnabled: false }); pr.rotateY(Math.PI / 2); pr.translate(XC - LC / 2, 0, 0);
-    const prisma = new THREE.Mesh(pr, mat(corR(cores, 92))); arca.add(prisma);
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.034, YW - Y0 + 0.01, 0.034), mat(corR(cores, 73))); p.position.set(XC + sx * (LC / 2 - 0.012), (Y0 + YW) / 2, sz * (DC - 0.012)); arca.add(p); arca.add(contornoCaixa(p, 0.005)); }
+      const pts = [[-DC, Y0], [DC, Y0], [DC, YW], [0, YR], [-DC, YW]], pos = [], uv = [];
+      pts.forEach(([z, y]) => { pos.push(X, y, z); uv.push(U(z), V(y)); });
+      poe(new THREE.Mesh(geo(pos, uv, [0, 1, 2, 0, 2, 4, 4, 2, 3]), matT(texFrontao(cores, porta), { side: THREE.DoubleSide })));
+      const cm = mat(corR(cores, 89)), d = 0.016, Xf = X + sx * d / 2;
+      if (porta) { const w = 0.38 * 2 * DC, h = 0.43 * (YR - Y0), t = 0.024;
+        for (const [bz, by, bw, bh] of [[-w / 2 - t / 2 + 0.004, Y0 + h / 2, t, h], [w / 2 + t / 2 - 0.004, Y0 + h / 2, t, h], [0, Y0 + h + t / 2, w + 2 * t - 0.008, t]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(d, bh, bw), cm); b.position.set(Xf, by, bz); poe(b, 0.003); }
+        const mac = new THREE.Mesh(new THREE.SphereGeometry(0.011, 14, 10), mat(ESCURO)); mac.position.set(Xf, Y0 + h * 0.48, w * 0.3); poe(mac); }
+      else { const yc = YR - 0.45 * (YR - Y0), r = 0.045;
+        const aro = new THREE.Mesh(new THREE.TorusGeometry(r, 0.009, 12, 36), cm); aro.rotation.y = Math.PI / 2; aro.position.set(Xf, yc, 0); poe(aro, 0.003);
+        const vidro = new THREE.Mesh(new THREE.CircleGeometry(r, 32), mat(corR(cores, 94), 1, { side: THREE.DoubleSide })); vidro.rotation.y = Math.PI / 2; vidro.position.set(X + sx * 0.003, yc, 0); poe(vidro); } }
+    // cantoneiras
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.034, YW - Y0 + 0.012, 0.034), mat(corR(cores, 73))); p.position.set(XC + sx * (LC / 2 - 0.012), (Y0 + YW) / 2, sz * (DC - 0.012)); poe(p, 0.004); }
   }
-  // telhado de duas águas: tábuas por cima, beiral colorido, forro por baixo
-  { const OZ = 0.075, OX = 0.06, T = 0.028, LR = LC + 2 * OX, ye = YW - 0.03, ze = DC + OZ, dy = YR + 0.012 - ye, ang = Math.atan2(dy, ze), WS = Math.hypot(ze, dy);
-    const topo = new THREE.MeshStandardMaterial({ map: texTelhado(cores), ...pad }), beiral = mat(corR(cores, 76)), ponta = mat(corR(cores, 18)), forro = mat(corR(cores, 90), 0.8);
+  // telhado de duas águas: tábuas com relevo, beiral colorido, forro por baixo, cumeeira redonda
+  { const OZ = 0.08, OX = 0.065, T = 0.03, LR = LC + 2 * OX, ye = YW - 0.03, ze = DC + OZ, dy = YR + 0.012 - ye, ang = Math.atan2(dy, ze), WS = Math.hypot(ze, dy);
+    const topo = matT(texTelhado(cores)), beiral = mat(corR(cores, 76)), ponta = mat(corR(cores, 18)), forro = mat(corR(cores, 90), 0.78);
     for (const s of [1, -1]) {
-      const g = new THREE.BoxGeometry(LR, T, WS), m = new THREE.Mesh(g, [ponta, ponta, topo, forro, s > 0 ? beiral : ponta, s > 0 ? ponta : beiral]);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(LR, T, WS), [ponta, ponta, topo, forro, s > 0 ? beiral : ponta, s > 0 ? ponta : beiral]);
       m.rotation.x = s * ang; const n = new THREE.Vector3(0, Math.cos(ang), s * Math.sin(ang));
-      m.position.set(XC, ye + dy / 2, s * ze / 2).addScaledVector(n, T / 2); arca.add(m); arca.add(contornoCaixa(m, 0.006)); }
-    const cume = new THREE.Mesh(new THREE.BoxGeometry(LR + 0.01, 0.03, 0.05), ponta); cume.position.set(XC, YR + 0.03, 0); arca.add(cume); arca.add(contornoCaixa(cume, 0.005));
+      m.position.set(XC, ye + dy / 2, s * ze / 2).addScaledVector(n, T / 2); poe(m, 0.005); }
+    const cume = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, LR + 0.02, 18), ponta); cume.rotation.z = Math.PI / 2; cume.position.set(XC, YR + 0.03, 0); poe(cume, 0.004);
   }
-  arca.traverse(o => { if (o.isMesh && !(o.material && o.material.side === THREE.BackSide && o.material.isMeshBasicMaterial)) { o.castShadow = true; o.receiveShadow = true; } });
+  arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   return raiz;
 }
+function texturaSombra() { // mancha de sombra macia (para o 3D por cima do quebra-cabeça)
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, 'rgba(0,0,0,0.42)'); g.addColorStop(0.6, 'rgba(0,0,0,0.18)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+function criarEspuma() { // espuma branca em volta do casco, na linha d'água
+  const L = linhaDagua(), pos = [], col = [], ind = [], anel = [];
+  L.forEach(([x, z]) => anel.push([x, z])); for (let i = L.length - 1; i >= 0; i--) anel.push([L[i][0], -L[i][1]]);
+  const n = anel.length;
+  anel.forEach(([x, z], i) => { const [xa, za] = anel[(i - 1 + n) % n], [xb, zb] = anel[(i + 1) % n]; let nx = zb - za, nz = -(xb - xa); const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
+    if (nx * x + nz * z < 0) { nx = -nx; nz = -nz; }
+    pos.push(x, 0.045, z + Math.sign(z) * 0.01, x + nx * 0.085, 0.045, z + nz * 0.085); col.push(1, 1, 1, 0.85, 1, 1, 1, 0); });
+  for (let i = 0; i < n; i++) { const a = 2 * i, b = 2 * ((i + 1) % n); ind.push(a, b, a + 1, a + 1, b, b + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4)); g.setIndex(ind);
+  return new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+}
+function ambiente(renderer, cena) { // reflexo suave de "sala clara", para a tinta ter brilho de brinquedo
+  const pm = new THREE.PMREMGenerator(renderer); cena.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+}
 function luzes(cena) { // ver em 3D: céu em cima, sol de lado
-  cena.add(new THREE.HemisphereLight(0xffffff, 0x9a8a70, 2.2));
-  const sol = new THREE.DirectionalLight(0xfff6e8, 2.6); sol.position.set(-1.2, 2.2, 1.8); cena.add(sol); return sol;
+  cena.add(new THREE.HemisphereLight(0xffffff, 0x9a8a70, 1.7));
+  const sol = new THREE.DirectionalLight(0xfff3e0, 2.5); sol.position.set(-1.2, 2.2, 1.8); cena.add(sol); return sol;
 }
 function luzesAR(cena) { // por cima da câmera: luz vinda de quem segura o celular
-  cena.add(new THREE.AmbientLight(0xffffff, 1.5));
-  const l = new THREE.DirectionalLight(0xffffff, 2.4); l.position.set(-0.4, 0.8, 1); cena.add(l);
+  cena.add(new THREE.AmbientLight(0xffffff, 1.1));
+  const l = new THREE.DirectionalLight(0xfff6ea, 2.3); l.position.set(-0.4, 0.8, 1); cena.add(l);
 }
 
 // ---------- realidade aumentada por cima da câmera ----------
@@ -380,14 +447,15 @@ let rAR = null, cenaAR = null, camAR = null, ancora = null, arcaAR = null, poseA
 function prepararAR() {
   if (rAR) return;
   rAR = new THREE.WebGLRenderer({ canvas: $('#ar'), alpha: true, antialias: true, preserveDrawingBuffer: DEBUG });
-  rAR.setPixelRatio(Math.min(2, devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
+  rAR.setPixelRatio(Math.min(1.5, devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
   cenaAR = new THREE.Scene(); camAR = new THREE.Camera(); luzesAR(cenaAR);
   ancora = new THREE.Group(); ancora.matrixAutoUpdate = false; ancora.visible = false; cenaAR.add(ancora);
   const [mw, mh] = DADOS.alvo;
   const tapa = new THREE.Mesh(new THREE.PlaneGeometry(mw * 1.3, mh * 1.3), new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide }));
   tapa.position.set(mw / 2, mh / 2, 0); tapa.renderOrder = -1; ancora.add(tapa); // esconde o que fica "abaixo" do quebra-cabeça
-  const agua = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: 0x3d9be0, transparent: true, opacity: 0.35, depthWrite: false }));
-  agua.scale.set(420, 150, 1); agua.position.set(509, 482, -0.5); ancora.add(agua); ancora.userData.agua = agua;
+  const sombra = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: texturaSombra(), transparent: true, depthWrite: false }));
+  sombra.scale.set(600, 230, 1); sombra.position.set(509, 482, -0.5); ancora.add(sombra); // sombra macia da arca sobre o quebra-cabeça
+  ambiente(rAR, cenaAR);
 }
 function colocarArcaAR(arca) {
   if (arcaAR) { ancora.remove(arcaAR); }
@@ -478,7 +546,7 @@ function poseDaHomografia(H) { // posição 3D a partir da homografia, com a mes
 async function acharAlvo() {
   guardarTraco();
   const [mw, mh] = DADOS.alvo;
-  if (Hc && performance.now() - tHc < 1500) { // endireita com a última posição
+  if (Hc && performance.now() - tHc < 6000) { // endireita com a última posição (vale por alguns segundos, se o celular não mexeu muito)
     const sr = Math.min(0.86 * NW / mw, 0.86 * NH / mh), ox = (NW - mw * sr) / 2, oy = (NH - mh * sr) / 2, R = [sr, 0, ox, 0, sr, oy, 0, 0, 1];
     const G = mul3(Hc, inv3(R));
     pinta(cxR, LT, (x, y) => { const w = G[6]*x + G[7]*y + G[8]; return w > 0 ? [(G[0]*x + G[1]*y + G[2]) / w, (G[3]*x + G[4]*y + G[5]) / w] : null; });
@@ -544,12 +612,13 @@ function abrir3D(cores) {
   if (!r3) {
     r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: true, preserveDrawingBuffer: true }); r3.setPixelRatio(Math.min(2, devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
-    cena3 = new THREE.Scene(); cena3.background = new THREE.Color(0xcfeaff); cena3.fog = new THREE.Fog(0xcfeaff, 6, 16);
+    cena3 = new THREE.Scene(); cena3.background = new THREE.Color(0xcfeaff); cena3.fog = new THREE.Fog(0xcfeaff, 6, 16); ambiente(r3, cena3);
     cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 50); cam3.position.set(-0.75, 0.55, 1.75);
     const sol = luzes(cena3); sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const g = new THREE.PlaneGeometry(30, 30, 90, 90); g.rotateX(-Math.PI / 2);
-    mar3 = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x2f86d6, roughness: 0.35, metalness: 0.05, flatShading: true })); mar3.receiveShadow = true;
+    mar3 = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x2a7fd0, roughness: 0.4, metalness: 0, flatShading: true, envMapIntensity: 0.15 })); mar3.receiveShadow = true;
     mar3.userData.base = Float32Array.from(g.attributes.position.array); cena3.add(mar3);
+    const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
     ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.49; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; });
   }
   if (arca3) cena3.remove(arca3); mexeu3 = false; enquadrar();
@@ -558,7 +627,7 @@ function abrir3D(cores) {
 }
 let mexeu3 = false;
 function enquadrar() { // cabe a arca inteira na tela, deitada ou em pé
-  if (mexeu3) return; const R = 0.74, vf = cam3.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam3.aspect);
+  if (mexeu3) return; const R = 0.82, vf = cam3.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam3.aspect);
   const dist = R / Math.sin(Math.min(vf, hf) / 2); const dir = new THREE.Vector3(-0.45, 0.2, 1).normalize();
   cam3.position.copy(ctl3.target).addScaledVector(dir, dist); ctl3.update();
 }
@@ -570,6 +639,7 @@ function anim3(tms) {
   for (let i = 0; i < p.count; i++) { const x = b[3*i], z = b[3*i+2]; p.array[3*i+1] = 0.035 * Math.sin(x * 2.1 + t * 1.3) + 0.025 * Math.sin(z * 2.7 + t * 0.9); }
   p.needsUpdate = true; mar3.geometry.computeVertexNormals();
   if (arca3) { arca3.position.y = 0.015 * Math.sin(t * 1.4); arca3.rotation.z = 0.02 * Math.sin(t * 0.9); arca3.rotation.x = 0.015 * Math.sin(t * 1.2); }
+  const esp = cena3.userData.espuma; if (esp) { esp.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.4); esp.scale.setScalar(1 + 0.02 * Math.sin(t * 1.4 + 1)); }
   ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
 }
 function coresExemplo() {
