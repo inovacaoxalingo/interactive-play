@@ -113,7 +113,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.6 · 06/11/2026';
+const VERSAO = '0.7 · 06/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -133,6 +133,36 @@ let DADOS = null;
 async function carregarDados() {
   if (DADOS) return;
   DADOS = await fetch('assets/dados.json').then(r => r.json());
+  MASCARAS = {}; // onde a foto vira textura (parede e frontão da cabine): 1 = dentro da parte, longe das linhas
+  await Promise.all(Object.entries(DADOS.texturas || {}).map(async ([nome, t]) => { try {
+    const im = new Image(); im.src = `assets/masc_${nome}.png`; await im.decode();
+    const c = document.createElement('canvas'); c.width = t.w; c.height = t.h; const x = c.getContext('2d'); x.drawImage(im, 0, 0, t.w, t.h);
+    const d = x.getImageData(0, 0, t.w, t.h).data, m = new Uint8Array(t.w * t.h); for (let i = 0; i < m.length; i++) m[i] = d[4 * i] > 127 ? 1 : 0; MASCARAS[nome] = m;
+  } catch (e) { } }));
+}
+let MASCARAS = {}, TEXF = null;
+// a pintura de verdade (listras, riscos da canetinha) vai para a parede e o frontão: soma as fotos da leitura nessas partes
+function guardarTexturas(Hr) {
+  const img = dadosCheio(); if (!TEXF) TEXF = {};
+  for (const [nome, t] of Object.entries(DADOS.texturas || {})) { const M = MASCARAS[nome]; if (!M) continue;
+    const [x0, y0, x1, y1] = t.caixa, w = t.w, h = t.h; const T = TEXF[nome] || (TEXF[nome] = { soma: new Float32Array(w * h * 3), n: new Uint16Array(w * h) });
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = j * w + i; if (!M[k]) continue;
+      const [px, py] = aplica(Hr, x0 + (i + 0.5) / w * (x1 - x0), y0 + (j + 0.5) / h * (y1 - y0)); if (!(px >= 0 && py >= 0 && px < VW - 1 && py < VH - 1)) continue;
+      const xi = px | 0, yi = py | 0, ax = px - xi, ay = py - yi, q = 4 * (yi * VW + xi), q2 = q + 4 * VW;
+      for (let c = 0; c < 3; c++) T.soma[3 * k + c] += (img[q + c] * (1 - ax) + img[q + 4 + c] * ax) * (1 - ay) + (img[q2 + c] * (1 - ax) + img[q2 + 4 + c] * ax) * ay;
+      T.n[k]++; } }
+}
+function fecharFuros(rgb, ok, w, h) { // onde a parte está escondida (bichos, porta, linhas): continua a cor de cima/de baixo da mesma coluna
+  const col = new Int8Array(w);
+  for (let x = 0; x < w; x++) { let ult = -1; const cima = new Int32Array(h).fill(-1), baixo = new Int32Array(h).fill(-1);
+    for (let y = 0; y < h; y++) { if (ok[y * w + x]) ult = y; cima[y] = ult; } ult = -1;
+    for (let y = h - 1; y >= 0; y--) { if (ok[y * w + x]) ult = y; baixo[y] = ult; }
+    if (cima[h - 1] < 0) continue; col[x] = 1;
+    for (let y = 0; y < h; y++) { if (ok[y * w + x]) continue; const a = cima[y], b = baixo[y], src = a < 0 ? b : b < 0 ? a : (y - a <= b - y ? a : b);
+      for (let c = 0; c < 3; c++) rgb[3 * (y * w + x) + c] = rgb[3 * (src * w + x) + c]; } }
+  for (let x = 0; x < w; x++) { if (col[x]) continue; let d = 1; // coluna sem nada: copia a vizinha mais perto
+    while (d < w && !((x - d >= 0 && col[x - d]) || (x + d < w && col[x + d]))) d++; const s = x - d >= 0 && col[x - d] ? x - d : x + d; if (s < 0 || s >= w || !col[s]) continue;
+    for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) rgb[3 * (y * w + x) + c] = rgb[3 * (y * w + s) + c]; }
 }
 
 // ---------- álgebra: homografia por mínimos quadrados (com pontos normalizados) ----------
@@ -287,17 +317,34 @@ function calcularCores(fotos) {
     const vals = [[], [], []];
     fotos.forEach(f => f.regioes[r].forEach((p, k) => { const [x, y] = ps[k] || ps[0]; const Wl = branco(x, y);
       for (let c = 0; c < 3; c++) { const k0 = 0.3 * K[c]; vals[c].push(Math.min(1.05, Math.max(0, (p[c] - k0) / Math.max(20, Wl[c] - k0)))); } }));
-    // o traço puxa para o escuro quando a leitura escorrega um pouco: descarta os 40% mais escuros
-    const ord = vals[0].map((_, i) => i).sort((i, j) => (vals[0][j] + vals[1][j] + vals[2][j]) - (vals[0][i] + vals[1][i] + vals[2][i]));
-    const fica = ord.slice(0, Math.max(1, Math.ceil(ord.length * 0.6)));
-    let c = vals.map(v => mediana(fica.map(i => v[i])));
-    if (Math.min(...c) > 0.84 && (Math.max(...c) - Math.min(...c)) < 0.1) return [246, 243, 236]; // sem pintura: fica o branco do MDF
+    // canetinha deixa riscos com papel aparecendo: separa os pontos em papel, traço preto e tinta; se pelo menos 1/4 é tinta, a parte foi pintada
+    const pts = vals[0].map((_, i) => [vals[0][i], vals[1][i], vals[2][i]]); if (!pts.length) return [246, 243, 236];
+    const ehPapel = p => Math.min(...p) > 0.8 && Math.max(...p) - Math.min(...p) < 0.12, ehEscuro = p => Math.max(...p) < 0.28 && Math.max(...p) - Math.min(...p) < 0.1;
+    const muitoEscuro = pts.filter(ehEscuro).length > pts.length / 2; // pintada de preto (e não o traço)
+    const tinta = pts.filter(p => !ehPapel(p) && (muitoEscuro || !ehEscuro(p)));
+    if (tinta.length < Math.max(2, 0.25 * pts.length)) return [246, 243, 236]; // sem pintura: fica o branco do MDF
+    const dom = corDominante(tinta.map(p => ({ c: p, peso: 1 })), 0); let c = dom ? dom.c : [0, 1, 2].map(k => mediana(tinta.map(p => p[k])));
+    { // riscos ralos saem desbotados na média: a cor da canetinha é a ponta mais forte do mesmo tom
+      const ld = paraLab(c), cd = Math.hypot(ld[1], ld[2]);
+      if (cd > 12) { const mesmo = tinta.map(p => ({ p, l: paraLab(p) })).filter(({ l }) => { const cr = Math.hypot(l[1], l[2]); return cr > 4 && (l[1] * ld[1] + l[2] * ld[2]) / (cr * cd) > 0.92; })
+          .sort((A, B) => Math.hypot(B.l[1], B.l[2]) - Math.hypot(A.l[1], A.l[2]));
+        if (mesmo.length >= 3) { const top = mesmo.slice(0, Math.max(2, Math.ceil(mesmo.length * 0.5))); c = [0, 1, 2].map(k => top.reduce((s, q) => s + q.p[k], 0) / top.length); } } }
     const m = (c[0] + c[1] + c[2]) / 3; c = c.map(v => Math.min(1, Math.max(0, m + (v - m) * 1.12))); // canetinha na foto sai mais apagada
     return c.map(v => Math.round(v * 255));
   });
   // tiras muito finas (3 a 4 px no desenho) pegam a cor da moldura ao lado: a leitura delas não é confiável
   const IGUAL = { 95: 89, 113: 102, 124: 107 };
   for (const [fina, larga] of Object.entries(IGUAL)) { const a = DADOS.regioes.indexOf(+fina), b = DADOS.regioes.indexOf(+larga); if (a >= 0 && b >= 0) cores[a] = cores[b]; }
+  // texturas da pintura (parede e frontão): mesma correção de luz das cores
+  const texturas = {};
+  for (const [nome, T] of Object.entries(TEXF || {})) { const t = DADOS.texturas[nome], [x0, y0, x1, y1] = t.caixa, w = t.w, h = t.h, rgb = new Float32Array(w * h * 3), ok = new Uint8Array(w * h); let n = 0;
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = j * w + i; if (!T.n[k]) continue; const Wl = branco(x0 + (i + 0.5) / w * (x1 - x0), y0 + (j + 0.5) / h * (y1 - y0)), v = [0, 0, 0];
+      for (let c = 0; c < 3; c++) { const k0 = 0.3 * K[c]; v[c] = Math.min(1, Math.max(0, (T.soma[3 * k + c] / T.n[k] - k0) / Math.max(20, Wl[c] - k0))); }
+      const m = (v[0] + v[1] + v[2]) / 3; for (let c = 0; c < 3; c++) rgb[3 * k + c] = Math.min(1, Math.max(0, m + (v[c] - m) * 1.12)) * PAPEL[c]; ok[k] = 1; n++; }
+    if (n < 0.05 * w * h) continue; fecharFuros(rgb, ok, w, h);
+    const cv2 = document.createElement('canvas'); cv2.width = w; cv2.height = h; const x = cv2.getContext('2d'), im = x.createImageData(w, h);
+    for (let k = 0; k < w * h; k++) { im.data[4 * k] = rgb[3 * k]; im.data[4 * k + 1] = rgb[3 * k + 1]; im.data[4 * k + 2] = rgb[3 * k + 2]; im.data[4 * k + 3] = 255; }
+    x.putImageData(im, 0, 0); texturas[nome] = cv2; }
   // a água: a cor que mais aparece pintada no mar, ponto a ponto (cada ponto vale a área da parte dele)
   const itens = []; let total = 0;
   (DADOS.mar || []).forEach(id => { const r = DADOS.regioes.indexOf(id); if (r < 0) return; const ps = DADOS.amostras[r], area = (DADOS.area || [])[r] || 1; total += area;
@@ -311,7 +358,7 @@ function calcularCores(fotos) {
       itens.push({ c, peso: area / lidos.length }); }); });
   const dom = corDominante(itens, total); let mar = null;
   if (dom) { const m = (dom.c[0] + dom.c[1] + dom.c[2]) / 3; mar = dom.c.map(v => Math.round(255 * Math.min(1, Math.max(0, m + (v - m) * 1.12)))); }
-  return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0 };
+  return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0, texturas };
 }
 
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
@@ -336,7 +383,7 @@ const ALT_FAIXA = [0.19, 0.21, 0.2, 0.2, 0.2]; // altura de cada faixa do casco,
 function texCasco(cores) {
   return dupla(2048, 512, (x, W, H, rel) => {
     let y = 0;
-    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i]; segs.forEach(([u0, u1, idx]) => preenche(x, rel, cores[idx] || PAPEL, u0 * W - 1, y, (u1 - u0) * W + 2, h + 1));
+    DADOS.faixas.forEach((segs, i) => { const h = H * ALT_FAIXA[i]; segs.forEach(([u0, u1, idx]) => preenche(x, rel, DADOS.regioes[idx] === 211 ? corR(cores, 244) : (cores[idx] || PAPEL), u0 * W - 1, y, (u1 - u0) * W + 2, h + 1)); // a 211 é a borda: vai no corrimão
       for (let k = 0; k < 9; k++) { const u = (k + 0.5 + (i % 2) * 0.5) / 9; traco(x, rel, 4, [u * W, y + 6, u * W, y + h - 6], 0.22); } // emendas das tábuas
       y += h; });
     y = 0; for (let i = 0; i < DADOS.faixas.length - 1; i++) { y += H * ALT_FAIXA[i]; traco(x, rel, 8, [0, y, W, y]); }
@@ -350,18 +397,20 @@ function texCasco(cores) {
 const JANELAS_LADO = [[0.29, 102, 109], [0.71, 107, 117]]; // posição na parede, moldura, vidro (janelas da esquerda e da direita do desenho)
 function texParede(cores) {
   return dupla(1024, 340, (x, W, H, rel) => {
-    preenche(x, rel, corR(cores, 92), 0, 0, W, H);
+    const tx = cores.texturas && cores.texturas.parede; // a pintura de verdade (listras etc.), quando veio da câmera
+    if (tx && !rel) { x.imageSmoothingEnabled = true; x.drawImage(tx, 0, 0, W, H); } else preenche(x, rel, corR(cores, 92), 0, 0, W, H);
     for (let yy = 56; yy < H; yy += 56) { traco(x, rel, 3, [0, yy, W, yy], 0.3); for (let k = 0; k < 6; k++) { const u = ((k + (yy / 56) % 2 * 0.5) / 6) * W; traco(x, rel, 2, [u, yy - 56, u, yy], 0.18); } }
     JANELAS_LADO.forEach(([u, , vid]) => { const w = 120, h = 136, cx = u * W, cy = H * 0.46;
       if (rel) { x.fillStyle = '#555'; x.fillRect(cx - w / 2, cy - h / 2, w, h); } else preenche(x, false, corR(cores, vid), cx - w / 2, cy - h / 2, w, h);
       retangulo(x, rel, 5, cx - w / 2, cy - h / 2, w, h); traco(x, rel, 5, [cx + w / 2 - 24, cy - h / 2, cx + w / 2 - 24, cy + h / 2]); });
   });
 }
-const TABUAS_FRONTAO = [87, 19, 19, 19, 19, 31];
+const TABUAS_FRONTAO = [18, 19, 19, 17, 19, 31]; // (87 é céu atrás da cabine, não entra)
 function texFrontao(cores, porta) {
   return dupla(512, 600, (x, W, H, rel) => {
     const tw = W / TABUAS_FRONTAO.length;
-    TABUAS_FRONTAO.forEach((id, i) => preenche(x, rel, corR(cores, id), i * tw - 1, 0, tw + 2, H));
+    const tx = cores.texturas && cores.texturas.frontao;
+    if (tx && !rel) { x.imageSmoothingEnabled = true; x.drawImage(tx, 0, 0, W, H); } else TABUAS_FRONTAO.forEach((id, i) => preenche(x, rel, corR(cores, id), i * tw - 1, 0, tw + 2, H));
     for (let i = 1; i < TABUAS_FRONTAO.length; i++) traco(x, rel, 6, [i * tw, 0, i * tw, H]);
     if (porta) { const w = W * 0.38, h = H * 0.43, x0 = (W - w) / 2, y0 = H - h;
       if (rel) { x.fillStyle = '#666'; x.fillRect(x0, y0, w, h); } else preenche(x, false, corR(cores, 94), x0, y0, w, h);
@@ -428,13 +477,13 @@ function criarArca(cores) {
       cp.push(x, yt - FUNDO, zi, x, yt - FUNDO, -zi); cu.push(u, 0, u, 1);
       if (i < NU) { const a = 4 * i, b = a + 4; ti.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3);
         di.push(a, b, a + 1, a + 1, b, b + 1, a + 2, b + 2, a + 3, a + 3, b + 2, b + 3); const c = 2 * i, d = c + 2; ci.push(c, d, c + 1, c + 1, d, d + 1); } }
-    poe(new THREE.Mesh(geo(tp, null, ti), mat(corR(cores, 219), 0.95, { side: THREE.DoubleSide })));
+    poe(new THREE.Mesh(geo(tp, null, ti), mat(corR(cores, 211), 0.95, { side: THREE.DoubleSide })));
     poe(new THREE.Mesh(geo(dp, null, di), mat(corR(cores, 285), 0.82, { side: THREE.DoubleSide })));
     const tc = texConves(); tc.map.wrapS = tc.bump.wrapS = THREE.RepeatWrapping; tc.map.repeat.set(3, 1); tc.bump.repeat.set(3, 1);
     poe(new THREE.Mesh(geo(cp, cu, ci), matT(tc, { side: THREE.DoubleSide })));
     // corrimão arredondado dos dois lados
     for (const lado of [1, -1]) { const pts = []; for (let i = 2; i <= NU - 2; i += 2) { const u = i / NU, f = cascoPonto(u, 1, lado); pts.push(new THREE.Vector3(f[0], bordaY(u) + 0.004, f[2] * 0.97)); }
-      poe(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.013, 10, false), mat(corR(cores, 219), 0.85)), 0.004); } }
+      poe(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.013, 10, false), mat(corR(cores, 211), 0.85)), 0.004); } }
   // mastros da proa e da popa (a peça escura do desenho), com uma bolinha na ponta
   for (const u of [0, 1]) { const sx = u ? 1 : -1, base = cascoPonto(u, 0, 1), top = cascoPonto(u, 1, 1);
     const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(base[0] - sx * 0.004, base[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.006, (base[1] + top[1]) / 2, 0), new THREE.Vector3(top[0] + sx * 0.02, top[1] + 0.02, 0), new THREE.Vector3(top[0] + sx * 0.06, top[1] + 0.09, 0)]);
@@ -617,7 +666,7 @@ async function abrirCamera() {
   ativo = true; recomecar(); passo(); animar();
 }
 function recomecar() {
-  MOLDE = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
+  MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#guia').classList.remove('some');
   $('#prog').style.display = 'none'; $('#prog i').style.width = '0';
   status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
@@ -797,7 +846,7 @@ async function passo() {
         ultimaH = cantos;
         if (mexeu < 0.03) estavel++; else estavel = 0;
         if (estavel >= 1) { const Hr = refinarPeloDesenho() ? mul3(mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], Hc), [DADOS.alvo[0] / DADOS.largura, 0, 0, 0, DADOS.alvo[0] / DADOS.largura, 0, 0, 0, 1]) : Hd;
-          fotos.push(amostrarFoto(Hr)); guardarLeitura(); window.__arcaH = { Hd: Hr, cantos: [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hr, x, y)), n: a.n, rms: a.rms, modo: a.modo, refino: REFINO }; }
+          fotos.push(amostrarFoto(Hr)); guardarTexturas(Hr); guardarLeitura(); window.__arcaH = { Hd: Hr, cantos: [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hr, x, y)), n: a.n, rms: a.rms, modo: a.modo, refino: REFINO }; }
         $('#prog').style.display = 'block'; $('#prog i').style.width = Math.round(100 * fotos.length / PRECISA) + '%';
         status(fotos.length ? 'Lendo as cores…' : 'Achei! Segure parado…', 'Não mexa o celular por um instante');
         if (fotos.length >= PRECISA) terminarLeitura();
@@ -812,7 +861,7 @@ async function passo() {
 }
 function terminarLeitura() {
   criarMolde(); // a mesma foto e posição da última leitura viram o molde do acompanhamento
-  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; window.__arcaCores = r;
+  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; window.__arcaCores = r;
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
