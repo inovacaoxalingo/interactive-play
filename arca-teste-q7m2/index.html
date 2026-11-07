@@ -116,7 +116,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.10 · 06/11/2026';
+const VERSAO = '0.11 · 06/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -416,7 +416,7 @@ function calcularCores(fotos) {
   return { cores, branco: Wg.map(Math.round), preto: K.map(Math.round), mar, marParte: dom ? Math.round(100 * dom.parte) : 0, texturas, tiras };
 }
 
-// ---------- personagens (modelos do Tripo, em partes; cada parte pega a cor da região correspondente do desenho) ----------
+// ---------- personagens (modelados em partes articuladas; cada parte pega a cor da região correspondente do desenho) ----------
 let PERSONAGENS = null, BIN_P = null;
 async function carregarPersonagens() {
   if (PERSONAGENS) return;
@@ -429,7 +429,9 @@ const ESF_OLHO = new THREE.SphereGeometry(1, 16, 12);
 function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; mapa: parte -> região do desenho (ou cor fixa)
   const pega = ([i, n]) => BIN_P.subarray(i / 2, i / 2 + n), raiz = new THREE.Group(), pad = { roughness: 0.55, metalness: 0, envMapIntensity: 0.45 };
   const corParte = p => { const m = mapa[p]; return Array.isArray(m) ? m : (m !== undefined ? corR(cores, m) : PAPEL); };
+  const grupos = {}; raiz.userData.pecas = grupos;
   for (const pc of d.pecas) {
+    const raiz = new THREE.Group(); raiz.name = pc.nome; raiz.userData.pivo = pc.pivo; grupos[pc.nome] = raiz;
     const q = pega(pc.v), pos = new Float32Array(q.length);
     for (let i = 0; i < q.length; i++) pos[i] = (pc.lo[i % 3] + q[i] / 65535 * pc.esc) * escala;
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -452,7 +454,13 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
       const br = new THREE.Mesh(ESF_OLHO, new THREE.MeshBasicMaterial({ color: 0xffffff })); br.scale.setScalar(r * 0.33 * escala); br.position.set(r * 0.35 * escala, r * 0.45 * escala, r * 0.42 * escala); o.add(br);
     }
   }
+  for (const pc of d.pecas) { const g = grupos[pc.nome], mae = pc.mae ? grupos[pc.mae] : null, pm = mae ? mae.userData.pivo : [0, 0, 0];
+    g.position.set((pc.pivo[0] - pm[0]) * escala, (pc.pivo[1] - pm[1]) * escala, (pc.pivo[2] - pm[2]) * escala); (mae || raiz).add(g); }
   return raiz;
+}
+function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o do cajado fica parado
+  if (p.bracoE) p.bracoE.rotation.z = Math.sin(t * 5) * 0.22; if (p.antebracoE) p.antebracoE.rotation.z = Math.sin(t * 5 + 0.6) * 0.3;
+  if (p.cabeca) { p.cabeca.rotation.z = Math.sin(t * 1.4) * 0.06; p.cabeca.rotation.y = Math.sin(t * 0.8) * 0.15; }
 }
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
 const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
@@ -628,8 +636,8 @@ function criarArca(cores) {
     const cume = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, LR + 0.02, 18), ponta); cume.rotation.z = Math.PI / 2; cume.position.set(XC, YR + 0.03, 0); poe(cume, 0.004);
   }
   // Noé no convés da proa (na frente da cabine não cabe: o beiral do telhado pega na cabeça dele), virado um pouco para quem olha
-  if (PERSONAGENS && PERSONAGENS.noe_t && DADOS.noe) { const mapa = { ...DADOS.noe, cajado: [170, 115, 60], pes: [150, 95, 55] };
-    const xn = -0.53, un = 0.5 + xn / CL, noe = montarPersonagem(PERSONAGENS.noe_t, mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.01); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
+  if (PERSONAGENS && PERSONAGENS.noe_o && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
+    const xn = -0.53, un = 0.5 + xn / CL, noe = montarPersonagem(PERSONAGENS.noe_o, mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.01); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
@@ -1113,6 +1121,7 @@ function balancar(obj, t, forca = 1, altura = alturaMar) { // a arca acompanha a
   const alvoY = (hc * 2 + hp + hs + hb + he) / 6 * 0.75 * forca, alvoRz = Math.atan2(hs - hp, 1.24) * 0.55 * forca, alvoRx = -Math.atan2(hb - he, 0.52) * 0.45 * forca;
   balanco.y += (alvoY - balanco.y) * 0.08; balanco.rz += (alvoRz - balanco.rz) * 0.06; balanco.rx += (alvoRx - balanco.rx) * 0.06;
   obj.position.y = balanco.y; obj.rotation.z = balanco.rz; obj.rotation.x = balanco.rx;
+  const noe = obj.getObjectByName('noe'); if (noe && noe.userData.pecas) acenar(noe.userData.pecas, t);
 }
 // ---------- o aquário em cima do quebra-cabeça (por cima da câmera) ----------
 // o vidro fica nas beiradas do quebra-cabeça, a água sobe de dentro dele e a arca boia no meio
