@@ -48,6 +48,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 .barra{position:absolute;left:0;right:0;bottom:0;padding:12px 12px max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;pointer-events:none}
 .barra button{pointer-events:auto;border:0;border-radius:14px;padding:13px 16px;font-weight:800;font-size:15.5px;cursor:pointer;background:rgba(255,255,255,.94);color:var(--mar2);box-shadow:0 3px 0 rgba(0,0,0,.25)}
 .barra button.prim{background:var(--sol);color:var(--mar2)}
+.barra button:disabled{opacity:.55;cursor:default}
 .barra button[hidden]{display:none}
 .progresso{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(320px,70vw);height:8px;border-radius:8px;background:rgba(255,255,255,.35);overflow:hidden;display:none}
 .progresso i{display:block;height:100%;width:0;background:var(--sol);transition:width .2s}
@@ -93,6 +94,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
   <div class="progresso" id="prog"><i></i></div>
   <div class="barra">
     <button id="bDeNovo" type="button" hidden>Ler as cores de novo</button>
+    <button id="bProximo" class="prim" type="button" hidden>Próximo ›</button>
     <button id="bVer3d" class="prim" type="button" hidden>Ver em 3D</button>
   </div>
   <div id="dbg"></div>
@@ -116,7 +118,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.12 · 07/11/2026';
+const VERSAO = '0.13 · 07/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -421,7 +423,7 @@ let PERSONAGENS = null, BIN_P = null;
 async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
-  for (const arq of ['assets/noe.json', 'assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
+  for (const arq of ['assets/noe.json', 'assets/mar.json', 'assets/fila.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
       const BIN = new Uint16Array(await new Response(new Blob([bruto]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
@@ -496,6 +498,89 @@ function animarVida(g, t, altura) {
     const amp = 0.5 * Math.max(0.08, Math.sin(tg * 0.5 + i * 1.7)), bat = Math.sin(t * 8.5 + i) * amp, pz = gv.userData.pecas;
     if (pz.asaE) pz.asaE.rotation.x = bat; if (pz.asaD) pz.asaD.rotation.x = -bat; });
 }
+// ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
+const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
+const FILA = [ // ordem de embarque; cada bicho: modelo, altura no mundo da arca, cor por parte (região do desenho ou cor fixa), lugar na fila (x, z)
+  { m: 'leao', h: 0.30, mapa: { corpo: 205, rosto: 205, juba: 159 }, x: -0.1, z: 0.78 },
+  { m: 'elefante', h: 0.36, mapa: { corpo: 110 }, x: 0.3, z: 0.64 }, { m: 'elefante', h: 0.36, mapa: { corpo: 106 }, x: 0.34, z: 0.93 },
+  { m: 'girafa', h: 0.62, mapa: { corpo: 32 }, x: 0.72, z: 0.66 }, { m: 'girafa', h: 0.6, mapa: { corpo: 22 }, x: 0.76, z: 0.93 },
+  { m: 'zebra', h: 0.34, mapa: { corpo: 132, listras: [40, 38, 42], crina: [40, 38, 42] }, x: 1.1, z: 0.66 }, { m: 'zebra', h: 0.34, mapa: { corpo: 116, listras: [40, 38, 42], crina: [40, 38, 42] }, x: 1.14, z: 0.93 },
+  { m: 'macaco', h: 0.24, mapa: { corpo: 66 }, x: 1.38, z: 0.68 }, { m: 'galinha', h: 0.14, mapa: { corpo: 310, crista: [225, 50, 45], bico: [245, 170, 40] }, x: 1.4, z: 0.93 }];
+function texturaCapim() { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#5fc43c'; g.fillRect(0, 0, 256, 256); let sem = 7; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) { const x = rnd() * 256, y = rnd() * 256, h = 4 + rnd() * 9, cl = rnd(); g.strokeStyle = cl < 0.5 ? '#79d94f' : cl < 0.85 ? '#4fae30' : '#9be56a'; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - 0.5) * 4, y - h); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(9, 6); t.colorSpace = THREE.SRGBColorSpace; return t; }
+function materiaisDe(obj) { const ms = []; obj.traverse(o => { [].concat(o.material || []).forEach(m => { if (!ms.includes(m)) ms.push(m); }); }); ms.forEach(m => { m.transparent = true; m.userData.op0 = m.opacity; }); return ms; }
+function opacidade(inst, a) { inst.userData.mats.forEach(m => { m.opacity = m.userData.op0 * a; }); inst.visible = a > 0.01; }
+function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
+  const g = new THREE.Group(); g.name = 'terra'; const r = retanguloAR(), w = r.x1 - r.x0, d = r.z1 - r.z0;
+  const capim = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.3, d * 1.3), new THREE.MeshLambertMaterial({ map: texturaCapim(), color: 0xe8ffe0 }));
+  capim.rotation.x = -Math.PI / 2; capim.position.set((r.x0 + r.x1) / 2, 0.003, (r.z0 + r.z1) / 2); capim.renderOrder = 2; g.add(capim);
+  const madeira = new THREE.MeshStandardMaterial({ color: 0xa8713c, roughness: 0.8 }), escura = new THREE.MeshStandardMaterial({ color: 0x7a4e26, roughness: 0.8 });
+  const dz = PE_RAMPA - TOPO_RAMPA[2], dy = TOPO_RAMPA[1], comp = Math.hypot(dz, dy), rampa = new THREE.Group();
+  const tabua = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.016, comp), madeira); rampa.add(tabua, contornoCaixa(tabua, 0.006));
+  for (let i = 1; i < 8; i++) { const rip = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.012, 0.022), escura); rip.position.set(0, 0.012, -comp / 2 + i * comp / 8); rampa.add(rip); }
+  rampa.position.set(XR, dy / 2 + 0.01, (PE_RAMPA + TOPO_RAMPA[2]) / 2); rampa.rotation.x = Math.atan2(dy, dz); g.add(rampa);
+  for (const x of [-0.42, 0.42]) { const calco = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.09, 0.34), escura); calco.position.set(x, 0.045, 0); g.add(calco); } // calços segurando a arca
+  const bichos = []; FILA.forEach((f, i) => { const mod = PERSONAGENS && PERSONAGENS[f.m]; if (!mod) return;
+    const inst = montarPersonagem(mod, { ...f.mapa, tinta: [30, 28, 32] }, cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = -Math.PI / 2 + (i % 2 ? 0.15 : -0.1);
+    inst.userData.mats = materiaisDe(inst); inst.userData.fila = f; inst.userData.yaw = inst.rotation.y; g.add(inst); bichos.push(inst); });
+  let noeChao = null; if (PERSONAGENS && PERSONAGENS.noe_o && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
+    noeChao = montarPersonagem(PERSONAGENS.noe_o, mapa, cores, 0.4); noeChao.position.set(-0.88, 0, 0.74); noeChao.rotation.y = Math.PI / 2; noeChao.userData.yaw = Math.PI / 2; noeChao.userData.mats = materiaisDe(noeChao); g.add(noeChao); }
+  const noeArca = arca.getObjectByName('noe'); if (noeArca) { noeArca.userData.mats = materiaisDe(noeArca); opacidade(noeArca, 0); }
+  // chuva: risquinhos caindo dentro do aquário; nuvens cinzas em cima
+  const N = 420, pos = new Float32Array(N * 6), vel = new Float32Array(N); let sem = 3; const rnd = () => (sem = (sem * 48271) % 2147483647) / 2147483647;
+  for (let i = 0; i < N; i++) { const x = r.x0 + rnd() * w, z = r.z0 + rnd() * d, y = rnd() * 1.3; pos.set([x, y, z, x, y + 0.045, z], i * 6); vel[i] = 1.4 + rnd() * 0.8; }
+  const gch = new THREE.BufferGeometry(); gch.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const chuva = new THREE.LineSegments(gch, new THREE.LineBasicMaterial({ color: 0xdfeeff, transparent: true, opacity: 0.6 })); chuva.visible = false; chuva.frustumCulled = false; g.add(chuva);
+  const nuvens = new THREE.Group(), matN = new THREE.MeshLambertMaterial({ color: 0x8e97a3, transparent: true, opacity: 0.95 });
+  [[-0.9, 0.85, -0.55, 0.55], [-0.1, 0.95, -0.7, 0.7], [0.75, 0.88, -0.5, 0.5]].forEach(([x, y, z, e]) => { const n = new THREE.Group();
+    [[0, 0, 0, 0.17], [0.17, 0.03, 0.04, 0.13], [-0.16, 0.02, -0.03, 0.12], [0.05, 0.08, -0.08, 0.12], [-0.04, 0.07, 0.09, 0.11]].forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(new THREE.SphereGeometry(rr, 12, 10), matN); m.position.set(a, b, c); n.add(m); });
+    n.position.set(x, y, z); n.scale.setScalar(e); nuvens.add(n); }); nuvens.visible = false; g.add(nuvens);
+  g.userData = { capim, rampa, bichos, noeChao, noeArca, chuva, vel, nuvens, matN, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
+  return g;
+}
+const VEL_BICHO = 0.42; // unidades por segundo
+function andar(inst, caminho, tDesde, bob = 1) { // anda pelos pontos do caminho em velocidade constante; devolve a fração do último trecho (para sumir) ou -1 se ainda não chegou nele
+  let resto = Math.max(0, tDesde) * VEL_BICHO, ult = -1;
+  for (let i = 1; i < caminho.length; i++) { const a = caminho[i - 1], b = caminho[i], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const f = Math.min(1, resto / L);
+    const x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f, z = a[2] + (b[2] - a[2]) * f; inst.position.set(x, y, z);
+    if (i === caminho.length - 1) ult = f;
+    if (f < 1 || i === caminho.length - 1) { const alvo = Math.atan2(b[0] - a[0], b[2] - a[2]); let dy = alvo - inst.userData.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); inst.userData.yaw += dy * 0.12; inst.rotation.y = inst.userData.yaw; break; }
+    resto -= L; }
+  if (tDesde > 0 && ult < 1) { const p = tDesde * 11; inst.position.y += 0.012 * Math.abs(Math.sin(p)) * bob; inst.rotation.z = 0.06 * Math.sin(p) * bob; } else inst.rotation.z = 0;
+  return ult;
+}
+let historia = null; // { etapa, t0 (ms), tChuva }  etapas: 0 esperando · 1 bichos embarcando · 2 Noé sobe, chove · 3 mar (normal)
+function animarTerra(terra, agora, t) {
+  const u = terra.userData, s = (agora - historia.t0) / 1000 / LENTO;
+  if (historia.etapa === 0) { u.bichos.forEach((b, i) => { b.rotation.z = 0.025 * Math.sin(t * 2 + i); b.position.y = 0.004 * Math.abs(Math.sin(t * 2 + i)); }); if (u.noeChao) acenar(u.noeChao.userData.pecas, t); }
+  if (historia.etapa === 1) { let prontos = 0; u.bichos.forEach((b, i) => { const f = b.userData.fila, td = s - i * 1.4; if (td <= 0) { b.rotation.z = 0.025 * Math.sin(t * 2 + i); return; }
+      const fim = andar(b, [[f.x, 0, f.z], u.pe, u.topo, u.dentro], td); if (fim >= 0) opacidade(b, 1 - fim); if (fim >= 1) prontos++; });
+    if (u.noeChao) acenar(u.noeChao.userData.pecas, t);
+    if (prontos === u.bichos.length && !historia.fimEmbarque) { historia.fimEmbarque = agora; $('#bProximo').disabled = false; status('Todos a bordo!', 'Toque em Próximo para o Noé subir', true); } }
+  if (historia.etapa >= 2) { const n = u.noeChao; if (n && n.visible) { const fim = andar(n, [[-0.88, 0, 0.74], u.pe, u.topo, u.dentro], s - 0.3); if (fim >= 0) opacidade(n, 1 - fim); if (n.visible) { const pz = n.userData.pecas; if (pz.bracoE) pz.bracoE.rotation.z = 0; if (pz.antebracoE) pz.antebracoE.rotation.z = 0; } }
+    if (u.noeArca && s > 4.6) opacidade(u.noeArca, Math.min(1, (s - 4.6) / 0.8)); }
+}
+function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fica durante o dilúvio e vai embora depois
+  const u = terra.userData; if (!historia || !historia.tChuva) { return 0; }
+  const sc = (agora - historia.tChuva) / 1000 / LENTO, fim = historia.fimChuva ? (agora - historia.fimChuva) / 1000 / LENTO : -1;
+  const inten = Math.min(1, sc / 2) * (fim >= 0 ? Math.max(0, 1 - fim / 2.2) : 1);
+  u.chuva.visible = inten > 0.02; u.nuvens.visible = inten > 0.02 || (fim >= 0 && fim < 4);
+  if (u.chuva.visible) { const pos = u.chuva.geometry.attributes.position.array, N = u.vel.length;
+    for (let i = 0; i < N; i++) { let y = pos[i * 6 + 1] - u.vel[i] * dtq; if (y < 0) y += 1.3; pos[i * 6 + 1] = y; pos[i * 6 + 4] = y + 0.045; }
+    u.chuva.geometry.attributes.position.needsUpdate = true; u.chuva.geometry.setDrawRange(0, Math.floor(N * inten) * 2); }
+  if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 === undefined ? (n.userData.y0 = n.position.y) : n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); }); }
+  return inten;
+}
+function proximoEvento() {
+  if (!historia) return; const agora = performance.now();
+  if (historia.etapa === 0) { historia.etapa = 1; historia.t0 = agora; $('#bProximo').disabled = true; status('Todos para a arca!', 'Os bichos vão entrando pela rampa', true); }
+  else if (historia.etapa === 1 || historia.etapa === 2 && false) { historia.etapa = 2; historia.t0 = agora; historia.tChuva = agora + 5000 * LENTO; $('#bProximo').disabled = true; status('Agora é a vez do Noé', 'E olha a chuva chegando…', true); }
+}
+$('#bProximo').addEventListener('click', proximoEvento);
+if (DEBUG) window.__historia = () => ({ h: historia, b: arcaAR && arcaAR.userData.terra ? arcaAR.userData.terra.userData.bichos.map(b => [b.userData.fila.m, ...b.position.toArray().map(v => +v.toFixed(2)), b.visible]) : null });
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
 const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
 const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
@@ -753,6 +838,7 @@ function colocarArcaAR(arca, cores) {
   const boia = new THREE.Group(); boia.add(arca); boia.add(espumaAR); // a arca e a espuma sobem junto com a água
   g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca;
   const vida = criarVida({ zSalto: 0.52, yVoo: 0.62, esc: 1 }); if (vida) { boia.add(vida); g.userData.vida = vida; }
+  const terra = criarTerra(cores, arca); g.add(terra); g.userData.terra = terra; historia = { etapa: 0, t0: performance.now(), tChuva: 0, fimChuva: 0 };
   const e = DADOS.alvo[0] / 2048 / k, arco = criarArco(cores, e); // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
   if (arco) { arco.position.set((ARCO_D.cx * DADOS.alvo[0] / 2048 - cx) / k, 0, retanguloAR().z0 + 0.22); g.add(arco); g.userData.arco = arco; }
   ancora.add(g); tSubida = performance.now();
@@ -797,21 +883,29 @@ function desenharAR() {
   if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
   const recente = agora - ultimaVez < 2000; // falhou alguns quadros: a arca fica no último lugar; depois some
   const ver = !!arcaAR && poseVista && recente;
-  if (ver && !ancora.visible && sumiuEm && agora - sumiuEm > 3000) tSubida = agora; // voltou depois de um tempo: enche de novo
+  if (ver && !ancora.visible && sumiuEm && agora - sumiuEm > 3000 && (!historia || historia.fimChuva)) tSubida = agora; // voltou depois de um tempo: enche de novo
   if (!ver && ancora.visible) sumiuEm = agora;
   ancora.visible = ver;
-  if (arcaAR) { const t = agora / 1000 / LENTO, dt = (agora - tSubida) / LENTO, ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
-    const vidro = ease(dt / 550), nivel = ease((dt - 250) / 1800), aparece = Math.min(1, Math.max(0, (dt - 900) / 700));
+  if (arcaAR) { const t = agora / 1000 / LENTO, ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3), terra = arcaAR.userData.terra;
+    // a história: em terra até a chuva; o dilúvio (tSubida) começa 2 s depois de começar a chover
+    const emTerra = historia && historia.etapa < 3; let chuva = 0;
+    if (terra) { if (historia.tChuva && agora >= historia.tChuva && historia.etapa === 2) { historia.etapa = 3; tSubida = historia.tChuva + 2000 * LENTO; }
+      if (historia.etapa <= 3) animarTerra(terra, agora, t); chuva = animarChuva(terra, agora, dq); }
+    const dt = emTerra ? -1e9 : (agora - tSubida) / LENTO, chovendo = historia && historia.tChuva && agora >= historia.tChuva;
+    const vidro = chovendo ? ease((agora - historia.tChuva) / LENTO / 700) : 0, nivel = ease((dt - 250) / 1800), aparece = 1;
+    if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && dt > 5200 * LENTO) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false;
+      $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false; status('A arca está boiando!', 'Ande em volta com o celular para ver de todos os lados', true); }
+    if (terra && historia.etapa === 3) { const a = 1 - nivel; [terra.userData.capim.material].forEach(m => { m.transparent = a < 1; m.opacity = a; }); terra.userData.rampa.visible = a > 0.02; terra.children.forEach(c => { if (c.geometry && c.geometry.type === 'BoxGeometry') c.visible = a > 0.02; }); }
     const u = marAR.userData.u; u.uT.value = t; u.uNivel.value = nivel; u.uVidro.value = vidro;
     ancora.updateMatrixWorld(true); u.uCamL.value.set(0, 0, 0).applyMatrix4(mInv.copy(marAR.matrixWorld).invert());
     const boia = arcaAR.userData.boia, arca = arcaAR.userData.arca; balancar(arca, t, 0.85 * nivel, alturaAR);
-    boia.position.y = ALTURA_AGUA * nivel; const sc = aparece < 1 ? 0.6 + 0.4 * ease(aparece) + 0.06 * Math.sin(aparece * Math.PI) : 1;
+    boia.position.y = Math.max(terra && terra.userData.capim.visible ? ARCA_TERRA : 0, ALTURA_AGUA * nivel); const sc = aparece < 1 ? 0.6 + 0.4 * ease(aparece) + 0.06 * Math.sin(aparece * Math.PI) : 1;
     boia.scale.setScalar(Math.max(0.001, sc)); boia.visible = aparece > 0;
-    const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; // as faixas abrem uma a uma, de fora para dentro
-      arco.userData.faixas.forEach((f, i) => { const a = ease((dt - 1500 - i * 120) / 600); f.scale.setScalar(Math.max(0.001, a)); f.visible = a > 0; algum = algum || a > 0; });
-      const a0 = ease((dt - 1500) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum; }
-    espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5;
-    if (arcaAR.userData.vida && nivel >= 1) animarVida(arcaAR.userData.vida, t, alturaAR); }
+    const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; const atraso = historia && !historia.arcoFeito ? 5400 : 1500; if (dt > 7000) historia.arcoFeito = true; // as faixas abrem uma a uma, de fora para dentro, depois que a chuva passa
+      arco.userData.faixas.forEach((f, i) => { const a = ease((dt - atraso - i * 120) / 600); f.scale.setScalar(Math.max(0.001, a)); f.visible = a > 0; algum = algum || a > 0; });
+      const a0 = ease((dt - atraso) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum; }
+    espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5; espumaAR.visible = nivel > 0.6;
+    if (arcaAR.userData.vida && nivel >= 1 && chuva < 0.3) animarVida(arcaAR.userData.vida, t, alturaAR); }
   rAR.render(cenaAR, camAR);
   if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
@@ -836,7 +930,7 @@ async function abrirCamera() {
 }
 function recomecar() {
   MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
-  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#guia').classList.remove('some');
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; historia = null; $('#guia').classList.remove('some');
   $('#prog').style.display = 'none'; $('#prog i').style.width = '0';
   status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
 }
@@ -1023,8 +1117,8 @@ async function passo() {
     } else if (a) info = `${a.modo} · erro alto ${a.rms.toFixed(1)}`;
   } catch (e) { info = 'erro ' + e.message; }
   if (!achou && lendo) { estavel = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
-  if (!achou && !lendo && performance.now() - ultimaVez > 2000) status('Aponte de novo para o quebra-cabeça', 'A arca volta a boiar em cima dele');
-  if (achou && !lendo) status('Pronto! A arca está boiando no quebra-cabeça', 'Ande em volta com o celular para ver de todos os lados', true);
+  if (!achou && !lendo && performance.now() - ultimaVez > 2000) status('Aponte de novo para o quebra-cabeça', 'A arca volta a aparecer em cima dele');
+  if (achou && !lendo && (!historia || historia.fimChuva)) status('Pronto! A arca está boiando no quebra-cabeça', 'Ande em volta com o celular para ver de todos os lados', true);
   if (DEBUG) { mostrarDepuracao(info, performance.now() - t0); window.__nDet = (window.__nDet || 0) + 1; window.__det = { achou, info, vis: ancora && ancora.visible, ms: Math.round(performance.now() - t0) }; }
   setTimeout(passo, lendo ? 0 : Math.max(4, 33 - (performance.now() - t0))); // depois da leitura só acompanha (até ~30 vezes por segundo)
 }
@@ -1033,8 +1127,8 @@ function terminarLeitura() {
   lendo = false; const t0c = performance.now(); const r = calcularCores(fotos); if (DEBUG) console.warn('tempo cores ms', Math.round(performance.now() - t0c)); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras; window.__arcaCores = r;
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
-  $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
-  status('Pronto! A arca está boiando no quebra-cabeça', 'Ande em volta com o celular para ver de todos os lados', true);
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
+  status('A arca está pronta em terra firme', 'Os bichos esperam na fila. Toque em Próximo para começar', true);
 }
 function animar() { if (!ativo) return; desenharAR(); fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); }
 function resumoEst() { const ok = EST.filter(e => e.ok).length, ms = EST.reduce((s, e) => s + e.ms, 0) / Math.max(1, EST.length);
