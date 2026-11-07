@@ -116,7 +116,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.11 · 06/11/2026';
+const VERSAO = '0.12 · 07/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -420,14 +420,19 @@ function calcularCores(fotos) {
 let PERSONAGENS = null, BIN_P = null;
 async function carregarPersonagens() {
   if (PERSONAGENS) return;
-  try { const d = await fetch('assets/noe.json').then(r => r.json());
-    const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
-    BIN_P = new Uint16Array(await new Response(new Blob([bruto]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); PERSONAGENS = d;
-  } catch (e) { PERSONAGENS = {}; }
+  const tudo = {};
+  for (const arq of ['assets/noe.json', 'assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
+    try { const d = await fetch(arq).then(r => r.json());
+      const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
+      const BIN = new Uint16Array(await new Response(new Blob([bruto]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+      for (const [k, v] of Object.entries(d)) if (k !== '_bin') { v.BIN = BIN; tudo[k] = v; }
+    } catch (e) { }
+  }
+  PERSONAGENS = tudo;
 }
 const ESF_OLHO = new THREE.SphereGeometry(1, 16, 12);
 function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; mapa: parte -> região do desenho (ou cor fixa)
-  const pega = ([i, n]) => BIN_P.subarray(i / 2, i / 2 + n), raiz = new THREE.Group(), pad = { roughness: 0.55, metalness: 0, envMapIntensity: 0.45 };
+  const B = d.BIN || BIN_P, pega = ([i, n]) => B.subarray(i / 2, i / 2 + n), raiz = new THREE.Group(), pad = { roughness: 0.55, metalness: 0, envMapIntensity: 0.45 };
   const corParte = p => { const m = mapa[p]; return Array.isArray(m) ? m : (m !== undefined ? corR(cores, m) : PAPEL); };
   const grupos = {}; raiz.userData.pecas = grupos;
   for (const pc of d.pecas) {
@@ -461,6 +466,35 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
 function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o do cajado fica parado
   if (p.bracoE) p.bracoE.rotation.z = Math.sin(t * 5) * 0.22; if (p.antebracoE) p.antebracoE.rotation.z = Math.sin(t * 5 + 0.6) * 0.3;
   if (p.cabeca) { p.cabeca.rotation.z = Math.sin(t * 1.4) * 0.06; p.cabeca.rotation.y = Math.sin(t * 0.8) * 0.15; }
+}
+// ---------- vida em volta da arca: um golfinho que salta de vez em quando e gaivotas que passam voando ----------
+const SALTO_P = DEBUG && /salto=1/.test(location.search) ? 2.6 : 11, GAIVOTA_P = DEBUG && /gaivota=1/.test(location.search) ? 16 : 34; // períodos (s); no teste ficam direto
+function criarVida(opc) { // opc: zSalto (onde o golfinho salta, na frente da arca), yVoo (altura das gaivotas), esc (tamanho do percurso)
+  if (!PERSONAGENS || !PERSONAGENS.golfinho || !PERSONAGENS.gaivota) return null;
+  const g = new THREE.Group(); g.name = 'vida'; const u = { ...opc, gaivotas: [], aneis: [] };
+  u.golfinho = montarPersonagem(PERSONAGENS.golfinho, PERSONAGENS.golfinho.cores, null, 0.2 * (opc.tam || 1)); u.golfinho.visible = false; g.add(u.golfinho);
+  for (let i = 0; i < 2; i++) { const gv = montarPersonagem(PERSONAGENS.gaivota, PERSONAGENS.gaivota.cores, null, 0.13 * (opc.tam || 1)); gv.visible = false; g.add(gv); u.gaivotas.push(gv); }
+  const anelGeo = new THREE.RingGeometry(0.72, 1, 28);
+  for (let i = 0; i < 2; i++) { const a = new THREE.Mesh(anelGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); a.rotation.x = -Math.PI / 2; a.visible = false; g.add(a); u.aneis.push(a); }
+  g.userData = u; return g;
+}
+function animarVida(g, t, altura) {
+  const u = g.userData, E = u.esc;
+  // golfinho: salta num arco na frente da arca, ora para um lado, ora para o outro; espuma onde sai e onde entra
+  const k = Math.floor(t / SALTO_P), ph = t - k * SALTO_P, dur = 1.9, dir = k % 2 ? 1 : -1, xc = ((k * 7) % 5 - 2) * 0.1 * E, zc = u.zSalto, L = 0.8 * (u.tam || 1), H = 0.42 * (u.tam || 1);
+  const gf = u.golfinho; gf.visible = ph < dur;
+  if (gf.visible) { const sfr = ph / dur, x = xc + dir * (sfr - 0.5) * L, y = H * Math.sin(Math.PI * sfr) - 0.16 * (u.tam || 1) + altura(x, zc, t);
+    gf.position.set(x, y, zc); gf.rotation.set(0, dir > 0 ? 0 : Math.PI, Math.atan2(H * Math.PI * Math.cos(Math.PI * sfr), L)); }
+  [[0, xc - dir * L / 2, ph], [1, xc + dir * L / 2, ph - dur + 0.35]].forEach(([i, x, ta]) => { const a = u.aneis[i], vis = ta > 0 && ta < 0.9; a.visible = vis;
+    if (vis) { const q = ta / 0.9; a.position.set(x, 0.012 + altura(x, zc, t), zc); a.scale.setScalar((0.05 + 0.22 * q) * (u.tam || 1)); a.material.opacity = 0.8 * (1 - q) * (1 - q); } });
+  // gaivotas: de tempos em tempos, duas passam voando por cima, de um lado ao outro, batendo as asas e planando
+  const kg = Math.floor(t / GAIVOTA_P), pg = t - kg * GAIVOTA_P, dv = 15, dg = kg % 2 ? -1 : 1;
+  u.gaivotas.forEach((gv, i) => { const tg = pg - i * 1.1, vis = tg > 0 && tg < dv; gv.visible = vis; if (!vis) return;
+    const sfr = tg / dv, x = dg * (sfr - 0.5) * 5.2 * E, z = (-0.35 + 0.55 * Math.sin(sfr * Math.PI * 1.3 + i) + i * 0.3) * E, y = u.yVoo + (0.1 * Math.sin(tg * 0.9 + i * 2)) * E;
+    const vx = dg * 5.2 * E / dv, vz = 0.55 * Math.PI * 1.3 / dv * Math.cos(sfr * Math.PI * 1.3 + i) * E;
+    gv.position.set(x, y, z); gv.rotation.set(0, Math.atan2(-vz, vx), 0.25 * Math.sin(tg * 0.9 + i * 2));
+    const amp = 0.5 * Math.max(0.08, Math.sin(tg * 0.5 + i * 1.7)), bat = Math.sin(t * 8.5 + i) * amp, pz = gv.userData.pecas;
+    if (pz.asaE) pz.asaE.rotation.x = bat; if (pz.asaD) pz.asaD.rotation.x = -bat; });
 }
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
 const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
@@ -718,6 +752,7 @@ function colocarArcaAR(arca, cores) {
   marAR = criarAquario(cores); espumaAR = criarEspuma(); espumaAR.renderOrder = 5;
   const boia = new THREE.Group(); boia.add(arca); boia.add(espumaAR); // a arca e a espuma sobem junto com a água
   g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca;
+  const vida = criarVida({ zSalto: 0.52, yVoo: 0.62, esc: 1 }); if (vida) { boia.add(vida); g.userData.vida = vida; }
   const e = DADOS.alvo[0] / 2048 / k, arco = criarArco(cores, e); // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
   if (arco) { arco.position.set((ARCO_D.cx * DADOS.alvo[0] / 2048 - cx) / k, 0, retanguloAR().z0 + 0.22); g.add(arco); g.userData.arco = arco; }
   ancora.add(g); tSubida = performance.now();
@@ -775,7 +810,8 @@ function desenharAR() {
     const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; // as faixas abrem uma a uma, de fora para dentro
       arco.userData.faixas.forEach((f, i) => { const a = ease((dt - 1500 - i * 120) / 600); f.scale.setScalar(Math.max(0.001, a)); f.visible = a > 0; algum = algum || a > 0; });
       const a0 = ease((dt - 1500) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum; }
-    espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5; }
+    espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5;
+    if (arcaAR.userData.vida && nivel >= 1) animarVida(arcaAR.userData.vida, t, alturaAR); }
   rAR.render(cenaAR, camAR);
   if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
@@ -1289,6 +1325,7 @@ function abrir3D(cores) {
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
+  if (cena3.userData.vida) { cena3.remove(cena3.userData.vida); descartar(cena3.userData.vida); } { const v = criarVida({ zSalto: 0.95, yVoo: 0.95, esc: 1.5, tam: 1.15 }); if (v) cena3.add(v); cena3.userData.vida = v; }
   if (cena3.userData.arco) { cena3.remove(cena3.userData.arco); descartar(cena3.userData.arco); cena3.userData.arco = null; }
   { const arco = criarArco(cores, 2.3 / ARCO_D.r0); if (arco) { arco.position.set(3.4, -0.3, -6.5); arco.rotation.y = -0.35; arco.traverse(o => { if (o.material) o.material.fog = false; }); cena3.add(arco); cena3.userData.arco = arco; } }
   if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
@@ -1305,6 +1342,7 @@ function anim3(tms) {
   if (c.width !== Math.round(w * r3.getPixelRatio()) || c.height !== Math.round(h * r3.getPixelRatio())) { r3.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); enquadrar(); }
   const u = mar3.userData.u; u.uT.value = t; u.uCam.value.copy(cam3.position);
   if (arca3) balancar(arca3, t);
+  if (cena3.userData.vida) animarVida(cena3.userData.vida, t, alturaMar);
   const esp = cena3.userData.espuma; if (esp) { esp.position.y = balanco.y * 0.6; esp.rotation.z = balanco.rz * 0.5; esp.material.opacity = 0.8 + 0.2 * Math.sin(t * 1.3); }
   fps3D(tms, () => { r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio)); if (QUAL.nivel === 0) cena3.userData.sol.castShadow = false; });
   ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
