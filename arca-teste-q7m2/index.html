@@ -118,7 +118,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.13 · 07/11/2026';
+const VERSAO = '0.14 · 07/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -138,7 +138,7 @@ let DADOS = null;
 async function carregarDados() {
   if (DADOS) return;
   DADOS = await fetch('assets/dados.json').then(r => r.json());
-  carregarPersonagens(); // os bichos (Tripo) chegam em paralelo; a arca não espera por eles
+  PROM_PERS = carregarPersonagens(); // os personagens chegam em paralelo; a leitura da câmera não espera por eles
   MASCARAS = {}; // onde a foto vira textura (parede e frontão da cabine): 1 = dentro da parte, longe das linhas
   await Promise.all(Object.entries(DADOS.texturas || {}).map(async ([nome, t]) => { try {
     const im = new Image(); im.src = `assets/masc_${nome}.png`; await im.decode();
@@ -420,10 +420,11 @@ function calcularCores(fotos) {
 
 // ---------- personagens (modelados em partes articuladas; cada parte pega a cor da região correspondente do desenho) ----------
 let PERSONAGENS = null, BIN_P = null;
+let PROM_PERS = null;
 async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
-  for (const arq of ['assets/noe.json', 'assets/mar.json', 'assets/fila.json']) { // cada arquivo traz seus personagens e um binário próprio
+  for (const arq of ['assets/noe.json', 'assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
       const BIN = new Uint16Array(await new Response(new Blob([bruto]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
@@ -500,12 +501,7 @@ function animarVida(g, t, altura) {
 }
 // ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
 const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
-const FILA = [ // ordem de embarque; cada bicho: modelo, altura no mundo da arca, cor por parte (região do desenho ou cor fixa), lugar na fila (x, z)
-  { m: 'leao', h: 0.30, mapa: { corpo: 205, rosto: 205, juba: 159 }, x: -0.1, z: 0.78 },
-  { m: 'elefante', h: 0.36, mapa: { corpo: 110 }, x: 0.3, z: 0.64 }, { m: 'elefante', h: 0.36, mapa: { corpo: 106 }, x: 0.34, z: 0.93 },
-  { m: 'girafa', h: 0.62, mapa: { corpo: 32 }, x: 0.72, z: 0.66 }, { m: 'girafa', h: 0.6, mapa: { corpo: 22 }, x: 0.76, z: 0.93 },
-  { m: 'zebra', h: 0.34, mapa: { corpo: 132, listras: [40, 38, 42], crina: [40, 38, 42] }, x: 1.1, z: 0.66 }, { m: 'zebra', h: 0.34, mapa: { corpo: 116, listras: [40, 38, 42], crina: [40, 38, 42] }, x: 1.14, z: 0.93 },
-  { m: 'macaco', h: 0.24, mapa: { corpo: 66 }, x: 1.38, z: 0.68 }, { m: 'galinha', h: 0.14, mapa: { corpo: 310, crista: [225, 50, 45], bico: [245, 170, 40] }, x: 1.4, z: 0.93 }];
+const FILA = []; // sem bichos em terra (decisão da Inovação em 07/11): só o Noé espera ao lado da rampa
 function texturaCapim() { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
   g.fillStyle = '#5fc43c'; g.fillRect(0, 0, 256, 256); let sem = 7; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < 2600; i++) { const x = rnd() * 256, y = rnd() * 256, h = 4 + rnd() * 9, cl = rnd(); g.strokeStyle = cl < 0.5 ? '#79d94f' : cl < 0.85 ? '#4fae30' : '#9be56a'; g.lineWidth = 1.2;
@@ -576,8 +572,7 @@ function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fi
 }
 function proximoEvento() {
   if (!historia) return; const agora = performance.now();
-  if (historia.etapa === 0) { historia.etapa = 1; historia.t0 = agora; $('#bProximo').disabled = true; status('Todos para a arca!', 'Os bichos vão entrando pela rampa', true); }
-  else if (historia.etapa === 1 || historia.etapa === 2 && false) { historia.etapa = 2; historia.t0 = agora; historia.tChuva = agora + 5000 * LENTO; $('#bProximo').disabled = true; status('Agora é a vez do Noé', 'E olha a chuva chegando…', true); }
+  if (historia.etapa === 0) { historia.etapa = 2; historia.t0 = agora; historia.tChuva = agora + 5000 * LENTO; $('#bProximo').disabled = true; status('O Noé está subindo na arca', 'E olha a chuva chegando…', true); }
 }
 $('#bProximo').addEventListener('click', proximoEvento);
 if (DEBUG) window.__historia = () => ({ h: historia, b: arcaAR && arcaAR.userData.terra ? arcaAR.userData.terra.userData.bichos.map(b => [b.userData.fila.m, ...b.position.toArray().map(v => +v.toFixed(2)), b.visible]) : null });
@@ -844,6 +839,7 @@ function colocarArcaAR(arca, cores) {
   ancora.add(g); tSubida = performance.now();
 }
 function projecaoAR() {
+  if (DEMO && camDemo) { camDemo.aspect = innerWidth / innerHeight; camDemo.updateProjectionMatrix(); camAR.projectionMatrix.copy(camDemo.projectionMatrix); camAR.projectionMatrixInverse.copy(camDemo.projectionMatrixInverse); return; }
   const Wc = innerWidth, Hc = innerHeight, sc = Math.max(Wc / VW, Hc / VH), k = sc * VW / NW, ox = (Wc - VW * sc) / 2, oy = (Hc - VH * sc) / 2;
   const f = focalAtual(), cxK = NW / 2, cyK = NH / 2, n = 10, fa = 100000;
   const a = 2 * k * f / Wc, b = 2 * (k * cxK + ox) / Wc - 1, d = 2 * k * f / Hc, c = 1 - 2 * (k * cyK + oy) / Hc;
@@ -880,6 +876,7 @@ function desenharAR() {
   if (!rAR || !$('#camera').classList.contains('ativa')) return;
   rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
   const agora = performance.now(), dq = Math.min(0.25, Math.max(0.001, (agora - (tDesenho || agora)) / 1000)), kq = 1 - Math.exp(-dq / 0.05); tDesenho = agora; // alisa em ~50 ms, em qualquer fps
+  if (DEMO && camDemo) { ctlDemo.update(); camDemo.updateMatrixWorld(); mDemo.multiplyMatrices(camDemo.matrixWorldInverse, P2W); mDemo.decompose(pA, qA, sA); pV.copy(pA); qV.copy(qA); sV.copy(sA); poseVista = true; ultimaVez = agora; }
   if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
   const recente = agora - ultimaVez < 2000; // falhou alguns quadros: a arca fica no último lugar; depois some
   const ver = !!arcaAR && poseVista && recente;
@@ -894,7 +891,7 @@ function desenharAR() {
     const dt = emTerra ? -1e9 : (agora - tSubida) / LENTO, chovendo = historia && historia.tChuva && agora >= historia.tChuva;
     const vidro = chovendo ? ease((agora - historia.tChuva) / LENTO / 700) : 0, nivel = ease((dt - 250) / 1800), aparece = 1;
     if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && dt > 5200 * LENTO) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false;
-      $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false; status('A arca está boiando!', 'Ande em volta com o celular para ver de todos os lados', true); }
+      $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false; status('A arca está boiando!', DEMO ? 'Arraste para girar e ver de todos os lados' : 'Ande em volta com o celular para ver de todos os lados', true); }
     if (terra && historia.etapa === 3) { const a = 1 - nivel; [terra.userData.capim.material].forEach(m => { m.transparent = a < 1; m.opacity = a; }); terra.userData.rampa.visible = a > 0.02; terra.children.forEach(c => { if (c.geometry && c.geometry.type === 'BoxGeometry') c.visible = a > 0.02; }); }
     const u = marAR.userData.u; u.uT.value = t; u.uNivel.value = nivel; u.uVidro.value = vidro;
     ancora.updateMatrixWorld(true); u.uCamL.value.set(0, 0, 0).applyMatrix4(mInv.copy(marAR.matrixWorld).invert());
@@ -1128,7 +1125,7 @@ function terminarLeitura() {
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
-  status('A arca está pronta em terra firme', 'Os bichos esperam na fila. Toque em Próximo para começar', true);
+  status('A arca está pronta em terra firme', 'Toque em Próximo para o Noé subir na arca', true);
 }
 function animar() { if (!ativo) return; desenharAR(); fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); }
 function resumoEst() { const ok = EST.filter(e => e.ok).length, ms = EST.reduce((s, e) => s + e.ms, 0) / Math.max(1, EST.length);
@@ -1471,6 +1468,47 @@ if (DEBUG) window.__int = { // só no modo de teste: para investigar o reconheci
       tracoEndireitado(mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], G)); await roda('endireitado', cvR); out.img = cvR.toDataURL('image/png'); }
     out.idadeHc = Hc ? Math.round(performance.now() - tHc) : null; return out; },
   parar() { ativo = false; }, get Hc() { return Hc; } };
+// ---------- modo demonstração: a história sem câmera, com a foto de um quebra-cabeça pintado em cima da mesa ----------
+const DEMO = /[?&]demo=1/.test(location.search) || !!window.ARCA_DEMO;
+let camDemo = null, ctlDemo = null, P2W = null; const mDemo = new THREE.Matrix4();
+function prepararDemo(img) {
+  if (camDemo) return; const [mw, mh] = DADOS.alvo;
+  ancora.children.forEach(c => { if (c.material && c.material.colorWrite === false) c.visible = false; }); // o "tapa" da câmera não precisa aqui
+  const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.needsUpdate = true;
+  const foto = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), new THREE.MeshBasicMaterial({ map: tex })); foto.position.set(mw / 2, mh / 2, 0); foto.rotation.x = Math.PI; foto.renderOrder = -1; ancora.add(foto);
+  const mesa = new THREE.Mesh(new THREE.PlaneGeometry(mw * 5, mh * 5), new THREE.MeshLambertMaterial({ color: 0xc9a47c })); mesa.position.set(mw / 2, mh / 2, 3); mesa.rotation.x = Math.PI; ancora.add(mesa);
+  rAR.setClearColor(0xe6edf3, 1); $('#video').style.display = 'none'; $('#ar').style.pointerEvents = 'auto'; $('#ar').style.touchAction = 'none';
+  camDemo = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 80); camDemo.position.set(0.35, 2.0, 3.0);
+  ctlDemo = new OrbitControls(camDemo, $('#ar')); ctlDemo.target.set(0.15, 0.1, 0.25); ctlDemo.enableDamping = true; ctlDemo.dampingFactor = 0.08;
+  ctlDemo.maxPolarAngle = Math.PI * 0.46; ctlDemo.minDistance = 1.2; ctlDemo.maxDistance = 8; ctlDemo.enablePan = false; ctlDemo.update();
+  const S = 1 / K_AR, [cx, cy] = centroAR(); // pixel do quebra-cabeça -> mesmas unidades da arca (x direita, y para cima, z para quem olha)
+  P2W = new THREE.Matrix4().set(S, 0, 0, -cx * S, 0, 0, -S, 0, 0, S, 0, -cy * S, 0, 0, 0, 1);
+}
+function iniciarDemo() { // lê as cores da foto como o app faz com a câmera e monta a história do começo
+  const e = VW / 2048, Hd = [e, 0, 0, 0, e, 0, 0, 0, 1]; FULL = null; TEXF = null; fotos = [];
+  for (let i = 0; i < PRECISA; i++) fotos.push(amostrarFoto(Hd)); guardarTexturas(Hd);
+  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras;
+  arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
+  $('#guia').classList.add('some'); $('#prog').style.display = 'none';
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
+  status('A arca está pronta em terra firme', 'Toque em Próximo para o Noé subir · arraste para girar', true);
+}
+async function abrirDemo() {
+  await carregarDados(); mostrar('camera'); status('Preparando a demonstração…'); await PROM_PERS;
+  const img = new Image(); img.src = 'assets/demo.jpg'; await img.decode();
+  VW = img.naturalWidth; VH = img.naturalHeight; NW = VW; NH = VH;
+  cvFull = document.createElement('canvas'); cvFull.width = VW; cvFull.height = VH; cxFull = cvFull.getContext('2d', { willReadFrequently: true }); cxFull.drawImage(img, 0, 0);
+  prepararAR(); prepararDemo(img); iniciarDemo();
+  if (!ativo) { ativo = true; animar(); }
+}
+if (DEMO) {
+  $('#bCamera').textContent = 'Ver a história'; $('#bCamera').onclick = abrirDemo;
+  $('#bDeNovo').textContent = 'Ver de novo'; $('#bDeNovo').onclick = iniciarDemo;
+  if (window.ARCA_DEMO) $('#bFoto').hidden = true; $('#bOutra').textContent = 'Ver a história de novo';
+  $('#vVoltar').onclick = () => { mostrar('camera'); if (!ativo) { ativo = true; animar(); } };
+  $('#bOutra').onclick = () => { mostrar('camera'); if (!ativo) { ativo = true; animar(); } iniciarDemo(); };
+  abrirDemo();
+}
 window.__arca = { carregarDados, criarArca, abrir3D, coresExemplo, get dados() { return DADOS; },
   vista(az, el, d = 2.2) { mexeu3 = true; const t = ctl3.target; cam3.position.set(t.x + d * Math.cos(el) * Math.sin(az), t.y + d * Math.sin(el), t.z + d * Math.cos(el) * Math.cos(az)); ctl3.update(); } };
 </script>
