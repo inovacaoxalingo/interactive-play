@@ -118,7 +118,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.14 · 07/11/2026';
+const VERSAO = '0.15 · 08/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -502,39 +502,98 @@ function animarVida(g, t, altura) {
 // ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
 const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
 const FILA = []; // sem bichos em terra (decisão da Inovação em 07/11): só o Noé espera ao lado da rampa
-function texturaCapim() { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#5fc43c'; g.fillRect(0, 0, 256, 256); let sem = 7; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 2600; i++) { const x = rnd() * 256, y = rnd() * 256, h = 4 + rnd() * 9, cl = rnd(); g.strokeStyle = cl < 0.5 ? '#79d94f' : cl < 0.85 ? '#4fae30' : '#9be56a'; g.lineWidth = 1.2;
+function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
+function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
+  const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
+  const forma = () => { g.beginPath(); g.roundRect(M, M, W - 2 * M, H - 2 * M, R); };
+  g.fillStyle = '#5fb641'; forma(); g.fill();
+  const tufo = (x, y, nx, ny) => { for (let k = 0; k < 3; k++) { const h = 9 + rnd() * 17, a = (rnd() - 0.5) * 1.1, bx = x + (rnd() - 0.5) * 7, by = y + (rnd() - 0.5) * 7;
+      const dx = nx * Math.cos(a) - ny * Math.sin(a), dy = nx * Math.sin(a) + ny * Math.cos(a), lw = 3.5 + rnd() * 2.5;
+      g.fillStyle = ['#5fb641', '#52a538', '#6cc24a'][k]; g.beginPath(); g.moveTo(bx - ny * lw, by + nx * lw); g.lineTo(bx + dx * h, by + dy * h); g.lineTo(bx + ny * lw, by - nx * lw); g.closePath(); g.fill(); } };
+  for (let x = M + R; x < W - M - R; x += 6) { tufo(x, M + 2, 0, -1); tufo(x, H - M - 2, 0, 1); }
+  for (let y = M + R; y < H - M - R; y += 6) { tufo(M + 2, y, -1, 0); tufo(W - M - 2, y, 1, 0); }
+  [[M + R, M + R, Math.PI], [W - M - R, M + R, 1.5 * Math.PI], [W - M - R, H - M - R, 0], [M + R, H - M - R, 0.5 * Math.PI]].forEach(([cx, cy, a0]) => {
+    for (let a = a0; a < a0 + Math.PI / 2; a += 0.12) tufo(cx + (R - 2) * Math.cos(a), cy + (R - 2) * Math.sin(a), Math.cos(a), Math.sin(a)); });
+  g.save(); forma(); g.clip();
+  for (let i = 0; i < 70; i++) { const x = rnd() * W, y = rnd() * H, r = 30 + rnd() * 90, claro = rnd() < 0.55, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, claro ? 'rgba(150,215,95,0.35)' : 'rgba(55,125,40,0.30)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
+  g.lineCap = 'round';
+  for (let i = 0; i < 11000; i++) { const x = rnd() * W, y = rnd() * H, h = 4 + rnd() * 7, cl = rnd(); g.strokeStyle = cl < 0.4 ? '#78cc52' : cl < 0.8 ? '#4c9c33' : '#93dc68'; g.lineWidth = 1.4 + rnd();
     g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - 0.5) * 4, y - h); g.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(9, 6); t.colorSpace = THREE.SRGBColorSpace; return t; }
+  for (let i = 0; i < 90; i++) { const x = M + 30 + rnd() * (W - 2 * M - 60), y = M + 30 + rnd() * (H - 2 * M - 60), tipo = rnd(); // florzinhas
+    if (tipo < 0.6) { g.fillStyle = '#ffffff'; for (let k = 0; k < 5; k++) { const a = k * 1.2566; g.beginPath(); g.arc(x + 3.2 * Math.cos(a), y + 3.2 * Math.sin(a), 2.6, 0, 7); g.fill(); } g.fillStyle = '#ffc928'; g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill(); }
+    else { g.fillStyle = tipo < 0.85 ? '#ffd52e' : '#ff9ec4'; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,0.7)'; g.beginPath(); g.arc(x - 1, y - 1, 1, 0, 7); g.fill(); } }
+  const sombra = g.createLinearGradient(0, 0, 0, H); sombra.addColorStop(0, 'rgba(30,70,20,0.10)'); sombra.addColorStop(0.5, 'rgba(0,0,0,0)'); g.fillStyle = sombra; g.fillRect(0, 0, W, H);
+  g.restore();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+let TEX_SOMBRA = null;
+function texturaSombra() { if (TEX_SOMBRA) return TEX_SOMBRA; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  gr.addColorStop(0, 'rgba(20,35,15,0.75)'); gr.addColorStop(0.55, 'rgba(20,35,15,0.38)'); gr.addColorStop(1, 'rgba(20,35,15,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return (TEX_SOMBRA = new THREE.CanvasTexture(c)); }
+function sombraChao(lx, lz, op) { const m = new THREE.Mesh(new THREE.PlaneGeometry(lx, lz), new THREE.MeshBasicMaterial({ map: texturaSombra(), transparent: true, depthWrite: false, opacity: op }));
+  m.rotation.x = -Math.PI / 2; m.renderOrder = 3; m.userData.op0 = op; return m; }
+function texturaMadeira() { const c = document.createElement('canvas'); c.width = 64; c.height = 256; const g = c.getContext('2d'), rnd = rndSem(5);
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 64, 256);
+  for (let i = 0; i < 14; i++) { const x0 = rnd() * 64, amp = 1 + rnd() * 3, fase = rnd() * 6; g.strokeStyle = `rgba(90,50,20,${0.10 + rnd() * 0.12})`; g.lineWidth = 0.8 + rnd() * 1.4; g.beginPath();
+    for (let y = 0; y <= 256; y += 8) g.lineTo(x0 + amp * Math.sin(y / 40 + fase), y); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+function tufoGeo() { // três folhinhas em leque, normais para cima (o capim acende por igual)
+  const P = [], N = [];
+  for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + 0.4, ca = Math.cos(a), sa = Math.sin(a), b = 0.0075, h = [0.034, 0.046, 0.03][k], lean = 0.012 * (k - 1);
+    P.push(-b * ca, 0, -b * sa, b * ca, 0, b * sa, lean * sa, h, -lean * ca); N.push(0, 1, 0, 0, 1, 0, 0, 1, 0); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); return geo; }
 function materiaisDe(obj) { const ms = []; obj.traverse(o => { [].concat(o.material || []).forEach(m => { if (!ms.includes(m)) ms.push(m); }); }); ms.forEach(m => { m.transparent = true; m.userData.op0 = m.opacity; }); return ms; }
 function opacidade(inst, a) { inst.userData.mats.forEach(m => { m.opacity = m.userData.op0 * a; }); inst.visible = a > 0.01; }
 function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
-  const g = new THREE.Group(); g.name = 'terra'; const r = retanguloAR(), w = r.x1 - r.x0, d = r.z1 - r.z0;
-  const capim = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.3, d * 1.3), new THREE.MeshLambertMaterial({ map: texturaCapim(), color: 0xe8ffe0 }));
-  capim.rotation.x = -Math.PI / 2; capim.position.set((r.x0 + r.x1) / 2, 0.003, (r.z0 + r.z1) / 2); capim.renderOrder = 2; g.add(capim);
-  const madeira = new THREE.MeshStandardMaterial({ color: 0xa8713c, roughness: 0.8 }), escura = new THREE.MeshStandardMaterial({ color: 0x7a4e26, roughness: 0.8 });
+  const g = new THREE.Group(); g.name = 'terra'; const r = retanguloAR(), w = r.x1 - r.x0, d = r.z1 - r.z0, cxr = (r.x0 + r.x1) / 2, czr = (r.z0 + r.z1) / 2, rnd = rndSem(23);
+  // gramado do tamanho do quebra-cabeça, com borda de tufos; a água cobre ele no dilúvio
+  const M = 30, fx = 1024 / (1024 - 2 * M), wc = w * 1.015 * fx, dc = d * 1.015 * (1 + 2 * M / (1024 * d / w - 2 * M));
+  const capim = new THREE.Mesh(new THREE.PlaneGeometry(wc, dc), new THREE.MeshLambertMaterial({ map: texturaCapim(w, d, M), transparent: true, alphaTest: 0.02 }));
+  capim.rotation.x = -Math.PI / 2; capim.position.set(cxr, 0.003, czr); capim.renderOrder = 2; g.add(capim);
+  // tufinhos de capim em 3D espalhados (menos embaixo da arca e da rampa)
+  const NT = 900, tufos = new THREE.InstancedMesh(tufoGeo(), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), NT), o = new THREE.Object3D(), cor = new THREE.Color();
+  const tons = [0x4f9f35, 0x5fb641, 0x6cc24a, 0x7fd05a, 0x57ad3c]; let n = 0;
+  for (let i = 0; i < NT * 3 && n < NT; i++) { const x = r.x0 + 0.04 + rnd() * (w - 0.08), z = r.z0 + 0.04 + rnd() * (d - 0.08);
+    if (Math.abs(x) < 0.8 && Math.abs(z) < 0.3) continue; if (Math.abs(x - XR) < 0.17 && z > TOPO_RAMPA[2] - 0.05 && z < PE_RAMPA + 0.06) continue;
+    o.position.set(x, 0.002, z); o.rotation.set(0, rnd() * 6.28, 0); o.scale.setScalar(0.7 + rnd() * 0.8); o.updateMatrix(); tufos.setMatrixAt(n, o.matrix); tufos.setColorAt(n, cor.setHex(tons[Math.floor(rnd() * tons.length)])); n++; }
+  tufos.count = n; tufos.renderOrder = 2; g.add(tufos);
+  // sombras de contato: a arca, a rampa e o Noé não ficam boiando no ar
+  const sArca = sombraChao(1.95, 0.74, 0.75); sArca.position.set(0, 0.005, 0.02); g.add(sArca);
+  const madeira = texturaMadeira(), escura = new THREE.MeshStandardMaterial({ color: 0x6e4421, roughness: 0.85, map: madeira });
   const dz = PE_RAMPA - TOPO_RAMPA[2], dy = TOPO_RAMPA[1], comp = Math.hypot(dz, dy), rampa = new THREE.Group();
-  const tabua = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.016, comp), madeira); rampa.add(tabua, contornoCaixa(tabua, 0.006));
-  for (let i = 1; i < 8; i++) { const rip = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.012, 0.022), escura); rip.position.set(0, 0.012, -comp / 2 + i * comp / 8); rampa.add(rip); }
+  // rampa: tábuas de tons diferentes, corrimão dos dois lados e travessas para o pé não escorregar
+  const tons2 = [0xa96d38, 0x9a6232, 0xb47841, 0xa2683a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, map: madeira })), NTB = 9, passo = comp / NTB;
+  for (let i = 0; i < NTB; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.215, 0.018, passo - 0.007), tons2[i % 4]); t.position.set(i % 2 ? 0.003 : -0.003, 0, -comp / 2 + passo * (i + 0.5)); rampa.add(t); }
+  for (let i = 1; i < NTB; i += 2) { const tr = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.012, 0.016), escura); tr.position.set(0, 0.014, -comp / 2 + passo * (i + 0.5)); rampa.add(tr); }
+  for (const sx of [-1, 1]) { const cr = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.036, comp + 0.02), escura); cr.position.set(sx * 0.12, 0.008, 0); rampa.add(cr, contornoCaixa(cr, 0.005)); }
   rampa.position.set(XR, dy / 2 + 0.01, (PE_RAMPA + TOPO_RAMPA[2]) / 2); rampa.rotation.x = Math.atan2(dy, dz); g.add(rampa);
-  for (const x of [-0.42, 0.42]) { const calco = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.09, 0.34), escura); calco.position.set(x, 0.045, 0); g.add(calco); } // calços segurando a arca
+  const sRampa = sombraChao(0.36, dz * 0.95, 0.45); sRampa.position.set(XR, 0.006, (PE_RAMPA + TOPO_RAMPA[2]) / 2 + 0.06); g.add(sRampa);
+  // apoios: dois troncos atravessados segurando a arca no chão
+  const apoios = new THREE.Group(), casca = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9, map: madeira }), miolo = new THREE.MeshStandardMaterial({ color: 0xe0b077, roughness: 0.9 });
+  for (const x of [-0.42, 0.42]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.42, 16), [casca, miolo, miolo]); l.rotation.x = Math.PI / 2; l.position.set(x, 0.048, 0); apoios.add(l); }
+  g.add(apoios);
   const bichos = []; FILA.forEach((f, i) => { const mod = PERSONAGENS && PERSONAGENS[f.m]; if (!mod) return;
     const inst = montarPersonagem(mod, { ...f.mapa, tinta: [30, 28, 32] }, cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = -Math.PI / 2 + (i % 2 ? 0.15 : -0.1);
     inst.userData.mats = materiaisDe(inst); inst.userData.fila = f; inst.userData.yaw = inst.rotation.y; g.add(inst); bichos.push(inst); });
-  let noeChao = null; if (PERSONAGENS && PERSONAGENS.noe_o && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
-    noeChao = montarPersonagem(PERSONAGENS.noe_o, mapa, cores, 0.4); noeChao.position.set(-0.88, 0, 0.74); noeChao.rotation.y = Math.PI / 2; noeChao.userData.yaw = Math.PI / 2; noeChao.userData.mats = materiaisDe(noeChao); g.add(noeChao); }
+  let noeChao = null, sNoe = null; if (PERSONAGENS && PERSONAGENS.noe_o && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
+    noeChao = montarPersonagem(PERSONAGENS.noe_o, mapa, cores, 0.4); noeChao.position.set(-0.88, 0, 0.74); noeChao.rotation.y = Math.PI / 2; noeChao.userData.yaw = Math.PI / 2; noeChao.userData.mats = materiaisDe(noeChao); g.add(noeChao);
+    sNoe = sombraChao(0.2, 0.17, 0.55); g.add(sNoe); }
   const noeArca = arca.getObjectByName('noe'); if (noeArca) { noeArca.userData.mats = materiaisDe(noeArca); opacidade(noeArca, 0); }
-  // chuva: risquinhos caindo dentro do aquário; nuvens cinzas em cima
-  const N = 420, pos = new Float32Array(N * 6), vel = new Float32Array(N); let sem = 3; const rnd = () => (sem = (sem * 48271) % 2147483647) / 2147483647;
-  for (let i = 0; i < N; i++) { const x = r.x0 + rnd() * w, z = r.z0 + rnd() * d, y = rnd() * 1.3; pos.set([x, y, z, x, y + 0.045, z], i * 6); vel[i] = 1.4 + rnd() * 0.8; }
-  const gch = new THREE.BufferGeometry(); gch.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const chuva = new THREE.LineSegments(gch, new THREE.LineBasicMaterial({ color: 0xdfeeff, transparent: true, opacity: 0.6 })); chuva.visible = false; chuva.frustumCulled = false; g.add(chuva);
-  const nuvens = new THREE.Group(), matN = new THREE.MeshLambertMaterial({ color: 0x8e97a3, transparent: true, opacity: 0.95 });
-  [[-0.9, 0.85, -0.55, 0.55], [-0.1, 0.95, -0.7, 0.7], [0.75, 0.88, -0.5, 0.5]].forEach(([x, y, z, e]) => { const n = new THREE.Group();
-    [[0, 0, 0, 0.17], [0.17, 0.03, 0.04, 0.13], [-0.16, 0.02, -0.03, 0.12], [0.05, 0.08, -0.08, 0.12], [-0.04, 0.07, 0.09, 0.11]].forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(new THREE.SphereGeometry(rr, 12, 10), matN); m.position.set(a, b, c); n.add(m); });
-    n.position.set(x, y, z); n.scale.setScalar(e); nuvens.add(n); }); nuvens.visible = false; g.add(nuvens);
-  g.userData = { capim, rampa, bichos, noeChao, noeArca, chuva, vel, nuvens, matN, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
+  // chuva: gotas compridas que somem em cima (vêm de longe) e respingos na água; nuvens fofas, claras em cima e mais escuras embaixo
+  const N = 460, pos = new Float32Array(N * 6), col = new Float32Array(N * 8), vel = new Float32Array(N), LG = 0.065;
+  for (let i = 0; i < N; i++) { const x = r.x0 + rnd() * w, z = r.z0 + rnd() * d, y = rnd() * 1.3; pos.set([x, y, z, x, y + LG, z], i * 6); col.set([0.86, 0.93, 1, 0.9, 0.86, 0.93, 1, 0], i * 8); vel[i] = 1.5 + rnd() * 0.8; }
+  const gch = new THREE.BufferGeometry(); gch.setAttribute('position', new THREE.BufferAttribute(pos, 3)); gch.setAttribute('color', new THREE.BufferAttribute(col, 4));
+  const chuva = new THREE.LineSegments(gch, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false })); chuva.visible = false; chuva.frustumCulled = false; g.add(chuva);
+  const anel = new THREE.RingGeometry(0.7, 1, 20), respingos = [];
+  for (let i = 0; i < 22; i++) { const m = new THREE.Mesh(anel, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.visible = false; m.renderOrder = 4;
+    m.userData = { fase: rnd(), per: 0.55 + rnd() * 0.35, ciclo: -1 }; g.add(m); respingos.push(m); }
+  const nuvens = new THREE.Group(), matN = new THREE.MeshLambertMaterial({ color: 0xd9e0e8, transparent: true, opacity: 0.95, emissive: 0x2a3340 }), matN2 = new THREE.MeshLambertMaterial({ color: 0x98a4b4, transparent: true, opacity: 0.95 }), esf = new THREE.SphereGeometry(1, 18, 14);
+  const lobos = [[0, 0.07, 0, 0.16], [0.15, 0.05, 0.02, 0.13], [-0.15, 0.045, -0.01, 0.125], [0.07, 0.14, -0.02, 0.12], [-0.08, 0.13, 0.03, 0.11], [0.27, 0.01, 0, 0.09], [-0.27, 0.01, 0.01, 0.085], [0.0, 0.03, 0.09, 0.11]];
+  [[-0.95, 0.78, -0.5, 0.8], [-0.05, 0.86, -0.72, 0.95], [0.85, 0.8, -0.45, 0.72]].forEach(([x, y, z, e]) => { const nv = new THREE.Group();
+    lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matN); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
+    const base = new THREE.Mesh(esf, matN2); base.position.set(0, 0.0, 0.01); base.scale.set(0.34, 0.075, 0.14); nv.add(base);
+    nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.y0 = y; nuvens.add(nv); }); nuvens.visible = false; g.add(nuvens);
+  g.userData = { capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
 }
 const VEL_BICHO = 0.42; // unidades por segundo
@@ -562,13 +621,30 @@ function animarTerra(terra, agora, t) {
 function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fica durante o dilúvio e vai embora depois
   const u = terra.userData; if (!historia || !historia.tChuva) { return 0; }
   const sc = (agora - historia.tChuva) / 1000 / LENTO, fim = historia.fimChuva ? (agora - historia.fimChuva) / 1000 / LENTO : -1;
+  if (sc < 0) { u.chuva.visible = false; u.nuvens.visible = false; return 0; } // ainda não começou
   const inten = Math.min(1, sc / 2) * (fim >= 0 ? Math.max(0, 1 - fim / 2.2) : 1);
   u.chuva.visible = inten > 0.02; u.nuvens.visible = inten > 0.02 || (fim >= 0 && fim < 4);
   if (u.chuva.visible) { const pos = u.chuva.geometry.attributes.position.array, N = u.vel.length;
-    for (let i = 0; i < N; i++) { let y = pos[i * 6 + 1] - u.vel[i] * dtq; if (y < 0) y += 1.3; pos[i * 6 + 1] = y; pos[i * 6 + 4] = y + 0.045; }
+    for (let i = 0; i < N; i++) { let y = pos[i * 6 + 1] - u.vel[i] * dtq; if (y < 0) y += 1.3; pos[i * 6 + 1] = y; pos[i * 6 + 4] = y + u.LG; }
     u.chuva.geometry.attributes.position.needsUpdate = true; u.chuva.geometry.setDrawRange(0, Math.floor(N * inten) * 2); }
-  if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 === undefined ? (n.userData.y0 = n.position.y) : n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); }); }
+  if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = u.matN2.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); n.scale.y = n.scale.x * (0.96 + 0.04 * Math.sin(agora / 700 + i * 2)); }); }
   return inten;
+}
+function animarClima(terra, t, nivel, chuva) {
+  const u = terra.userData, R = u.rect;
+  u.respingos.forEach((m, i) => { const ud = m.userData, ativo = i < Math.floor(u.respingos.length * chuva); if (!ativo) { m.visible = false; return; }
+    const f = t / ud.per + ud.fase, ciclo = Math.floor(f), q = f - ciclo;
+    if (ciclo !== ud.ciclo) { ud.ciclo = ciclo; let x, z, k = 0; do { x = R.x0 + 0.08 + Math.random() * (R.x1 - R.x0 - 0.16); z = R.z0 + 0.08 + Math.random() * (R.z1 - R.z0 - 0.16); } while (Math.abs(x) < 0.75 && Math.abs(z) < 0.28 && ++k < 6); ud.x = x; ud.z = z; }
+    const y = nivel > 0.02 ? ALTURA_AGUA * nivel + alturaAR(ud.x, ud.z, t) * nivel + 0.006 : 0.012;
+    m.visible = true; m.position.set(ud.x, y, ud.z); m.scale.setScalar(0.008 + 0.04 * q); m.material.opacity = 0.75 * (1 - q) * (1 - q); });
+  const a = 1 - nivel; u.tufos.visible = a > 0.03; u.tufos.scale.y = Math.max(0.01, a); u.apoios.visible = a > 0.02;
+  u.sombras.forEach(s => { s.material.opacity = s.userData.op0 * a; s.visible = a > 0.02; });
+  if (u.sNoe) { const n = u.noeChao, alt = n ? n.position.y : 1; u.sNoe.visible = n && n.visible && alt < 0.12; if (u.sNoe.visible) { u.sNoe.position.set(n.position.x, 0.006, n.position.z); u.sNoe.material.opacity = u.sNoe.userData.op0 * (1 - alt / 0.12) * n.userData.mats[0].opacity; } }
+}
+function luzDoTempo(cena, chuva) { // com chuva a luz baixa e fica azulada; quando passa, volta o sol
+  const L = cena.userData.luz; if (!L) return; const f = Math.min(1, Math.max(0, chuva));
+  L.amb.intensity = L.a0 * (1 - 0.28 * f); L.sol.intensity = L.s0 * (1 - 0.5 * f); L.hemi.intensity = L.h0 * (1 - 0.3 * f);
+  L.sol.color.copy(L.c0).lerp(L.cChuva, f); if (cena.background) cena.backgroundIntensity = 1 - 0.4 * f;
 }
 function proximoEvento() {
   if (!historia) return; const agora = performance.now();
@@ -803,8 +879,9 @@ function luzes(cena) { // ver em 3D: céu em cima, sol de lado
   const sol = new THREE.DirectionalLight(0xfff3e0, 2.5); sol.position.set(-1.2, 2.2, 1.8); cena.add(sol); return sol;
 }
 function luzesAR(cena) { // por cima da câmera: luz vinda de quem segura o celular
-  cena.add(new THREE.AmbientLight(0xffffff, 1.1));
-  const l = new THREE.DirectionalLight(0xfff6ea, 2.3); l.position.set(-0.4, 0.8, 1); cena.add(l);
+  const amb = new THREE.AmbientLight(0xffffff, 0.8), hemi = new THREE.HemisphereLight(0xeaf4ff, 0x8a8f72, 0.55);
+  const l = new THREE.DirectionalLight(0xfff6ea, 2.4); l.position.set(-0.4, 0.8, 1); cena.add(amb, hemi, l);
+  cena.userData.luz = { amb, sol: l, hemi, a0: 0.8, s0: 2.4, h0: 0.55, c0: new THREE.Color(0xfff6ea), cChuva: new THREE.Color(0xc4d6f0) };
 }
 
 // ---------- realidade aumentada por cima da câmera ----------
@@ -877,7 +954,8 @@ function desenharAR() {
   rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
   const agora = performance.now(), dq = Math.min(0.25, Math.max(0.001, (agora - (tDesenho || agora)) / 1000)), kq = 1 - Math.exp(-dq / 0.05); tDesenho = agora; // alisa em ~50 ms, em qualquer fps
   if (DEMO && camDemo) { ctlDemo.update(); camDemo.updateMatrixWorld(); mDemo.multiplyMatrices(camDemo.matrixWorldInverse, P2W); mDemo.decompose(pA, qA, sA); pV.copy(pA); qV.copy(qA); sV.copy(sA); poseVista = true; ultimaVez = agora; }
-  if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true; }
+  if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true;
+    const L = cenaAR.userData.luz; if (L) L.hemi.position.set(0, 0, -1).applyQuaternion(qV); } // o céu fica "em cima" do quebra-cabeça
   const recente = agora - ultimaVez < 2000; // falhou alguns quadros: a arca fica no último lugar; depois some
   const ver = !!arcaAR && poseVista && recente;
   if (ver && !ancora.visible && sumiuEm && agora - sumiuEm > 3000 && (!historia || historia.fimChuva)) tSubida = agora; // voltou depois de um tempo: enche de novo
@@ -890,9 +968,10 @@ function desenharAR() {
       if (historia.etapa <= 3) animarTerra(terra, agora, t); chuva = animarChuva(terra, agora, dq); }
     const dt = emTerra ? -1e9 : (agora - tSubida) / LENTO, chovendo = historia && historia.tChuva && agora >= historia.tChuva;
     const vidro = chovendo ? ease((agora - historia.tChuva) / LENTO / 700) : 0, nivel = ease((dt - 250) / 1800), aparece = 1;
-    if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && dt > 5200 * LENTO) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false;
+    if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && dt > 5200 * LENTO) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false; terra.userData.tufos.visible = false;
       $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false; status('A arca está boiando!', DEMO ? 'Arraste para girar e ver de todos os lados' : 'Ande em volta com o celular para ver de todos os lados', true); }
-    if (terra && historia.etapa === 3) { const a = 1 - nivel; [terra.userData.capim.material].forEach(m => { m.transparent = a < 1; m.opacity = a; }); terra.userData.rampa.visible = a > 0.02; terra.children.forEach(c => { if (c.geometry && c.geometry.type === 'BoxGeometry') c.visible = a > 0.02; }); }
+    if (terra && historia.etapa === 3) { const a = 1 - nivel; terra.userData.capim.material.opacity = a; terra.userData.rampa.visible = a > 0.02; }
+    if (terra) animarClima(terra, t, nivel, chuva); luzDoTempo(cenaAR, chuva);
     const u = marAR.userData.u; u.uT.value = t; u.uNivel.value = nivel; u.uVidro.value = vidro;
     ancora.updateMatrixWorld(true); u.uCamL.value.set(0, 0, 0).applyMatrix4(mInv.copy(marAR.matrixWorld).invert());
     const boia = arcaAR.userData.boia, arca = arcaAR.userData.arca; balancar(arca, t, 0.85 * nivel, alturaAR);
@@ -1471,14 +1550,24 @@ if (DEBUG) window.__int = { // só no modo de teste: para investigar o reconheci
 // ---------- modo demonstração: a história sem câmera, com a foto de um quebra-cabeça pintado em cima da mesa ----------
 const DEMO = /[?&]demo=1/.test(location.search) || !!window.ARCA_DEMO;
 let camDemo = null, ctlDemo = null, P2W = null; const mDemo = new THREE.Matrix4();
+function texturaMesa() { // tampo de mesa em tábuas largas, com veios
+  const W = 1024, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), rnd = rndSem(9), tons = ['#c89c6c', '#bf9262', '#cfa575', '#c3965f'];
+  const NT = 6, h = W / NT;
+  for (let i = 0; i < NT; i++) { g.fillStyle = tons[i % 4]; g.fillRect(0, i * h, W, h);
+    for (let k = 0; k < 26; k++) { const y0 = i * h + rnd() * h, amp = 2 + rnd() * 6, fr = 80 + rnd() * 200, fase = rnd() * 6; g.strokeStyle = `rgba(110,65,30,${0.06 + rnd() * 0.1})`; g.lineWidth = 1 + rnd() * 2; g.beginPath();
+      for (let x = 0; x <= W; x += 16) g.lineTo(x, y0 + amp * Math.sin(x / fr + fase)); g.stroke(); }
+    g.fillStyle = 'rgba(70,40,20,0.45)'; g.fillRect(0, i * h, W, 3); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2.5, 2.5); t.anisotropy = 4; return t; }
 function prepararDemo(img) {
   if (camDemo) return; const [mw, mh] = DADOS.alvo;
   ancora.children.forEach(c => { if (c.material && c.material.colorWrite === false) c.visible = false; }); // o "tapa" da câmera não precisa aqui
   const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.needsUpdate = true;
   const foto = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), new THREE.MeshBasicMaterial({ map: tex })); foto.position.set(mw / 2, mh / 2, 0); foto.rotation.x = Math.PI; foto.renderOrder = -1; ancora.add(foto);
-  const mesa = new THREE.Mesh(new THREE.PlaneGeometry(mw * 5, mh * 5), new THREE.MeshLambertMaterial({ color: 0xc9a47c })); mesa.position.set(mw / 2, mh / 2, 3); mesa.rotation.x = Math.PI; ancora.add(mesa);
-  rAR.setClearColor(0xe6edf3, 1); $('#video').style.display = 'none'; $('#ar').style.pointerEvents = 'auto'; $('#ar').style.touchAction = 'none';
-  camDemo = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 80); camDemo.position.set(0.35, 2.0, 3.0);
+  const mesa = new THREE.Mesh(new THREE.PlaneGeometry(mw * 5, mh * 5), new THREE.MeshLambertMaterial({ map: texturaMesa() })); mesa.position.set(mw / 2, mh / 2, 3); mesa.rotation.x = Math.PI; ancora.add(mesa);
+  const ceu = document.createElement('canvas'); ceu.width = 4; ceu.height = 256; const gc = ceu.getContext('2d'), gr = gc.createLinearGradient(0, 0, 0, 256);
+  gr.addColorStop(0, '#a9cbe6'); gr.addColorStop(0.55, '#dbe8f1'); gr.addColorStop(1, '#f2f1ec'); gc.fillStyle = gr; gc.fillRect(0, 0, 4, 256);
+  cenaAR.background = new THREE.CanvasTexture(ceu); cenaAR.background.colorSpace = THREE.SRGBColorSpace; $('#video').style.display = 'none'; $('#ar').style.pointerEvents = 'auto'; $('#ar').style.touchAction = 'none';
+  camDemo = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 80); camDemo.position.set(0.35, 2.15, 3.3);
   ctlDemo = new OrbitControls(camDemo, $('#ar')); ctlDemo.target.set(0.15, 0.1, 0.25); ctlDemo.enableDamping = true; ctlDemo.dampingFactor = 0.08;
   ctlDemo.maxPolarAngle = Math.PI * 0.46; ctlDemo.minDistance = 1.2; ctlDemo.maxDistance = 8; ctlDemo.enablePan = false; ctlDemo.update();
   const S = 1 / K_AR, [cx, cy] = centroAR(); // pixel do quebra-cabeça -> mesmas unidades da arca (x direita, y para cima, z para quem olha)
