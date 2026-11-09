@@ -50,6 +50,13 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 .barra button.prim{background:var(--sol);color:var(--mar2)}
 .barra button:disabled{opacity:.55;cursor:default}
 .barra button[hidden]{display:none}
+.bsom{border:0;background:rgba(255,255,255,.92);color:var(--mar2);border-radius:999px;width:46px;height:40px;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center;flex:none}
+.bsom[aria-pressed=false]{background:rgba(255,255,255,.7)}
+.legenda{position:absolute;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,6px);width:max-content;max-width:min(600px,calc(100vw - 32px));margin:0;background:rgba(13,45,87,.72);color:#fff;border-radius:12px;padding:7px 13px;font-size:14px;line-height:1.38;font-weight:600;text-align:center;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
+@media (max-height:500px){.legenda{font-size:13px;padding:6px 12px;bottom:calc(66px + env(safe-area-inset-bottom))}}
+.legenda.on{opacity:1;transform:translate(-50%,0)}
+.barra button.chama{animation:chama 1.2s ease-in-out infinite}
+@keyframes chama{0%,100%{transform:scale(1);box-shadow:0 3px 0 rgba(0,0,0,.25),0 0 0 0 rgba(255,201,51,.75)}50%{transform:scale(1.06);box-shadow:0 3px 0 rgba(0,0,0,.25),0 0 0 12px rgba(255,201,51,0)}}
 .progresso{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(320px,70vw);height:8px;border-radius:8px;background:rgba(255,255,255,.35);overflow:hidden;display:none}
 .progresso i{display:block;height:100%;width:0;background:var(--sol);transition:width .2s}
 /* 3D */
@@ -62,7 +69,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 #dbg .cores{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
 #dbg .cores i{width:14px;height:14px;display:block;border-radius:2px}
 :focus-visible{outline:3px solid var(--sol);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.barra button.chama{animation:none;outline:3px solid var(--sol)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
@@ -90,7 +97,8 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
   <video id="video" playsinline muted autoplay></video>
   <canvas id="ar"></canvas>
   <div class="guia" id="guia"></div>
-  <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><span style="width:72px"></span></div>
+  <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
+  <p class="legenda" id="legenda" aria-live="polite"></p>
   <div class="progresso" id="prog"><i></i></div>
   <div class="barra">
     <button id="bDeNovo" type="button" hidden>Ler as cores de novo</button>
@@ -102,7 +110,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 
 <section id="ver3d" class="tela">
   <canvas id="cena"></canvas>
-  <div class="topo"><button class="voltar" id="vVoltar" type="button">‹ Voltar</button><span></span><span></span></div>
+  <div class="topo"><button class="voltar" id="vVoltar" type="button">‹ Voltar</button><span></span><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
   <div class="dica3d">Arraste para girar · dois dedos para aproximar</div>
   <div class="barra"><button id="bFoto" type="button">Salvar imagem</button><button id="bOutra" type="button" class="prim">Ler outra pintura</button></div>
 </section>
@@ -118,7 +126,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.15 · 08/11/2026';
+const VERSAO = '0.16 · 08/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -127,7 +135,195 @@ function medidorFPS() { let n = 0, t0 = 0; return (agora, aoBaixar) => { if (!t0
   if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > 0 && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
 const fps3D = medidorFPS(), fpsAR = medidorFPS();
 const TELAS = ['inicio', 'camera', 'ver3d'];
-function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); }
+function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); }
+
+// ---------- som: a narração (voz Cleo, Google AI Studio), a música de fundo e os efeitos (feitos aqui mesmo, sem arquivo) ----------
+// a música: "Peaceful Acoustic Melody", Universfield (Pixabay, sem Content ID, baixada em 08/11/2026)
+const FALAS = { // código do arquivo: [texto da legenda, duração em s]
+  VO_MIRE: ['Aponte o celular para o seu quebra-cabeça pintado.', 3.52],
+  VO_LENDO: ['Segure parado… Estou olhando as cores que você pintou!', 5.94],
+  VO_PERDEU: ['Opa! Aponte o celular de novo para o quebra-cabeça.', 4.24],
+  VO_H01_NOE: ['Há muito tempo, vivia um homem chamado Noé. Ele amava a Deus e cuidava de todos com carinho.', 8.12],
+  VO_H02_ARCA: ['Deus pediu a Noé que construísse uma arca bem grande. E olha só: a arca ficou com as cores que você pintou!', 8.46],
+  VO_H03_ANIMAIS: ['Os animais já entraram na arca, de dois em dois. Agora só falta o Noé. Toque em Próximo para ele subir!', 8.32],
+  VO_H04_SOBE: ['Lá vai o Noé, subindo a rampa! Ele entrou com a família, e Deus fechou a porta.', 6.0],
+  VO_H05_CHUVA: ['Então começou a chover. Choveu quarenta dias e quarenta noites!', 5.6],
+  VO_H06_BOIA: ['A água subiu, subiu… e a arca boiou, bem segura, com todos lá dentro.', 6.76],
+  VO_H07_ARCOIRIS: ['Um dia, a chuva parou. E no céu apareceu um arco-íris! É o sinal da promessa de Deus: nunca mais um dilúvio vai cobrir a terra.', 11.16],
+  VO_H07B_SEMARCO: ['Um dia, a chuva parou. Deus prometeu que nunca mais um dilúvio ia cobrir a terra, e deu o arco-íris como sinal. Que tal pintar o arco-íris do seu quebra-cabeça?', 10.68],
+  VO_H08_CONVITE: ['Agora ande em volta com o celular e veja a sua arca de todos os lados!', 5.22],
+  VO_X01_GOLFINHO: ['Olha! Um golfinho pulando!', 2.76],
+  VO_X02_GAIVOTAS: ['E lá vão as gaivotas, voando sobre o mar!', 3.6] };
+const esperar = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+const SOM = (() => {
+  let ctx = null, mestre, gMus, gVoz, gEf, prom = null, promVoz = null, mus = null, querMus = false, destravado = false, ligado = true, telaAtual = 'inicio';
+  let an = null, atual = null, serie = 0, esperando = [], alvoM = -1, chuvaA = 0, laco = {}, ruidoB = null;
+  const buf = {}, VOL_MUS = 0.42; // música sozinha ~ -25 LUFS; com a voz (-16) cai para ~ -33
+  try { ligado = localStorage.getItem('arca-som') !== '0'; } catch (e) {}
+  function criar() {
+    if (ctx) return true; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    try { ctx = new AC({ sampleRate: 24000 }); } catch (e) { try { ctx = new AC(); } catch (e2) { return false; } } // 24 kHz: a voz já é assim, e a música ocupa metade da memória
+    const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -8; lim.knee.value = 4; lim.ratio.value = 6; lim.attack.value = 0.004; lim.release.value = 0.2; lim.connect(ctx.destination);
+    if (DEBUG) { an = ctx.createAnalyser(); an.fftSize = 4096; lim.connect(an); }
+    mestre = ctx.createGain(); mestre.gain.value = ligado ? 1 : 0; mestre.connect(lim);
+    gMus = ctx.createGain(); gMus.gain.value = VOL_MUS; gMus.connect(mestre);
+    gVoz = ctx.createGain(); gVoz.connect(mestre); gEf = ctx.createGain(); gEf.gain.value = 0.9; gEf.connect(mestre);
+    carregar(); return true;
+  }
+  function carregar() { // as falas primeiro (são pequenas), depois a música
+    if (prom) return prom;
+    const pega = url => fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.arrayBuffer(); })
+      .then(a => new Promise((ok, erro) => { const p = ctx.decodeAudioData(a, ok, erro); if (p && p.catch) p.catch(() => {}); }));
+    promVoz = Promise.all(Object.keys(FALAS).map(n => pega('assets/voz/' + n + '.mp3').then(b => { buf[n] = b; }).catch(() => {})));
+    prom = promVoz.then(() => pega('assets/musica.mp3')).then(b => { buf.musica = b; if (querMus) tocarMusica(); }).catch(() => {});
+    return prom;
+  }
+  function destravar() { // no iPhone o som só liga dentro de um toque: todo toque tenta
+    if (!criar()) return;
+    try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) {} // toca mesmo com o celular no silencioso
+    if (ligado && ctx.state !== 'running' && !document.hidden) ctx.resume().catch(() => {});
+    if (!destravado) { destravado = true; const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate); s.connect(ctx.destination); s.start(0); }
+  }
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, destravar, true));
+  const pronto = () => ligado && ctx && ctx.state === 'running';
+  // ----- música: volta inteira em laço, mais baixa enquanto a Cleo fala e durante a chuva -----
+  function fimUtil(b) { if (b._fim) return b._fim; const d = b.getChannelData(0); let i = d.length - 1; while (i > 0 && Math.abs(d[i]) < 0.004) i--; return (b._fim = Math.min(b.duration, i / b.sampleRate + 0.05)); }
+  function tocarMusica() {
+    if (!ctx || !buf.musica || mus) return;
+    const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = buf.musica; s.loop = true; s.loopEnd = fimUtil(buf.musica);
+    g.gain.value = 0; g.gain.setTargetAtTime(1, ctx.currentTime, 0.7); s.connect(g); g.connect(gMus); s.start(); mus = { s, g }; alvoM = -1; mixar();
+  }
+  function pararMusica() { if (!mus) return; const { s, g } = mus; mus = null; g.gain.setTargetAtTime(0, ctx.currentTime, 0.25); try { s.stop(ctx.currentTime + 1.5); } catch (e) {} }
+  function mixar() {
+    if (!ctx) return; const v = VOL_MUS * (atual && atual.src ? 0.4 : 1) * (1 - 0.55 * chuvaA);
+    if (Math.abs(v - alvoM) < 0.004) return; const desce = v < alvoM; alvoM = v; gMus.gain.setTargetAtTime(v, ctx.currentTime, desce ? 0.1 : 0.7);
+  }
+  // ----- falas: uma de cada vez; sem som (ou sem o arquivo) a legenda fica o mesmo tempo na tela e a história anda igual -----
+  function legenda(txt) { const el = $('#legenda'); if (!el) return; if (txt) { el.textContent = txt; el.classList.add('on'); } else el.classList.remove('on'); }
+  function acabar(a, ok) {
+    if (atual !== a) return; atual = null; clearTimeout(a.timer); if (DEBUG) console.log('[som] fim', a.nome, ok ? 'ok' : 'cortada', Math.round(performance.now() - a.t0) + 'ms');
+    if (a.src) { const s = a.src, g = a.g; a.src = null; s.onended = null; if (!ok) { g.gain.setTargetAtTime(0, ctx.currentTime, 0.04); try { s.stop(ctx.currentTime + 0.25); } catch (e) {} } }
+    legenda(''); mixar(); a.fim(ok); const w = esperando; esperando = []; w.forEach(r => r());
+  }
+  function semVoz() { // a fala atual continua só na legenda até o fim do tempo dela (som desligado ou aba escondida)
+    const a = atual; if (!a || !a.src) return; const s = a.src; a.src = null; s.onended = null; a.g.gain.setTargetAtTime(0, ctx.currentTime, 0.03); try { s.stop(ctx.currentTime + 0.15); } catch (e) {}
+    clearTimeout(a.timer); a.timer = setTimeout(() => acabar(a, true), Math.max(0, a.t0 + a.dur - performance.now())); mixar();
+  }
+  function calar() { serie++; if (atual) acabar(atual, false); }
+  async function falar(nome) {
+    calar(); const meu = serie, f = FALAS[nome]; if (!f || telaAtual !== 'camera') return false;
+    if (ligado && ctx) { // a fala que ainda está chegando ou o som que ainda está ligando: espera um pouco
+      if (!buf[nome] && promVoz) await Promise.race([promVoz, esperar(2500)]);
+      if (ctx.state !== 'running' && !document.hidden) await Promise.race([ctx.resume().catch(() => {}), esperar(600)]);
+      if (meu !== serie) return false; }
+    return new Promise(fim => {
+      const a = { nome, fim, src: null, g: null, timer: 0, t0: performance.now(), dur: f[1] * 1000 }; atual = a; legenda(f[0]); if (DEBUG) console.log('[som] fala', nome, pronto() && !!buf[nome] ? 'voz' : 'legenda', Math.round(performance.now()));
+      if (pronto() && buf[nome] && !document.hidden) { const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = buf[nome]; s.connect(g); g.connect(gVoz);
+        s.onended = () => acabar(a, true); s.start(); a.src = s; a.g = g; a.timer = setTimeout(() => acabar(a, true), a.dur + 1500); } // por segurança, se o "fim" não vier
+      else a.timer = setTimeout(() => acabar(a, true), a.dur);
+      mixar(); });
+  }
+  const fimDaFala = () => atual ? new Promise(r => esperando.push(r)) : Promise.resolve();
+  // ----- efeitos: ruído filtrado e tons simples -----
+  function ruido() { if (ruidoB) return ruidoB; const n = ctx.sampleRate * 2, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; return (ruidoB = b); }
+  function env(g, t, a, pico, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(pico, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+  function sopro(t, o) { // ruído num filtro, com envelope rápido
+    const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), a = o.a || 0.003, dec = o.dec || 0.1; s.buffer = ruido();
+    fl.type = o.tipo || 'bandpass'; fl.frequency.setValueAtTime(o.f || 1000, t); if (o.f2) fl.frequency.exponentialRampToValueAtTime(o.f2, t + a + dec); fl.Q.value = o.q || 1;
+    env(g, t, a, o.pico || 0.2, dec); s.connect(fl); fl.connect(g); g.connect(gEf); s.start(t, Math.random() * 1.5); s.stop(t + a + dec + 0.05);
+  }
+  function tom(t, o) {
+    if (o.f > ctx.sampleRate * 0.45) return; const os = ctx.createOscillator(), g = ctx.createGain(), a = o.a || 0.005, dec = o.dec || 0.3; os.type = o.tipo || 'sine';
+    os.frequency.setValueAtTime(o.f, t); if (o.f2) os.frequency.exponentialRampToValueAtTime(o.f2, t + a + dec); env(g, t, a, o.pico || 0.2, dec); os.connect(g); g.connect(gEf); os.start(t); os.stop(t + a + dec + 0.05);
+  }
+  function trovao(t, forca) { // estrondo baixo que rola e vai sumindo
+    const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), N = 80, dur = 3.6, c = new Float32Array(N); s.buffer = ruido(); s.loop = true;
+    for (let i = 0; i < N; i++) { const x = i / (N - 1); c[i] = forca * 0.85 * Math.min(1, x * 16) * Math.pow(1 - x, 1.5) * (0.45 + 0.55 * Math.random()); } c[N - 1] = 0;
+    fl.type = 'lowpass'; fl.Q.value = 0.8; fl.frequency.setValueAtTime(1100, t); fl.frequency.exponentialRampToValueAtTime(130, t + 1.4);
+    g.gain.value = 0; g.gain.setValueCurveAtTime(c, t, dur); s.connect(fl); fl.connect(g); g.connect(gEf); s.start(t); s.stop(t + dur + 0.1);
+  }
+  function efeito(nome, x = 1) {
+    if (DEBUG && nome !== 'passo') console.log('[som] efeito', nome, x, Math.round(performance.now())); if (!pronto()) return; const t = ctx.currentTime + 0.01;
+    if (nome === 'passo') { if (x) { sopro(t, { f: 1500, q: 2.2, pico: 0.1, dec: 0.045 }); tom(t, { f: 230, f2: 130, pico: 0.12, dec: 0.07 }); } // madeira da rampa
+      else sopro(t, { f: 2600, q: 0.7, pico: 0.03, a: 0.01, dec: 0.08 }); } // capim
+    else if (nome === 'porta') { tom(t, { f: 96, f2: 50, pico: 0.5, dec: 0.45 }); sopro(t, { tipo: 'lowpass', f: 520, pico: 0.32, dec: 0.22 }); sopro(t + 0.15, { f: 2300, q: 5, pico: 0.07, dec: 0.03 }); }
+    else if (nome === 'trovao') trovao(t, x);
+    else if (nome === 'agua') { const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = ruido(); s.loop = true; fl.type = 'lowpass'; fl.Q.value = 2;
+      fl.frequency.setValueAtTime(220, t); fl.frequency.exponentialRampToValueAtTime(1300, t + 2.6); fl.frequency.exponentialRampToValueAtTime(400, t + 5);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.26, t + 1.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 5.2); s.connect(fl); fl.connect(g); g.connect(gEf); s.start(t); s.stop(t + 5.3); }
+    else if (nome === 'splash') { sopro(t, { f: 1900, f2: 650, q: 0.8, pico: 0.3 * x, a: 0.004, dec: 0.38 }); tom(t, { f: 330, f2: 90, pico: 0.16 * x, dec: 0.12 }); }
+    else if (nome === 'arco') { const notas = [1047, 1175, 1319, 1568, 1760, 2093, 2349]; for (let i = 0; i < x; i++) { const f = notas[i % notas.length];
+      [[1, 0.075, 1.5], [2.756, 0.028, 0.7], [5.404, 0.012, 0.35]].forEach(([m, p, d]) => tom(t + i * 0.12, { f: f * m, pico: p, a: 0.002, dec: d })); } }
+  }
+  // ----- chuva e mar: dois laços de ruído (feitos uma vez), com o volume seguindo a cena -----
+  function lacoBuf(seg, gerar) { // ruído que emenda sem estalo no fim do laço
+    const sr = ctx.sampleRate, n = Math.floor(seg * sr), m = Math.floor(0.25 * sr), tmp = new Float32Array(n + m); gerar(tmp, sr);
+    const b = ctx.createBuffer(1, n, sr), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = tmp[i]; for (let i = 0; i < m; i++) { const k = i / m; d[i] = tmp[i] * k + tmp[n + i] * (1 - k); } return b;
+  }
+  function rosa(d) { let b0 = 0, b1 = 0, b2 = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099; b1 = 0.963 * b1 + w * 0.2965; b2 = 0.57 * b2 + w * 1.0526; d[i] += (b0 + b1 + b2 + w * 0.1848) * 0.12; } }
+  function abrirLaco(nome) {
+    if (laco[nome]) return laco[nome]; const s = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = 0;
+    if (nome === 'chuva') { s.buffer = lacoBuf(4, (d, sr) => { rosa(d); for (let k = 0; k < 4 * 90; k++) { const p = Math.floor(Math.random() * (d.length - sr * 0.02)), f = 1800 + Math.random() * 3200, a = 0.08 + Math.random() * 0.25; // gotas
+        for (let j = 0; j < sr * 0.02; j++) d[p + j] += a * Math.exp(-j / (sr * 0.0025)) * Math.sin(2 * Math.PI * f * j / sr); } });
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 450; s.connect(hp); hp.connect(g); }
+    else { s.buffer = lacoBuf(8, (d, sr) => { let y = 0; for (let i = 0; i < d.length; i++) { y = 0.996 * y + (Math.random() * 2 - 1) * 0.06; const t = i / sr, onda = 0.5 - 0.5 * Math.cos(2 * Math.PI * t / 4); d[i] = y * (0.3 + 0.7 * onda * onda); } }); // marulho: 2 ondas a cada 8 s
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; s.connect(lp); lp.connect(g); }
+    s.loop = true; g.connect(gEf); s.start(); return (laco[nome] = { s, g, v: 0 });
+  }
+  function ambiente(chuva, mar) { // a cada quadro: chuva 0..1, mar 0..1
+    chuvaA = chuva; if (!ctx) return; mixar(); if (!pronto() && !laco.chuva && !laco.mar) return;
+    const fala = atual && atual.src ? 0.7 : 1; // a chuva e o mar dão espaço para a voz
+    [['chuva', chuva * 0.38 * fala], ['mar', mar * (1 - 0.7 * chuva) * 0.2 * fala]].forEach(([n, v]) => { if (v < 0.002 && !laco[n]) return; if (!laco[n] && !pronto()) return;
+      const L = abrirLaco(n); if (Math.abs(v - L.v) > 0.003) { L.v = v; L.g.gain.setTargetAtTime(v, ctx.currentTime, 0.25); } });
+  }
+  function fecharLacos() { Object.values(laco).forEach(L => { L.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); try { L.s.stop(ctx.currentTime + 1); } catch (e) {} }); laco = {}; chuvaA = 0; }
+  // ----- telas, botão de som, aba escondida -----
+  function tela(t) { telaAtual = t; calar(); querMus = t !== 'inicio'; if (!ctx) return; if (querMus) tocarMusica(); else { pararMusica(); fecharLacos(); } }
+  function botoes() { document.querySelectorAll('.bsom').forEach(b => { b.textContent = ligado ? '🔊' : '🔇'; b.setAttribute('aria-pressed', String(ligado)); b.setAttribute('aria-label', ligado ? 'Som ligado' : 'Som desligado'); }); }
+  function alternar() {
+    ligado = !ligado; try { localStorage.setItem('arca-som', ligado ? '1' : '0'); } catch (e) {} botoes(); if (!criar()) return;
+    mestre.gain.setTargetAtTime(ligado ? 1 : 0, ctx.currentTime, 0.05);
+    if (ligado) { ctx.resume().catch(() => {}); if (querMus) tocarMusica(); } else { semVoz(); setTimeout(() => { if (!ligado) ctx.suspend().catch(() => {}); }, 250); }
+  }
+  document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) { semVoz(); ctx.suspend().catch(() => {}); } else if (ligado) ctx.resume().catch(() => {}); });
+  document.addEventListener('DOMContentLoaded', botoes); setTimeout(botoes, 0);
+  return { destravar, falar, calar, fimDaFala, efeito, ambiente, tela, alternar, get falando() { return !!atual; }, get ligado() { return ligado; },
+    medir() { if (!an) return null; const d = new Float32Array(an.fftSize); an.getFloatTimeDomainData(d); let p = 0, q = 0; for (const v of d) { p = Math.max(p, Math.abs(v)); q += v * v; } const db = x => Math.round(20 * Math.log10(x + 1e-9)); return [db(p), db(Math.sqrt(q / d.length))]; },
+    get estado() { return { ctx: ctx && ctx.state, carregadas: Object.keys(buf).length, atual: atual && atual.nome, comVoz: !!(atual && atual.src), mus: !!mus, alvoM: +alvoM.toFixed(3), lacos: Object.keys(laco) }; } };
+})();
+if (DEBUG) window.__som = SOM;
+// a narração conduz a história: cada cena espera a fala que conta ela
+async function narrarComeco(h) { // depois da leitura: a arca em terra e o Noé ao lado da rampa
+  await esperar(600); await SOM.fimDaFala(); // se a Cleo ainda estiver orientando (Aponte… / Segure parado…), espera ela terminar
+  for (const [n, pausa] of [['VO_H01_NOE', 450], ['VO_H02_ARCA', 450], ['VO_H03_ANIMAIS', 0]]) {
+    if (historia !== h || h.etapa !== 0) return;
+    if (n === 'VO_H03_ANIMAIS') setTimeout(() => { if (historia === h && h.etapa === 0) $('#bProximo').classList.add('chama'); }, 5900); // "Toque em Próximo…"
+    if (!(await SOM.falar(n))) return; await esperar(pausa); }
+  if (historia === h && h.etapa === 0) { h.livre = true; $('#bProximo').classList.add('chama'); }
+}
+async function narrarChuva(h) { // começou a chover: trovão, a fala da chuva, a água sobe com a fala da arca boiando
+  SOM.efeito('trovao', 1); setTimeout(() => { if (historia === h) SOM.efeito('trovao', 0.45); }, 3900);
+  await esperar(650); if (historia !== h) return;
+  await SOM.falar('VO_H05_CHUVA'); if (historia !== h) return;
+  DUR_SUBIDA = 5200; tSubida = Math.max(h.tChuva + 2000 * LENTO, performance.now() + 200); await esperar(tSubida - performance.now()); if (historia !== h) return;
+  SOM.efeito('agua'); await SOM.falar('VO_H06_BOIA'); if (historia !== h) return; // a arca sai do chão em "e a arca boiou" (~3,3 s)
+  h.tFim = Math.max(tSubida + (250 + DUR_SUBIDA + 300) * LENTO, performance.now() + 250);
+}
+async function narrarFim(h) { // a chuva parou: arco-íris (ou o convite para pintar ele) e o convite para ver de todos os lados
+  const temArco = !!(arcaAR && arcaAR.userData.arco); h.tArco = temArco ? performance.now() + 300 + 4400 : 0; // as faixas abrem em "apareceu um arco-íris"
+  await esperar(300); if (historia !== h) return;
+  await SOM.falar(temArco ? 'VO_H07_ARCOIRIS' : 'VO_H07B_SEMARCO'); if (historia !== h) return;
+  $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
+  status('A arca está boiando!', DEMO ? 'Arraste para girar e ver de todos os lados' : 'Ande em volta com o celular para ver de todos os lados', true);
+  await esperar(500); if (historia !== h) return;
+  await SOM.falar('VO_H08_CONVITE'); if (historia === h) h.livre = true;
+}
+function eventoVida(tipo) { // o golfinho sai/entra na água, as gaivotas chegam
+  if (tipo !== 'gaivotas' && ancora && ancora.visible) SOM.efeito('splash', tipo === 'entra' ? 1 : 0.6);
+  const h = historia; if (!h || !h.livre || !h.fimChuva || SOM.falando) return; // as falas extras só depois da história, uma vez cada
+  if (tipo === 'sai' && !h.disseGolfinho) { h.disseGolfinho = true; SOM.falar('VO_X01_GOLFINHO'); }
+  if (tipo === 'gaivotas' && !h.disseGaivotas) { h.disseGaivotas = true; SOM.falar('VO_X02_GAIVOTAS'); }
+}
 let ultimoStatus = '', tStatus = 0;
 function status(t, s, sumir) { // sumir: a mensagem sai da frente depois de uns segundos (para ver a arca inteira)
   const h = t + (s ? '<small>' + s + '</small>' : ''), el = $('#status'); if (h === ultimoStatus) return; ultimoStatus = h; el.innerHTML = h; el.classList.remove('quieto');
@@ -498,6 +694,9 @@ function animarVida(g, t, altura) {
     gv.position.set(x, y, z); gv.rotation.set(0, Math.atan2(-vz, vx), 0.25 * Math.sin(tg * 0.9 + i * 2));
     const amp = 0.5 * Math.max(0.08, Math.sin(tg * 0.5 + i * 1.7)), bat = Math.sin(t * 8.5 + i) * amp, pz = gv.userData.pecas;
     if (pz.asaE) pz.asaE.rotation.x = bat; if (pz.asaD) pz.asaD.rotation.x = -bat; });
+  if (u.aoEvento) { // para o som: o golfinho fura a água ao sair e ao entrar; as gaivotas chegam
+    const pa = u.kAnt === k ? u.phAnt : u.kAnt === k - 1 ? -1 : 1e9, pga = u.kgAnt === kg ? u.pgAnt : u.kgAnt === kg - 1 ? -1 : 1e9; // começou outro ciclo entre dois quadros: conta do começo
+    if (pa < 0.22 && ph >= 0.22) u.aoEvento('sai'); if (pa < 1.64 && ph >= 1.64) u.aoEvento('entra'); if (pga < 2.5 && pg >= 2.5) u.aoEvento('gaivotas'); u.kAnt = k; u.phAnt = ph; u.kgAnt = kg; u.pgAnt = pg; }
 }
 // ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
 const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
@@ -615,7 +814,8 @@ function animarTerra(terra, agora, t) {
       const fim = andar(b, [[f.x, 0, f.z], u.pe, u.topo, u.dentro], td); if (fim >= 0) opacidade(b, 1 - fim); if (fim >= 1) prontos++; });
     if (u.noeChao) acenar(u.noeChao.userData.pecas, t);
     if (prontos === u.bichos.length && !historia.fimEmbarque) { historia.fimEmbarque = agora; $('#bProximo').disabled = false; status('Todos a bordo!', 'Toque em Próximo para o Noé subir', true); } }
-  if (historia.etapa >= 2) { const n = u.noeChao; if (n && n.visible) { const fim = andar(n, [[-0.88, 0, 0.74], u.pe, u.topo, u.dentro], s - 0.3); if (fim >= 0) opacidade(n, 1 - fim); if (n.visible) { const pz = n.userData.pecas; if (pz.bracoE) pz.bracoE.rotation.z = 0; if (pz.antebracoE) pz.antebracoE.rotation.z = 0; } }
+  if (historia.etapa >= 2) { const n = u.noeChao; if (n && n.visible) { const fim = andar(n, [[-0.88, 0, 0.74], u.pe, u.topo, u.dentro], s - 0.3); if (fim >= 0) opacidade(n, 1 - fim); if (n.visible) { const pz = n.userData.pecas; if (pz.bracoE) pz.bracoE.rotation.z = 0; if (pz.antebracoE) pz.antebracoE.rotation.z = 0; }
+      const kp = Math.floor((s - 0.3) * 11 / Math.PI); if (s > 0.3 && fim < 0.7 && kp !== u.kPasso) { u.kPasso = kp; SOM.efeito('passo', n.position.y > 0.02 ? 1 : 0); } } // passinhos: no capim, depois na madeira
     if (u.noeArca && s > 4.6) opacidade(u.noeArca, Math.min(1, (s - 4.6) / 0.8)); }
 }
 function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fica durante o dilúvio e vai embora depois
@@ -648,7 +848,10 @@ function luzDoTempo(cena, chuva) { // com chuva a luz baixa e fica azulada; quan
 }
 function proximoEvento() {
   if (!historia) return; const agora = performance.now();
-  if (historia.etapa === 0) { historia.etapa = 2; historia.t0 = agora; historia.tChuva = agora + 5000 * LENTO; $('#bProximo').disabled = true; status('O Noé está subindo na arca', 'E olha a chuva chegando…', true); }
+  if (historia.etapa === 0) { const h = historia; h.etapa = 2; h.t0 = agora; h.tChuva = 0; h.livre = false; $('#bProximo').disabled = true; $('#bProximo').classList.remove('chama');
+    status('O Noé está subindo na arca', 'E olha a chuva chegando…', true);
+    setTimeout(() => { if (historia === h) SOM.efeito('porta'); }, 5750 * LENTO); // "…e Deus fechou a porta."
+    SOM.falar('VO_H04_SOBE').then(() => { if (historia === h) h.tChuva = Math.max(h.t0 + 5000 * LENTO, performance.now() + 350); }); } // a chuva espera a fala
 }
 $('#bProximo').addEventListener('click', proximoEvento);
 if (DEBUG) window.__historia = () => ({ h: historia, b: arcaAR && arcaAR.userData.terra ? arcaAR.userData.terra.userData.bichos.map(b => [b.userData.fila.m, ...b.position.toArray().map(v => +v.toFixed(2)), b.visible]) : null });
@@ -897,7 +1100,7 @@ function prepararAR() {
   tapa.position.set(mw / 2, mh / 2, 0); tapa.renderOrder = -1; ancora.add(tapa); // esconde o que fica "abaixo" do quebra-cabeça
   ambiente(rAR, cenaAR);
 }
-let marAR = null, espumaAR = null, tSubida = 0, sumiuEm = 0;
+let marAR = null, espumaAR = null, tSubida = 0, sumiuEm = 0, DUR_SUBIDA = 1800; // na história a água sobe devagar (5,2 s), junto com a fala
 function descartar(obj) { // libera a memória da arca/água antiga (ler de novo várias vezes não pesa)
   obj.traverse(o => { if (o.geometry) o.geometry.dispose(); [].concat(o.material || []).forEach(m => { ['map', 'bumpMap'].forEach(k => m[k] && m[k].dispose()); m.dispose(); }); });
 }
@@ -909,11 +1112,11 @@ function colocarArcaAR(arca, cores) {
   marAR = criarAquario(cores); espumaAR = criarEspuma(); espumaAR.renderOrder = 5;
   const boia = new THREE.Group(); boia.add(arca); boia.add(espumaAR); // a arca e a espuma sobem junto com a água
   g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca;
-  const vida = criarVida({ zSalto: 0.52, yVoo: 0.62, esc: 1 }); if (vida) { boia.add(vida); g.userData.vida = vida; }
+  const vida = criarVida({ zSalto: 0.52, yVoo: 0.62, esc: 1 }); if (vida) { vida.userData.aoEvento = eventoVida; boia.add(vida); g.userData.vida = vida; }
   const terra = criarTerra(cores, arca); g.add(terra); g.userData.terra = terra; historia = { etapa: 0, t0: performance.now(), tChuva: 0, fimChuva: 0 };
   const e = DADOS.alvo[0] / 2048 / k, arco = criarArco(cores, e); // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
   if (arco) { arco.position.set((ARCO_D.cx * DADOS.alvo[0] / 2048 - cx) / k, 0, retanguloAR().z0 + 0.22); g.add(arco); g.userData.arco = arco; }
-  ancora.add(g); tSubida = performance.now();
+  ancora.add(g); tSubida = performance.now(); DUR_SUBIDA = 1800;
 }
 function projecaoAR() {
   if (DEMO && camDemo) { camDemo.aspect = innerWidth / innerHeight; camDemo.updateProjectionMatrix(); camAR.projectionMatrix.copy(camDemo.projectionMatrix); camAR.projectionMatrixInverse.copy(camDemo.projectionMatrixInverse); return; }
@@ -958,18 +1161,19 @@ function desenharAR() {
     const L = cenaAR.userData.luz; if (L) L.hemi.position.set(0, 0, -1).applyQuaternion(qV); } // o céu fica "em cima" do quebra-cabeça
   const recente = agora - ultimaVez < 2000; // falhou alguns quadros: a arca fica no último lugar; depois some
   const ver = !!arcaAR && poseVista && recente;
-  if (ver && !ancora.visible && sumiuEm && agora - sumiuEm > 3000 && (!historia || historia.fimChuva)) tSubida = agora; // voltou depois de um tempo: enche de novo
+  if (ver && !ancora.visible && sumiuEm && agora - sumiuEm > 3000 && (!historia || historia.fimChuva)) { tSubida = agora; DUR_SUBIDA = 1800; } // voltou depois de um tempo: enche de novo
   if (!ver && ancora.visible) sumiuEm = agora;
   ancora.visible = ver;
   if (arcaAR) { const t = agora / 1000 / LENTO, ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3), terra = arcaAR.userData.terra;
     // a história: em terra até a chuva; o dilúvio (tSubida) começa 2 s depois de começar a chover
     const emTerra = historia && historia.etapa < 3; let chuva = 0;
-    if (terra) { if (historia.tChuva && agora >= historia.tChuva && historia.etapa === 2) { historia.etapa = 3; tSubida = historia.tChuva + 2000 * LENTO; }
+    if (terra) { if (historia.tChuva && agora >= historia.tChuva && historia.etapa === 2) { historia.etapa = 3; tSubida = 1e15; narrarChuva(historia); } // a água espera a fala da chuva
       if (historia.etapa <= 3) animarTerra(terra, agora, t); chuva = animarChuva(terra, agora, dq); }
     const dt = emTerra ? -1e9 : (agora - tSubida) / LENTO, chovendo = historia && historia.tChuva && agora >= historia.tChuva;
-    const vidro = chovendo ? ease((agora - historia.tChuva) / LENTO / 700) : 0, nivel = ease((dt - 250) / 1800), aparece = 1;
-    if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && dt > 5200 * LENTO) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false; terra.userData.tufos.visible = false;
-      $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false; status('A arca está boiando!', DEMO ? 'Arraste para girar e ver de todos os lados' : 'Ande em volta com o celular para ver de todos os lados', true); }
+    const suave = x => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+    const vidro = chovendo ? ease((agora - historia.tChuva) / LENTO / 700) : 0, nivel = DUR_SUBIDA > 3000 ? suave((dt - 250) / DUR_SUBIDA) : ease((dt - 250) / DUR_SUBIDA), aparece = 1;
+    if (terra && historia.etapa === 3 && nivel >= 1 && !historia.fimChuva && historia.tFim && agora >= historia.tFim) { historia.fimChuva = agora; terra.userData.capim.visible = false; terra.userData.rampa.visible = false; terra.userData.tufos.visible = false;
+      narrarFim(historia); } // os botões aparecem quando a Cleo termina de contar
     if (terra && historia.etapa === 3) { const a = 1 - nivel; terra.userData.capim.material.opacity = a; terra.userData.rampa.visible = a > 0.02; }
     if (terra) animarClima(terra, t, nivel, chuva); luzDoTempo(cenaAR, chuva);
     const u = marAR.userData.u; u.uT.value = t; u.uNivel.value = nivel; u.uVidro.value = vidro;
@@ -977,17 +1181,19 @@ function desenharAR() {
     const boia = arcaAR.userData.boia, arca = arcaAR.userData.arca; balancar(arca, t, 0.85 * nivel, alturaAR);
     boia.position.y = Math.max(terra && terra.userData.capim.visible ? ARCA_TERRA : 0, ALTURA_AGUA * nivel); const sc = aparece < 1 ? 0.6 + 0.4 * ease(aparece) + 0.06 * Math.sin(aparece * Math.PI) : 1;
     boia.scale.setScalar(Math.max(0.001, sc)); boia.visible = aparece > 0;
-    const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; const atraso = historia && !historia.arcoFeito ? 5400 : 1500; if (dt > 7000) historia.arcoFeito = true; // as faixas abrem uma a uma, de fora para dentro, depois que a chuva passa
+    const arco = arcaAR.userData.arco; if (arco) { arco.position.y = ALTURA_AGUA * nivel - 0.01; let algum = false; const atraso = historia && !historia.arcoFeito ? (historia.tArco ? (historia.tArco - tSubida) / LENTO : 1e12) : 1500; if (historia && historia.tArco && agora > historia.tArco + 2500) historia.arcoFeito = true; // as faixas abrem uma a uma, de fora para dentro, depois que a chuva passa
       arco.userData.faixas.forEach((f, i) => { const a = ease((dt - atraso - i * 120) / 600); f.scale.setScalar(Math.max(0.001, a)); f.visible = a > 0; algum = algum || a > 0; });
-      const a0 = ease((dt - atraso) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum; }
+      const a0 = ease((dt - atraso) / 600); arco.userData.fundo.scale.setScalar(Math.max(0.001, a0)); arco.visible = algum;
+      if (algum && !arco.userData.soou) { arco.userData.soou = true; SOM.efeito('arco', arco.userData.faixas.length); } else if (!algum) arco.userData.soou = false; } // sininhos, um por faixa
     espumaAR.position.y = arca.position.y * 0.6 - 0.018; espumaAR.rotation.z = arca.rotation.z * 0.5; espumaAR.visible = nivel > 0.6;
-    if (arcaAR.userData.vida && nivel >= 1 && chuva < 0.3) animarVida(arcaAR.userData.vida, t, alturaAR); }
+    if (arcaAR.userData.vida && nivel >= 1 && chuva < 0.3) animarVida(arcaAR.userData.vida, t, alturaAR);
+    SOM.ambiente(chuva, nivel); }
   rAR.render(cenaAR, camAR);
   if (DEBUG) window.__ar = { vis: ancora.visible, tem: !!arcaAR, pose: poseVista, rec: recente, m: ancora.matrix.elements.map(v => +v.toFixed(3)) };
 }
 
 // ---------- fluxo da câmera ----------
-let fotos = [], estavel = 0, ultimaH = null, lendo = true, coresAtuais = null, arcaAtual = null;
+let fotos = [], estavel = 0, ultimaH = null, lendo = true, coresAtuais = null, arcaAtual = null, achouDesde = 0, disseLendo = false, tAviso = 0; // tAviso: última fala de orientação
 const PRECISA = 3;
 async function abrirCamera() {
   $('#erro').style.display = 'none';
@@ -1006,11 +1212,12 @@ async function abrirCamera() {
 }
 function recomecar() {
   MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
-  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; historia = null; $('#guia').classList.remove('some');
-  $('#prog').style.display = 'none'; $('#prog i').style.width = '0';
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; $('#bProximo').classList.remove('chama'); historia = null; $('#guia').classList.remove('some');
+  $('#prog').style.display = 'none'; $('#prog i').style.width = '0'; achouDesde = 0; disseLendo = false; tAviso = performance.now();
   status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
+  SOM.calar(); if (!DEMO) SOM.falar('VO_MIRE');
 }
-function fecharCamera() { ativo = false; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
+function fecharCamera() { ativo = false; historia = null; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
 // ---------- acompanhamento rápido por janelinhas (depois da leitura) ----------
 // a foto da leitura, endireitada, vira o "molde"; em cada quadro novo, cada janelinha do molde é procurada perto de onde estava
 // (correlação normalizada: aguenta luz diferente). Bem mais leve que o reconhecimento completo, então acompanha mais vezes por segundo.
@@ -1188,11 +1395,14 @@ async function passo() {
           fotos.push(amostrarFoto(Hr)); guardarTexturas(Hr); guardarLeitura(); window.__arcaH = { Hd: Hr, cantos: [[0, 0], [2048, 0], [2048, 1399], [0, 1399]].map(([x, y]) => aplica(Hr, x, y)), n: a.n, rms: a.rms, modo: a.modo, refino: REFINO }; }
         $('#prog').style.display = 'block'; $('#prog i').style.width = Math.round(100 * fotos.length / PRECISA) + '%';
         status(fotos.length ? 'Lendo as cores…' : 'Achei! Segure parado…', 'Não mexa o celular por um instante');
+        if (!achouDesde) achouDesde = performance.now();
+        if (!disseLendo && fotos.length < PRECISA && !SOM.falando && performance.now() - achouDesde > 1300) { disseLendo = true; tAviso = performance.now(); SOM.falar('VO_LENDO'); } // achou, mas não consegue segurar parado
         if (fotos.length >= PRECISA) terminarLeitura();
       }
     } else if (a) info = `${a.modo} · erro alto ${a.rms.toFixed(1)}`;
   } catch (e) { info = 'erro ' + e.message; }
-  if (!achou && lendo) { estavel = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
+  falarOrientacao(achou);
+  if (!achou && lendo) { estavel = 0; achouDesde = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
   if (!achou && !lendo && performance.now() - ultimaVez > 2000) status('Aponte de novo para o quebra-cabeça', 'A arca volta a aparecer em cima dele');
   if (achou && !lendo && (!historia || historia.fimChuva)) status('Pronto! A arca está boiando no quebra-cabeça', 'Ande em volta com o celular para ver de todos os lados', true);
   if (DEBUG) { mostrarDepuracao(info, performance.now() - t0); window.__nDet = (window.__nDet || 0) + 1; window.__det = { achou, info, vis: ancora && ancora.visible, ms: Math.round(performance.now() - t0) }; }
@@ -1205,6 +1415,12 @@ function terminarLeitura() {
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
   status('A arca está pronta em terra firme', 'Toque em Próximo para o Noé subir na arca', true);
+  narrarComeco(historia);
+}
+function falarOrientacao(achou) { // a Cleo ajuda quando o quebra-cabeça some: no máximo uma vez a cada 12 s e nunca no meio da história
+  const agora = performance.now(); if (DEMO || achou || SOM.falando || agora - tAviso < 12000) return;
+  if (lendo && agora - ultimaVez > 9000 && agora - tAviso > 15000) { tAviso = agora; SOM.falar('VO_MIRE'); return; } // ainda não achou: repete o pedido
+  if (!lendo && agora - ultimaVez > 2500 && (!historia || historia.livre)) { tAviso = agora; SOM.falar('VO_PERDEU'); }
 }
 function animar() { if (!ativo) return; desenharAR(); fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); }
 function resumoEst() { const ok = EST.filter(e => e.ok).length, ms = EST.reduce((s, e) => s + e.ms, 0) / Math.max(1, EST.length);
@@ -1495,7 +1711,7 @@ function abrir3D(cores) {
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
-  if (cena3.userData.vida) { cena3.remove(cena3.userData.vida); descartar(cena3.userData.vida); } { const v = criarVida({ zSalto: 0.95, yVoo: 0.95, esc: 1.5, tam: 1.15 }); if (v) cena3.add(v); cena3.userData.vida = v; }
+  if (cena3.userData.vida) { cena3.remove(cena3.userData.vida); descartar(cena3.userData.vida); } { const v = criarVida({ zSalto: 0.95, yVoo: 0.95, esc: 1.5, tam: 1.15 }); if (v) { v.userData.aoEvento = tipo => { if (tipo !== 'gaivotas') SOM.efeito('splash', tipo === 'entra' ? 0.8 : 0.5); }; cena3.add(v); } cena3.userData.vida = v; }
   if (cena3.userData.arco) { cena3.remove(cena3.userData.arco); descartar(cena3.userData.arco); cena3.userData.arco = null; }
   { const arco = criarArco(cores, 2.3 / ARCO_D.r0); if (arco) { arco.position.set(3.4, -0.3, -6.5); arco.rotation.y = -0.35; arco.traverse(o => { if (o.material) o.material.fog = false; }); cena3.add(arco); cena3.userData.arco = arco; } }
   if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
@@ -1512,7 +1728,7 @@ function anim3(tms) {
   if (c.width !== Math.round(w * r3.getPixelRatio()) || c.height !== Math.round(h * r3.getPixelRatio())) { r3.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); enquadrar(); }
   const u = mar3.userData.u; u.uT.value = t; u.uCam.value.copy(cam3.position);
   if (arca3) balancar(arca3, t);
-  if (cena3.userData.vida) animarVida(cena3.userData.vida, t, alturaMar);
+  if (cena3.userData.vida) animarVida(cena3.userData.vida, t, alturaMar); SOM.ambiente(0, 0.85);
   const esp = cena3.userData.espuma; if (esp) { esp.position.y = balanco.y * 0.6; esp.rotation.z = balanco.rz * 0.5; esp.material.opacity = 0.8 + 0.2 * Math.sin(t * 1.3); }
   fps3D(tms, () => { r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio)); if (QUAL.nivel === 0) cena3.userData.sol.castShadow = false; });
   ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
@@ -1531,6 +1747,7 @@ $('#versao').textContent = 'Protótipo · versão ' + VERSAO;
 $('#bCamera').onclick = abrirCamera;
 $('#bExemplo').onclick = async () => { await carregarDados(); abrir3D(coresExemplo()); };
 $('#cVoltar').onclick = fecharCamera;
+document.querySelectorAll('.bsom').forEach(b => { b.onclick = () => SOM.alternar(); });
 $('#bDeNovo').onclick = recomecar;
 $('#bVer3d').onclick = () => { if (coresAtuais) { ativo = false; abrir3D(coresAtuais); } };
 $('#vVoltar').onclick = () => { if (stream) { mostrar('camera'); ativo = true; passo(); animar(); } else mostrar('inicio'); };
@@ -1581,6 +1798,7 @@ function iniciarDemo() { // lê as cores da foto como o app faz com a câmera e 
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
   status('A arca está pronta em terra firme', 'Toque em Próximo para o Noé subir · arraste para girar', true);
+  $('#bProximo').classList.remove('chama'); SOM.calar(); narrarComeco(historia);
 }
 async function abrirDemo() {
   await carregarDados(); mostrar('camera'); status('Preparando a demonstração…'); await PROM_PERS;
@@ -1596,7 +1814,6 @@ if (DEMO) {
   if (window.ARCA_DEMO) $('#bFoto').hidden = true; $('#bOutra').textContent = 'Ver a história de novo';
   $('#vVoltar').onclick = () => { mostrar('camera'); if (!ativo) { ativo = true; animar(); } };
   $('#bOutra').onclick = () => { mostrar('camera'); if (!ativo) { ativo = true; animar(); } iniciarDemo(); };
-  abrirDemo();
 }
 window.__arca = { carregarDados, criarArca, abrir3D, coresExemplo, get dados() { return DADOS; },
   vista(az, el, d = 2.2) { mexeu3 = true; const t = ctl3.target; cam3.position.set(t.x + d * Math.cos(el) * Math.sin(az), t.y + d * Math.sin(el), t.z + d * Math.cos(el) * Math.cos(az)); ctl3.update(); } };
