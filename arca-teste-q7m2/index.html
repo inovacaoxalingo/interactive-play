@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.17.1 · 12/11/2026';
+const VERSAO = '0.18 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -622,6 +622,7 @@ async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
   const promNoe = carregarNoe().catch(e => { console.warn('[noe]', e); });
+  const promGir = carregarBicho('girafa').catch(e => { console.warn('[girafa]', e); });
   for (const arq of ['assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
@@ -630,10 +631,13 @@ async function carregarPersonagens() {
     } catch (e) { }
   }
   await promNoe; if (NOE_G) tudo.noe_g = NOE_G;
+  await promGir; if (BICHOS_G.girafa) tudo.girafa_g = BICHOS_G.girafa;
   PERSONAGENS = tudo;
 }
 // ---------- o Noé (modelo do Tripo, assets/noe.glb): textura com as cores padrão + mapa das regiões do desenho (assets/noe_regioes.png) ----------
 // cada texel da textura sabe a que parte do desenho pertence; na leitura, a parte recebe a cor pintada e mantém o sombreado da textura
+// na demonstração (artifact) o .glb não é servido: vai em base64 dentro de um <nome>_glb.json (montar_demo.py)
+const carregarGLB = url => window.ARCA_DEMO ? fetch(url.replace(/\.glb$/, '_glb.json')).then(r => r.json()).then(j => new GLTFLoader().parseAsync(Uint8Array.from(atob(j.glb), c => c.charCodeAt(0)).buffer, '')) : new GLTFLoader().loadAsync(url);
 let NOE_G = null;
 // índice = valor/16 no PNG; a orelha (6 px no desenho, colada na manga) segue a cor do rosto e a sobrancelha (só uma, 12 px) segue a do cabelo:
 // partes tão pequenas não dão leitura confiável pela câmera
@@ -641,7 +645,7 @@ const NOE_PARTES = [null, 'cabelo', 'bigode', 'pele', 'cabelo', 'pele', 'mao', '
 const NOE_LUM = [null, 'cabelo', 'bigode', 'pele', 'sobrancelha', 'orelha', 'mao', 'manto', 'tunica', 'barra', 'faixa', 'gola'];
 const NOE_POSE = { bracoE: -0.75, antebracoE: -1.9 };              // o braço livre levantado para acenar (radianos, em z)
 async function carregarNoe() {
-  const [g, imR] = await Promise.all([new GLTFLoader().loadAsync('assets/noe.glb'),
+  const [g, imR] = await Promise.all([carregarGLB('assets/noe.glb'),
     new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = 'assets/noe_regioes.png'; })]);
   const src = g.scene.getObjectByProperty('isMesh', true), ex = g.scene.userData, tex = src.material.map, geo = src.geometry;
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
@@ -712,6 +716,47 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
     g.position.set((pc.pivo[0] - pm[0]) * escala, (pc.pivo[1] - pm[1]) * escala, (pc.pivo[2] - pm[2]) * escala); (mae || raiz).add(g); }
   return raiz;
 }
+// ---------- bichos do Tripo (assets/<nome>.glb + <nome>_regioes.png): mesma ideia do Noé, sem esqueleto ----------
+const BICHOS_G = {};
+const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'] }; // índice = valor/16 no PNG
+async function carregarBicho(nome) {
+  const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
+    new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = `assets/${nome}_regioes.png`; })]);
+  const src = g.scene.getObjectByProperty('isMesh', true), tex = src.material.map; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const W = tex.image.width, H = tex.image.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const cx = cv.getContext('2d', { willReadFrequently: true }); cx.imageSmoothingEnabled = false;
+  cx.drawImage(tex.image, 0, 0); const orig = cx.getImageData(0, 0, W, H);
+  cx.clearRect(0, 0, W, H); cx.drawImage(imR, 0, 0, W, H); const rd = cx.getImageData(0, 0, W, H).data, reg = new Uint8Array(W * H);
+  for (let i = 0; i < reg.length; i++) reg[i] = Math.round(rd[i * 4] / 16);
+  const partes = BICHO_PARTES[nome], lum = g.scene.userData.lum || {};
+  BICHOS_G[nome] = { geo: src.geometry, tex, orig, reg, W, H, partes, lum: partes.map(p => p ? (lum[p] || 128) : 1), cache: new Map() };
+}
+function corDeVarias(cores, ids) { // várias regiões (as manchas): a cor pintada que cobre mais área, juntando os tons parecidos
+  const it = []; ids.forEach(id => { const i = DADOS.regioes.indexOf(id); if (i >= 0 && cores[i]) it.push({ c: cores[i], a: (DADOS.area || [])[i] || 1 }); });
+  if (!it.length) return PAPEL; let melhor = it[0], pm = 0;
+  for (const a of it) { let soma = 0; for (const b of it) if (Math.hypot(a.c[0] - b.c[0], a.c[1] - b.c[1], a.c[2] - b.c[2]) < 70) soma += b.a; if (soma > pm) { pm = soma; melhor = a; } }
+  return melhor.c;
+}
+function texturaRecolorida(G, cor, chave) { // cor[i]: cor de cada região (null = fica a do modelo); mantém o sombreado da textura
+  if (G.cache.has(chave)) return G.cache.get(chave);
+  const k = G.lum.map(l => 1 / Math.max(8, l)), o = G.orig.data, img = new ImageData(new Uint8ClampedArray(o), G.W, G.H), d = img.data, reg = G.reg;
+  for (let i = 0, N = reg.length; i < N; i++) { const r = reg[i]; if (!r || !cor[r]) continue; const j = i * 4, c = cor[r];
+    let f = (0.2126 * o[j] + 0.7152 * o[j + 1] + 0.0722 * o[j + 2]) * k[r]; f = f < 1 ? Math.max(0.3, f) : Math.min(1.3, 1 + (f - 1) * 0.6);
+    d[j] = c[0] * f; d[j + 1] = c[1] * f; d[j + 2] = c[2] * f; }
+  const cv = document.createElement('canvas'); cv.width = G.W; cv.height = G.H; cv.getContext('2d').putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; G.cache.set(chave, t); return t;
+}
+const demoSemPintura = () => (/[?&]demo=1/.test(location.search) || window.ARCA_DEMO) && !/[?&]noecor=1/.test(location.search);
+function montarBicho(nome, mapa, cores, escala) { // mapa: parte -> região do desenho (ou lista de regiões, ou cor fixa)
+  const G = BICHOS_G[nome], raiz = new THREE.Group(); let map = G.tex;
+  if (cores && !demoSemPintura()) { const cor = G.partes.map(p => { if (!p) return null; const m = mapa[p]; if (m === undefined) return null; return Array.isArray(m) ? corDeVarias(cores, m) : corR(cores, m); });
+    map = texturaRecolorida(G, cor, JSON.stringify(cor)); }
+  const corpo = new THREE.Mesh(G.geo, new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, envMapIntensity: 0.5 })); corpo.castShadow = true; corpo.receiveShadow = true; raiz.add(corpo);
+  const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide }), esp = (0.0015 / escala).toFixed(5);
+  cont.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${esp};`); };
+  const linha = new THREE.Mesh(G.geo, cont); linha.userData.contorno = true; raiz.add(linha);
+  raiz.scale.setScalar(escala); return raiz;
+}
 function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o do cajado fica parado
   if (p.bracoE) p.bracoE.rotation.z = (p.bracoE.userData.r0 || 0) + Math.sin(t * 5) * 0.22; if (p.antebracoE) p.antebracoE.rotation.z = (p.antebracoE.userData.r0 || 0) + Math.sin(t * 5 + 0.6) * 0.3;
   if (p.cabeca) { p.cabeca.rotation.z = Math.sin(t * 1.4) * 0.06; p.cabeca.rotation.y = Math.sin(t * 0.8) * 0.15; }
@@ -750,7 +795,10 @@ function animarVida(g, t, altura) {
 }
 // ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
 const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
-const FILA = []; // sem bichos em terra (decisão da Inovação em 07/11): só o Noé espera ao lado da rampa
+// bichos em terra (12/11: as girafas voltam): esperam atrás do Noé, sobem a rampa depois dele e aparecem no convés
+// g: qual girafa do desenho (DADOS.girafas), h: escala, atraso: segundos depois do Próximo, vel: velocidade relativa à do Noé
+const FILA = [{ m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 }];
+const CONVES = [{ g: 0, h: 0.44, x: 0.52, z: 0.07, yaw: -0.3 }, { g: 1, h: 0.49, x: 0.65, z: -0.07, yaw: -0.55 }]; // as girafas no convés da popa (na proa o telhado pega na cabeça delas)
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
   const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
@@ -821,9 +869,10 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   const apoios = new THREE.Group(), casca = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9, map: madeira }), miolo = new THREE.MeshStandardMaterial({ color: 0xe0b077, roughness: 0.9 });
   for (const x of [-0.42, 0.42]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.42, 16), [casca, miolo, miolo]); l.rotation.x = Math.PI / 2; l.position.set(x, 0.048, 0); apoios.add(l); }
   g.add(apoios);
-  const bichos = []; FILA.forEach((f, i) => { const mod = PERSONAGENS && PERSONAGENS[f.m]; if (!mod) return;
-    const inst = montarPersonagem(mod, { ...f.mapa, tinta: [30, 28, 32] }, cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = -Math.PI / 2 + (i % 2 ? 0.15 : -0.1);
+  const bichos = []; FILA.forEach((f, i) => { if (!PERSONAGENS || !PERSONAGENS[f.m + '_g'] || !DADOS.girafas) return;
+    const inst = montarBicho(f.m, DADOS.girafas[f.g], cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = Math.PI / 2 + (i % 2 ? 0.12 : -0.08);
     inst.userData.mats = materiaisDe(inst); inst.userData.fila = f; inst.userData.yaw = inst.rotation.y; g.add(inst); bichos.push(inst); });
+  const bichosArca = bichos.map(b => { const a = arca.getObjectByName('girafa' + b.userData.fila.g); if (a) { a.userData.mats = materiaisDe(a); opacidade(a, 0); } return a; });
   let noeChao = null, sNoe = null; if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
     noeChao = montarNoe(mapa, cores, 0.4); noeChao.position.set(-0.88, 0, 0.74); noeChao.rotation.y = Math.PI / 2; noeChao.userData.yaw = Math.PI / 2; noeChao.userData.mats = materiaisDe(noeChao); g.add(noeChao);
     sNoe = sombraChao(0.2, 0.17, 0.55); g.add(sNoe); }
@@ -842,7 +891,7 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
     lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matN); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
     const base = new THREE.Mesh(esf, matN2); base.position.set(0, 0.0, 0.01); base.scale.set(0.34, 0.075, 0.14); nv.add(base);
     nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.y0 = y; nuvens.add(nv); }); nuvens.visible = false; g.add(nuvens);
-  g.userData = { capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
+  g.userData = { capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
 }
 const VEL_BICHO = 0.42; // unidades por segundo
@@ -866,7 +915,12 @@ function animarTerra(terra, agora, t) {
     if (prontos === u.bichos.length && !historia.fimEmbarque) { historia.fimEmbarque = agora; $('#bProximo').disabled = false; status('Todos a bordo!', 'Toque em Próximo para o Noé subir', true); } }
   if (historia.etapa >= 2) { const n = u.noeChao; if (n && n.visible) { const fim = andar(n, [[-0.88, 0, 0.74], u.pe, u.topo, u.dentro], s - 0.3); if (fim >= 0) opacidade(n, 1 - fim); if (n.visible) { const pz = n.userData.pecas; if (pz.bracoE) pz.bracoE.rotation.z = 0; if (pz.antebracoE) pz.antebracoE.rotation.z = 0; }
       const kp = Math.floor((s - 0.3) * 11 / Math.PI); if (s > 0.3 && fim < 0.7 && kp !== u.kPasso) { u.kPasso = kp; SOM.efeito('passo', n.position.y > 0.02 ? 1 : 0); } } // passinhos: no capim, depois na madeira
-    if (u.noeArca && s > 4.6) opacidade(u.noeArca, Math.min(1, (s - 4.6) / 0.8)); }
+    if (u.noeArca && s > 4.6) opacidade(u.noeArca, Math.min(1, (s - 4.6) / 0.8));
+    u.bichos.forEach((b, i) => { const f = b.userData.fila, a = u.bichosArca[i];
+      if (b.visible) { const td = s - f.atraso; if (td <= 0) { b.rotation.z = 0.025 * Math.sin(t * 2 + i); }
+        else { const fim = andar(b, [[f.x, 0, f.z], u.pe, u.topo, u.dentro], td * (f.vel || 1)); if (fim >= 0) opacidade(b, 1 - fim); if (fim >= 1 && !b.userData.tDentro) b.userData.tDentro = s; } }
+      else if (!b.userData.tDentro) b.userData.tDentro = s;
+      if (a && b.userData.tDentro) opacidade(a, Math.min(1, Math.max(0, (s - b.userData.tDentro - 0.2) / 0.8))); }); }
 }
 function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fica durante o dilúvio e vai embora depois
   const u = terra.userData; if (!historia || !historia.tChuva) { return 0; }
@@ -1081,6 +1135,8 @@ function criarArca(cores) {
   // Noé no convés da proa (na frente da cabine não cabe: o beiral do telhado pega na cabeça dele), virado um pouco para quem olha
   if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
     const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.01); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
+  if (PERSONAGENS && PERSONAGENS.girafa_g && DADOS.girafas) CONVES.forEach(c => { const gi = montarBicho('girafa', DADOS.girafas[c.g], cores, c.h);
+    gi.position.set(c.x, bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = 'girafa' + c.g; arca.add(gi); });
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
