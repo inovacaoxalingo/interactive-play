@@ -112,7 +112,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
   <canvas id="cena"></canvas>
   <div class="topo"><button class="voltar" id="vVoltar" type="button">‹ Voltar</button><span></span><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
   <div class="dica3d">Arraste para girar · dois dedos para aproximar</div>
-  <div class="barra"><button id="bFoto" type="button">Salvar imagem</button><button id="bOutra" type="button" class="prim">Ler outra pintura</button></div>
+  <div class="barra"><button id="bFoto" type="button">Salvar imagem</button><button id="bHistoria" type="button" class="prim" hidden>Contar a história</button><button id="bOutra" type="button" class="prim">Ler outra pintura</button></div>
 </section>
 
 <script type="module">
@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.21 · 12/11/2026';
+const VERSAO = '0.22 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -1277,7 +1277,7 @@ function desenharAR() {
   if (!rAR || !$('#camera').classList.contains('ativa')) return;
   rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
   const agora = performance.now(), dq = Math.min(0.25, Math.max(0.001, (agora - (tDesenho || agora)) / 1000)), kq = 1 - Math.exp(-dq / 0.05); tDesenho = agora; // alisa em ~50 ms, em qualquer fps
-  if (DEMO && camDemo) { ctlDemo.update(); camDemo.updateMatrixWorld(); mDemo.multiplyMatrices(camDemo.matrixWorldInverse, P2W); mDemo.decompose(pA, qA, sA); pV.copy(pA); qV.copy(qA); sV.copy(sA); poseVista = true; ultimaVez = agora; }
+  if (DEMO && camDemo) { aplicarZoom(ctlDemo, camDemo); ctlDemo.update(); camDemo.updateMatrixWorld(); mDemo.multiplyMatrices(camDemo.matrixWorldInverse, P2W); mDemo.decompose(pA, qA, sA); pV.copy(pA); qV.copy(qA); sV.copy(sA); poseVista = true; ultimaVez = agora; }
   if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true;
     const L = cenaAR.userData.luz; if (L) L.hemi.position.set(0, 0, -1).applyQuaternion(qV); } // o céu fica "em cima" do quebra-cabeça
   const recente = agora - ultimaVez < 2000; // falhou alguns quadros: a arca fica no último lugar; depois some
@@ -1818,7 +1818,8 @@ function estimarFocal(H) {
 // ---------- ver em 3D (sem câmera) ----------
 let r3 = null, cena3 = null, cam3 = null, ctl3 = null, arca3 = null, mar3 = null, loop3 = false;
 function abrir3D(cores) {
-  mostrar('ver3d');
+  mostrar('ver3d'); $('#bHistoria').hidden = true; // só aparece no exemplo
+  if (cam3 && !mexeu3) zoomAlvo.delete(cam3);
   if (!r3) {
     r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: true, preserveDrawingBuffer: true }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1827,7 +1828,7 @@ function abrir3D(cores) {
     cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 60); cam3.position.set(-0.75, 0.55, 1.75);
     const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.nivel > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
-    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; });
+    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; }); zoomSuave(ctl3, cam3, $('#ver3d'));
   }
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
@@ -1838,6 +1839,16 @@ function abrir3D(cores) {
   if (!loop3) { loop3 = true; requestAnimationFrame(anim3); }
 }
 let mexeu3 = false;
+const zoomAlvo = new Map(); // câmera -> distância desejada; a câmera chega nela aos poucos
+function zoomSuave(ctl, cam, el) {
+  el.addEventListener('wheel', e => { if (!ctl.enabled) return; e.preventDefault(); e.stopImmediatePropagation();
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY, k = Math.max(-1, Math.min(1, dy / 100)); // um "dente" da roda por vez, mesmo no touchpad
+    const d0 = zoomAlvo.get(cam) ?? cam.position.distanceTo(ctl.target); zoomAlvo.set(cam, Math.min(ctl.maxDistance, Math.max(ctl.minDistance, d0 * Math.exp(k * 0.12))));
+    if (cam === cam3) mexeu3 = true; }, { capture: true, passive: false });
+}
+function aplicarZoom(ctl, cam) { const alvo = zoomAlvo.get(cam); if (alvo === undefined) return;
+  const v = cam.position.clone().sub(ctl.target), d = v.length(), nd = d + (alvo - d) * 0.18; cam.position.copy(ctl.target).addScaledVector(v.normalize(), nd);
+  if (Math.abs(alvo - nd) < 0.002) zoomAlvo.delete(cam); }
 function enquadrar() { // cabe a arca inteira na tela, deitada ou em pé
   if (mexeu3) return; const R = 0.82, vf = cam3.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam3.aspect);
   const dist = R / Math.sin(Math.min(vf, hf) / 2); const dir = new THREE.Vector3(-0.45, 0.2, 1).normalize();
@@ -1852,7 +1863,7 @@ function anim3(tms) {
   if (cena3.userData.vida) animarVida(cena3.userData.vida, t, alturaMar); SOM.ambiente(0, 0.85);
   const esp = cena3.userData.espuma; if (esp) { esp.position.y = balanco.y * 0.6; esp.rotation.z = balanco.rz * 0.5; esp.material.opacity = 0.8 + 0.2 * Math.sin(t * 1.3); }
   fps3D(tms, () => { r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio)); if (QUAL.nivel === 0) cena3.userData.sol.castShadow = false; });
-  ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
+  aplicarZoom(ctl3, cam3); ctl3.update(); r3.render(cena3, cam3); requestAnimationFrame(anim3);
 }
 function coresExemplo() {
   // pintura de exemplo, como uma criança faria: cada tábua de uma cor
@@ -1872,7 +1883,9 @@ function coresExemplo() {
 // ---------- botões ----------
 $('#versao').textContent = 'Protótipo · versão ' + VERSAO;
 $('#bCamera').onclick = abrirCamera;
-$('#bExemplo').onclick = async () => { await carregarDados(); if (!PROM_PERS) PROM_PERS = carregarPersonagens(); await PROM_PERS; abrir3D(coresExemplo()); };
+$('#bExemplo').onclick = async () => { await carregarDados(); if (!PROM_PERS) PROM_PERS = carregarPersonagens(); await PROM_PERS; abrir3D(coresExemplo()); $('#bHistoria').hidden = false; };
+// do exemplo para a história: abre a demonstração (o quebra-cabeça pintado na mesa, girando com o dedo ou o mouse)
+$('#bHistoria').onclick = () => { if (DEMO) { $('#bHistoria').hidden = true; SOM.destravar && SOM.destravar(); abrirDemo(); } else location.href = location.pathname + '?demo=1'; };
 $('#cVoltar').onclick = fecharCamera;
 document.querySelectorAll('.bsom').forEach(b => { b.onclick = () => SOM.alternar(); });
 $('#bDeNovo').onclick = recomecar;
@@ -1913,7 +1926,7 @@ function prepararDemo(img) {
   cenaAR.background = new THREE.CanvasTexture(ceu); cenaAR.background.colorSpace = THREE.SRGBColorSpace; $('#video').style.display = 'none'; $('#ar').style.pointerEvents = 'auto'; $('#ar').style.touchAction = 'none';
   camDemo = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 80); camDemo.position.set(0.35, 2.15, 3.3);
   ctlDemo = new OrbitControls(camDemo, $('#ar')); ctlDemo.target.set(0.15, 0.1, 0.25); ctlDemo.enableDamping = true; ctlDemo.dampingFactor = 0.08;
-  ctlDemo.maxPolarAngle = Math.PI * 0.46; ctlDemo.minDistance = 1.2; ctlDemo.maxDistance = 8; ctlDemo.enablePan = false; ctlDemo.update();
+  ctlDemo.maxPolarAngle = Math.PI * 0.46; ctlDemo.minDistance = 1.2; ctlDemo.maxDistance = 8; ctlDemo.enablePan = false; ctlDemo.update(); zoomSuave(ctlDemo, camDemo, $('#camera'));
   const S = 1 / K_AR, [cx, cy] = centroAR(); // pixel do quebra-cabeça -> mesmas unidades da arca (x direita, y para cima, z para quem olha)
   P2W = new THREE.Matrix4().set(S, 0, 0, -cx * S, 0, 0, -S, 0, 0, S, 0, -cy * S, 0, 0, 0, 1);
 }
