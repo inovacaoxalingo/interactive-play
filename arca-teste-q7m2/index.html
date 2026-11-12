@@ -39,6 +39,13 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 #ar{pointer-events:none}
 .guia{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,calc(80vh*1.464));aspect-ratio:1.464;border:3px dashed rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none}
 .guia.some{opacity:0}
+#deitar{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:rgba(13,45,87,.94);color:#fff;text-align:center;z-index:5}
+#deitar b{font-size:22px;font-weight:800}#deitar p{margin:0;font-size:15px;line-height:1.4;opacity:.9;max-width:320px}
+#deitar .cel{width:54px;height:92px;border:4px solid #fff;border-radius:12px;animation:deita 2.2s ease-in-out infinite}
+@keyframes deita{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+#deitar button{margin-top:6px;border:0;background:transparent;color:#fff;text-decoration:underline;font-size:13px;opacity:.75;cursor:pointer}
+#camera.ativa.empe:not(.demo) #deitar{display:flex}
+#camera.ativa.empe:not(.demo) .topo{z-index:6}#camera.ativa.empe:not(.demo) .status,#camera.ativa.empe:not(.demo) .bsom{visibility:hidden}
 .topo{position:absolute;left:0;right:0;top:0;padding:max(12px,env(safe-area-inset-top)) 12px 0;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;pointer-events:none}
 .topo>*{pointer-events:auto}
 .voltar{border:0;background:rgba(255,255,255,.92);color:var(--mar2);font-weight:800;border-radius:999px;padding:9px 14px;font-size:15px;cursor:pointer}
@@ -97,6 +104,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
   <video id="video" playsinline muted autoplay></video>
   <canvas id="ar"></canvas>
   <div class="guia" id="guia"></div>
+  <div id="deitar"><div class="cel"></div><b>Deite o celular</b><p>O quebra-cabeça é deitado: com o celular deitado ele cabe inteiro na tela e a leitura fica melhor.</p><p style="font-size:13px">Se a tela não girar, ligue a rotação automática do celular.</p><button type="button" id="bEmPe">Continuar com o celular em pé</button></div>
   <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
   <p class="legenda" id="legenda" aria-live="polite"></p>
   <div class="progresso" id="prog"><i></i></div>
@@ -127,7 +135,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.33 · 12/11/2026';
+const VERSAO = '0.34 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -141,7 +149,7 @@ function perdeuContexto() { // o celular ficou sem memória de vídeo: recarrega
   const u = new URL(location.href); u.searchParams.set('qualidade', 'baixa'); location.replace(u.toString());
 }
 function medidorFPS() { let n = 0, t0 = 0; return (agora, aoBaixar) => { if (!t0) t0 = agora; n++; const dt = agora - t0;
-  if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > 0 && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
+  if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > Math.max(0, QUAL.base - 1) && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
 const fps3D = medidorFPS(), fpsAR = medidorFPS();
 const TELAS = ['inicio', 'camera', 'ver3d'];
 function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); if (t === 'camera' && typeof stream !== 'undefined' && stream && !DEMO_ATIVO()) setTimeout(renovarVideo, 0); }
@@ -448,7 +456,7 @@ async function montarControle() {
   ctrl = new Controller({ inputWidth: NW, inputHeight: NH, maxTrack: 1, debugMode: true });
   await ctrl.addImageTargets('assets/alvo.mind');
   const cd = ctrl.cropDetector; cd.detector = new cd.detector.constructor(NW, NH, false); cd.detect = t => cd.detector.detect(t); cd.detectMoving = cd.detect;
-  $('#guia').style.width = ''; $('#guia').classList.toggle('retrato', VH > VW);
+  $('#guia').style.width = '';
 }
 // mapa de traço: só a linha preta fica escura; a tinta da canetinha vira branco
 // V = brilho (max RGB), comparado com o mais claro em volta (janela 9x9)
@@ -1358,16 +1366,20 @@ async function abrirCamera() {
   video.srcObject = stream; await video.play().catch(() => {});
   for (let i = 0; i < 100 && !video.videoWidth; i++) await new Promise(r => setTimeout(r, 50));
   await montarControle(); prepararAR();
-  ativo = true; recomecar(); passo(); animar();
+  ativo = true; conferirDeitado(); recomecar(); passo(); animar();
 }
 function tirarArcaAR() { if (arcaAR) { ancora.remove(arcaAR); descartar(arcaAR); arcaAR = null; } if (ancora) ancora.visible = false; poseVista = false; sumiuEm = 0; }
 function recomecar() {
   tirarArcaAR(); MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; $('#bProximo').classList.remove('chama'); historia = null; $('#guia').classList.remove('some');
   $('#prog').style.display = 'none'; $('#prog i').style.width = '0'; achouDesde = 0; disseLendo = false; tAviso = performance.now();
-  status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
+  status('Aponte para o quebra-cabeça inteiro', 'Deixe ele dentro do quadro pontilhado');
   SOM.calar(); if (!DEMO) SOM.falar('VO_MIRE');
 }
+let EM_PE = false, emPeAceito = false;
+function conferirDeitado() { EM_PE = !emPeAceito && matchMedia('(orientation: portrait)').matches && matchMedia('(pointer: coarse)').matches; $('#camera').classList.toggle('empe', EM_PE); $('#camera').classList.toggle('demo', !!DEMO); }
+addEventListener('resize', conferirDeitado); addEventListener('orientationchange', () => setTimeout(conferirDeitado, 200));
+$('#bEmPe').addEventListener('click', () => { emPeAceito = true; conferirDeitado(); });
 function fecharCamera() { ativo = false; historia = null; tirarArcaAR(); if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
 // ---------- acompanhamento rápido por janelinhas (depois da leitura) ----------
 // a foto da leitura, endireitada, vira o "molde"; em cada quadro novo, cada janelinha do molde é procurada perto de onde estava
@@ -1463,6 +1475,41 @@ function criarMolde() { // chamado no fim da leitura: Hc e a foto (cxFull) são 
   if (DEBUG) window.__molde = { n: MOLDE.janelas.length };
 }
 const BJ = new Float32Array((2 * (RJ + BUSCA) + 1) ** 2), NC = new Float32Array((2 * BUSCA + 1) ** 2);
+// acompanhamento num "trabalhador" (outro núcleo do processador): a conta das janelinhas não trava mais o desenho da cena.
+// Se o navegador não tiver OffscreenCanvas (iPhone antigo), segue tudo como antes, aqui mesmo.
+let ultimoAchou = false; // a rodada anterior achou: tenta as janelinhas primeiro (se o celular mexeu demais, elas falham e os outros jeitos entram na mesma rodada)
+let TRAB = null, trabOcupado = false, trabMolde = null, trabPend = null, custoJanelas = 0;
+function criarTrabalhador() {
+  if (TRAB !== null || typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap === 'undefined' || /[?&]trab=0/.test(location.search)) return;
+  try {
+    const fontes = [resolver, normaliza, mul3, inv3, aplica, dlt, homografiaRobusta, lerEndireitado, casar].map(f => f.toString()).join('\n');
+    const corpo = `const RJ = ${RJ}, BUSCA = ${BUSCA}, LADO = ${LADO}, AREA = ${AREA}; let VW = 0, VH = 0, janelas = null, oc = null, ox = null;
+const BJ = new Float32Array((2 * (RJ + BUSCA) + 1) ** 2), NC = new Float32Array((2 * BUSCA + 1) ** 2);
+${fontes}
+onmessage = e => { const m = e.data;
+  if (m.molde) { janelas = m.molde; return; }
+  try { const t0 = performance.now(); VW = m.VW; VH = m.VH;
+    if (!oc || oc.width !== VW || oc.height !== VH) { oc = new OffscreenCanvas(VW, VH); ox = oc.getContext('2d', { willReadFrequently: true }); }
+    ox.drawImage(m.bmp, 0, 0, VW, VH); m.bmp.close(); const img = ox.getImageData(0, 0, VW, VH).data;
+    const { src, dst } = casar(janelas, (x0, y0, LW, buf) => lerEndireitado(img, m.Gf, x0, y0, LW, LW, buf));
+    let r = null; if (src.length >= 14) { const h = homografiaRobusta(src, dst); if (h && h.n >= 12 && h.rms <= 1.2) r = { H: mul3(mul3(m.Ginv, h.H), m.R), n: h.n, rms: h.rms }; }
+    postMessage({ id: m.id, r, ms: performance.now() - t0 });
+  } catch (err) { postMessage({ id: m.id, erro: String(err) }); } };`;
+    TRAB = new Worker(URL.createObjectURL(new Blob([corpo], { type: 'text/javascript' })));
+    TRAB.onmessage = e => { const p = trabPend; trabPend = null; trabOcupado = false; if (p) p(e.data); };
+    TRAB.onerror = () => { TRAB = false; if (trabPend) { const p = trabPend; trabPend = null; p({ erro: 'trabalhador' }); } };
+  } catch (e) { TRAB = false; }
+}
+let idTrab = 0;
+async function seguirJanelasTrab() { // igual a seguirJanelas, mas a conta roda no trabalhador
+  const { R, janelas } = MOLDE;
+  if (trabMolde !== MOLDE) { TRAB.postMessage({ molde: janelas.map(j => ({ x: j.x, y: j.y, t: j.t, n: j.n })) }); trabMolde = MOLDE; }
+  const Ginv = mul3(Hc, inv3(R)), Gf = mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], Ginv);
+  const bmp = await createImageBitmap(video);
+  const res = await new Promise(ok => { trabPend = ok; trabOcupado = true; TRAB.postMessage({ id: ++idTrab, bmp, VW, VH, Gf, Ginv, R }, [bmp]); });
+  if (res.erro) { TRAB = false; return undefined; } // falhou: volta a fazer aqui mesmo
+  custoJanelas = res.ms; return res.r ? { ...res.r, modo: 'janelas*' } : null;
+}
 function seguirJanelas() { // procura as janelinhas no quadro atual, endireitado pela última posição; devolve a posição nova ou null
   const { R, janelas } = MOLDE, Ginv = mul3(Hc, inv3(R)), Gf = mul3([VW / NW, 0, 0, 0, VH / NH, 0, 0, 0, 1], Ginv), img = dadosCheio();
   const { src, dst } = casar(janelas, (x0, y0, LW, buf) => lerEndireitado(img, Gf, x0, y0, LW, LW, buf));
@@ -1509,8 +1556,11 @@ function poseDaHomografia(H) { // posição 3D a partir da homografia, com a mes
 let contaDbg = 0;
 async function acharAlvo() {
   const [mw, mh] = DADOS.alvo;
-  if (MOLDE && Hc && performance.now() - tHc < IDADE_JANELAS) { // 0) acompanhamento rápido pelas janelinhas do molde
-    const a = seguirJanelas(); if (a) { falhasJanelas = 0; if (DEBUG && ++contaDbg % 4 === 0) desenharQuadro(); return a; } falhasJanelas++; }
+  // a janelinha procura até ~9 px em volta de onde estava: vale enquanto a posição for recente. No celular lento "recente" é medido pela própria rodada
+  if (MOLDE && Hc && (ultimoAchou || performance.now() - tHc < Math.max(IDADE_JANELAS, 2.5 * custoJanelas))) { // 0) acompanhamento rápido pelas janelinhas do molde
+    let a; if (TRAB) a = await seguirJanelasTrab(); if (a === undefined) { capturar(); a = seguirJanelas(); }
+    if (a) { falhasJanelas = 0; if (DEBUG && ++contaDbg % 4 === 0) { capturar(); desenharQuadro(); } return a; } falhasJanelas++; }
+  capturar(); // os outros jeitos usam a foto aqui mesmo
   if (Hc && performance.now() - tHc < 6000) { // endireita com a última posição (vale por alguns segundos, se o celular não mexeu muito)
     const sr = Math.min(0.86 * NW / mw, 0.86 * NH / mh), ox = (NW - mw * sr) / 2, oy = (NH - mh * sr) / 2, R = [sr, 0, ox, 0, sr, oy, 0, 0, 1];
     const G = mul3(Hc, inv3(R)); // endireitado -> quadro reduzido
@@ -1527,8 +1577,9 @@ async function passo() {
   if (!ativo) return;
   if (video.videoWidth && (video.videoWidth !== VW || video.videoHeight !== VH)) { await montarControle(); }
   if (!cvR || cvR.width !== NW || cvR.height !== NH) { cvR = document.createElement('canvas'); cvR.width = NW; cvR.height = NH; cxR = cvR.getContext('2d', { willReadFrequently: true }); Hc = null; }
-  const t0 = performance.now();
-  capturar();
+  if (EM_PE && !DEMO) { setTimeout(passo, 250); return; } // esperando deitar o celular
+  const t0 = performance.now(); criarTrabalhador();
+  if (!MOLDE || !TRAB) capturar(); // com o trabalhador, a foto só é tirada aqui se precisar
   let achou = false, info = '';
   try {
     const a = await acharAlvo(); EST.push({ ms: performance.now() - t0, ok: !!(a && a.rms < 3), modo: a ? a.modo : '' }); if (EST.length > 40) EST.shift(); if (a) EST.ultimo = a;
@@ -1552,15 +1603,15 @@ async function passo() {
       }
     } else if (a) info = `${a.modo} · erro alto ${a.rms.toFixed(1)}`;
   } catch (e) { info = 'erro ' + e.message; }
-  falarOrientacao(achou);
+  ultimoAchou = achou; falarOrientacao(achou);
   if (!achou && lendo) { estavel = 0; achouDesde = 0; if (performance.now() - ultimaVez > 1500) status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Com boa luz e sem reflexo em cima'); }
   if (!achou && !lendo && performance.now() - ultimaVez > 2000) status('Aponte de novo para o quebra-cabeça', 'A arca volta a aparecer em cima dele');
   if (achou && !lendo && (!historia || historia.fimChuva)) status('Pronto! A arca está boiando no quebra-cabeça', 'Ande em volta com o celular para ver de todos os lados', true);
-  if (DEBUG) { mostrarDepuracao(info, performance.now() - t0); window.__nDet = (window.__nDet || 0) + 1; window.__det = { achou, info, vis: ancora && ancora.visible, ms: Math.round(performance.now() - t0) }; }
+  if (DEBUG) { window.__trk = { molde: !!MOLDE, fj: falhasJanelas, trab: String(TRAB), cj: Math.round(custoJanelas), idade: Math.round(performance.now() - tHc) }; mostrarDepuracao(info, performance.now() - t0); window.__nDet = (window.__nDet || 0) + 1; window.__det = { achou, info, vis: ancora && ancora.visible, ms: Math.round(performance.now() - t0) }; }
   // depois da leitura só acompanha (até ~30 vezes por segundo). Celular fraco: o acompanhamento espera um pouco mais entre uma rodada e outra,
   // para sobrar tempo de desenhar a cena (antes ele ocupava o processador inteiro e a imagem ficava em ~4 quadros por segundo)
-  const custo = performance.now() - t0, folga = [1.6, 0.9, 0][QUAL.base];
-  setTimeout(passo, lendo ? (QUAL.base < 2 ? custo * folga * 0.5 : 0) : Math.max(4, 33 - custo, custo * folga));
+  const custo = performance.now() - t0, viaTrab = EST.ultimo && EST.ultimo.modo === 'janelas*';
+  setTimeout(passo, lendo || viaTrab ? 0 : Math.max(4, 33 - custo, QUAL.base < 2 && custo > 150 ? 0.3 * custo : 0)); // pelo trabalhador não precisa esperar: a cena continua sendo desenhada
 }
 function terminarLeitura() {
   criarMolde(); // a mesma foto e posição da última leitura viram o molde do acompanhamento
@@ -1596,7 +1647,7 @@ function salvarDiagnostico() { // uma imagem só, para mandar por WhatsApp: foto
   if (H) { const [mw, mh] = DADOS.alvo, k = fw / NW; x.strokeStyle = '#18c964'; x.lineWidth = 4; x.beginPath(); [[0, 0], [mw, 0], [mw, mh], [0, mh]].forEach(([a, b], i) => { const [u, v] = aplica(H, a, b); i ? x.lineTo(u * k, v * k) : x.moveTo(u * k, v * k); }); x.closePath(); x.stroke(); }
   x.drawImage(cv, 0, fh + 10, 480, Math.round(480 * NH / NW));
   const r = resumoEst(), u = EST.ultimo || {}, cr = window.__arcaCores || {};
-  const linhas = [`Arca Toys · protótipo v${VERSAO} · gerado em ${new Date().toLocaleString('pt-BR')}`, navigator.userAgent.slice(0, 110), `câmera ${VW}x${VH} · reconhecimento ${NW}x${NH} · qualidade ${QUAL.nivel} · fps ${window.__fps || '?'}`,
+  const linhas = [`Arca Toys · protótipo v${VERSAO} · gerado em ${new Date().toLocaleString('pt-BR')}`, navigator.userAgent.slice(0, 110), `câmera ${VW}x${VH} · reconhecimento ${NW}x${NH} · qualidade ${QUAL.base}/${QUAL.nivel} · ${TRAB ? "trabalhador" : "sem trabalhador"} · fps ${window.__fps || '?'}`,
     `acerto ${r.acerto}% em ${r.n} tentativas · ${r.ms} ms por tentativa · saltos descartados ${saltos}`, `último: ${u.modo || '-'} · pares ${u.n || '-'} · erro ${u.rms ? u.rms.toFixed(2) : '-'} px`,
     `fotos lidas ${fotos.length} · branco ${cr.branco || '-'} · preto ${cr.preto || '-'} · acerto pelo desenho ${REFINO ? REFINO.n + ' pontos, ' + REFINO.rms + ' px (corrigiu ' + REFINO.desl + ' px)' : 'não'} · molde ${MOLDE ? MOLDE.janelas.length + ' janelas' : 'não'}`, `água ${cr.mar ? cr.mar + ' (' + cr.marParte + '% do mar)' : 'sem pintura → azul'} · foco ${window.__focal ? window.__focal.padrao + ' → ' + (window.__focal.estimada || '-') : '-'}`, `peças 3D ${window.__pecas ? window.__pecas.antes + ' → ' + window.__pecas.depois : '-'}`];
   x.fillStyle = '#1d1b20'; x.font = '600 17px system-ui, sans-serif'; linhas.forEach((l, i) => x.fillText(l, 500, fh + 34 + i * 26));
@@ -1980,7 +2031,7 @@ function iniciarDemo() { // lê as cores da foto como o app faz com a câmera e 
   $('#bProximo').classList.remove('chama'); SOM.calar(); narrarComeco(historia);
 }
 async function abrirDemo() {
-  await carregarDados(); mostrar('camera'); status('Preparando a demonstração…'); await PROM_PERS;
+  await carregarDados(); mostrar('camera'); conferirDeitado(); status('Preparando a demonstração…'); await PROM_PERS;
   const img = new Image(); img.src = 'assets/demo.jpg'; await img.decode();
   VW = img.naturalWidth; VH = img.naturalHeight; NW = VW; NH = VH;
   cvFull = document.createElement('canvas'); cvFull.width = VW; cvFull.height = VH; cxFull = cvFull.getContext('2d', { willReadFrequently: true }); cxFull.drawImage(img, 0, 0);
