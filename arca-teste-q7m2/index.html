@@ -35,7 +35,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 /* câmera */
 #camera{background:#000;overflow:hidden}
 #video,#ar{position:absolute;inset:0;width:100%;height:100%}
-#video{object-fit:cover}
+#video{object-fit:cover;min-width:100%;min-height:100%}
 #ar{pointer-events:none}
 .guia{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,calc(80vh*1.464));aspect-ratio:1.464;border:3px dashed rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none}
 .guia.some{opacity:0}
@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.25 · 12/11/2026';
+const VERSAO = '0.26 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -136,7 +136,8 @@ function medidorFPS() { let n = 0, t0 = 0; return (agora, aoBaixar) => { if (!t0
   if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > 0 && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
 const fps3D = medidorFPS(), fpsAR = medidorFPS();
 const TELAS = ['inicio', 'camera', 'ver3d'];
-function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); }
+function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); if (t === 'camera' && typeof stream !== 'undefined' && stream && !DEMO_ATIVO()) setTimeout(renovarVideo, 0); }
+const DEMO_ATIVO = () => /[?&]demo=1/.test(location.search) || !!window.ARCA_DEMO;
 
 // ---------- som: a narração (voz Cleo, Google AI Studio), a música de fundo e os efeitos (feitos aqui mesmo, sem arquivo) ----------
 // a música: "Peaceful Acoustic Melody", Universfield (Pixabay, sem Content ID, baixada em 08/11/2026)
@@ -415,7 +416,17 @@ function homografiaRobusta(src, dst) {
 // ---------- câmera + reconhecimento (MindAR, olhando o quadro inteiro e só o traço preto) ----------
 let Controller = null, ctrl = null, stream = null, VW = 0, VH = 0, NW = 0, NH = 0, cv = null, cx = null, ativo = false;
 let cvFull = null, cxFull = null;
-const video = $('#video');
+let video = $('#video');
+function renovarVideo() { // troca o elemento de vídeo por um novo com a mesma câmera: o iOS volta a desenhar ele na tela inteira
+  if (!stream) return; const n = video.cloneNode(false); n.muted = true; n.playsInline = true; n.setAttribute('playsinline', ''); n.srcObject = stream;
+  video.replaceWith(n); video = n; n.play().catch(() => {});
+}
+function conferirVideo() { // a imagem da câmera tem que cobrir a tela toda; se não cobrir, renova
+  if (!stream || !$('#camera').classList.contains('ativa') || DEMO) return; const r = video.getBoundingClientRect(), c = $('#camera').getBoundingClientRect();
+  if (r.width < c.width * 0.97 || r.height < c.height * 0.97 || video.paused) renovarVideo();
+}
+setInterval(conferirVideo, 1000); addEventListener('resize', () => setTimeout(conferirVideo, 300)); addEventListener('pageshow', () => setTimeout(conferirVideo, 300));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(conferirVideo, 300); });
 async function montarControle() {
   VW = video.videoWidth; VH = video.videoHeight;
   const s = 720 / Math.max(VW, VH); NW = Math.round(VW * s); NH = Math.round(VH * s);
@@ -732,8 +743,10 @@ async function carregarBicho(nome) {
   const partes = BICHO_PARTES[nome], lum = g.scene.userData.lum || {};
   BICHOS_G[nome] = { geo: src.geometry, tex, orig, reg, W, H, partes, lum: partes.map(p => p ? (lum[p] || 128) : 1), cache: new Map() };
 }
-function corDeVarias(cores, ids) { // várias regiões (as manchas): a cor pintada que cobre mais área, juntando os tons parecidos
-  const it = []; ids.forEach(id => { const i = DADOS.regioes.indexOf(id); if (i >= 0 && cores[i]) it.push({ c: cores[i], a: (DADOS.area || [])[i] || 1 }); });
+function corDeVarias(cores, ids, minFrac = 0.05) { // várias regiões (manchas, listras): a cor pintada que cobre mais área, juntando os tons parecidos
+  const papel = c => c === PAPEL || (Math.min(...c) > 215 && Math.max(...c) - Math.min(...c) < 22); // listra sem tinta não "vota" (antes o branco ganhava das pintadas)
+  const it = []; let total = 0; ids.forEach(id => { const i = DADOS.regioes.indexOf(id); if (i < 0) return; const a = (DADOS.area || [])[i] || 1; total += a; if (cores[i] && !papel(cores[i])) it.push({ c: cores[i], a }); });
+  if (!it.length || it.reduce((t, x) => t + x.a, 0) < minFrac * total) return PAPEL; // quase nada pintado: fica sem tinta
   if (!it.length) return PAPEL; let melhor = it[0], pm = 0;
   for (const a of it) { let soma = 0; for (const b of it) if (Math.hypot(a.c[0] - b.c[0], a.c[1] - b.c[1], a.c[2] - b.c[2]) < 70) soma += b.a; if (soma > pm) { pm = soma; melhor = a; } }
   return melhor.c;
@@ -750,7 +763,7 @@ function texturaRecolorida(G, cor, chave) { // cor[i]: cor de cada região (null
 const demoSemPintura = () => (/[?&]demo=1/.test(location.search) || window.ARCA_DEMO) && !/[?&]noecor=1/.test(location.search);
 function montarBicho(nome, mapa, cores, escala) { // mapa: parte -> região do desenho (ou lista de regiões, ou cor fixa)
   const G = BICHOS_G[nome], raiz = new THREE.Group(); let map = G.tex;
-  if (cores && !demoSemPintura()) { const cor = G.partes.map(p => { if (!p) return null; const m = mapa[p]; if (m === undefined) return null; return Array.isArray(m) ? corDeVarias(cores, m) : corR(cores, m); });
+  if (cores && !demoSemPintura()) { const cor = G.partes.map(p => { if (!p) return null; const m = mapa[p]; if (m === undefined) return null; return Array.isArray(m) ? corDeVarias(cores, m, p === 'corpo' || p === 'pelo' ? 0.3 : 0.05) : corR(cores, m); });
     map = texturaRecolorida(G, cor, JSON.stringify(cor)); }
   const corpo = new THREE.Mesh(G.geo, new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, envMapIntensity: 0.5 })); corpo.castShadow = true; corpo.receiveShadow = true; raiz.add(corpo);
   const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide }), esp = (0.0015 / escala).toFixed(5);
