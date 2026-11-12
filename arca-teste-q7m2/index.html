@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.24 · 12/11/2026';
+const VERSAO = '0.25 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -622,7 +622,7 @@ async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
   const promNoe = carregarNoe().catch(e => { console.warn('[noe]', e); });
-  const promGir = Promise.all(['girafa', 'zebra', 'elefante'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
+  const promGir = Promise.all(['girafa', 'zebra', 'elefante', 'macaco'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
   for (const arq of ['assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
@@ -718,7 +718,7 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
 }
 // ---------- bichos do Tripo (assets/<nome>.glb + <nome>_regioes.png): mesma ideia do Noé, sem esqueleto ----------
 const BICHOS_G = {};
-const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'], elefante: [null, 'corpo', 'orelha', 'unhas'] }; // índice = valor/16 no PNG
+const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'], elefante: [null, 'corpo', 'orelha', 'unhas'], macaco: [null, 'pelo', 'claro'] }; // índice = valor/16 no PNG
 const DESENHO_BICHO = m => DADOS[m + 's']; // DADOS.girafas, DADOS.zebras: as regiões de cada um no desenho
 async function carregarBicho(nome) {
   const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
@@ -799,13 +799,15 @@ const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.
 // bichos em terra (12/11: as girafas voltam): esperam atrás do Noé, sobem a rampa depois dele e aparecem no convés
 // g: qual girafa do desenho (DADOS.girafas), h: escala, atraso: segundos depois do Próximo, vel: velocidade relativa à do Noé
 // zebras (12/11): do outro lado da rampa, sobem depois das girafas, trotando
-const FILA = [{ m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 },
+const FILA = [{ m: 'macaco', g: 0, h: 0.21, x: -0.64, z: 0.93, atraso: 0, vel: 1.6 }, { m: 'macaco', g: 1, h: 0.2, x: -0.8, z: 0.95, atraso: 0.3, vel: 1.6 }, // macacos (12/11): correm na frente de todos
+  { m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 },
   { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 },
   { m: 'elefante', g: 0, h: 0.44, x: 0.38, z: 0.88, atraso: 4.2, vel: 1.25, yaw: -Math.PI / 2 }, { m: 'elefante', g: 1, h: 0.42, x: 0.4, z: 0.6, atraso: 4.9, vel: 1.25, yaw: -Math.PI / 2 }]; // elefantes (12/11): depois das zebras
 // como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
 const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.62, z: -0.05, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.54, z: -0.11, yaw: -0.75 },
   { m: 'zebra', g: 0, h: 0.31, x: 0.55, z: -0.08, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.63, z: -0.1, yaw: 1.1 },
-  { m: 'elefante', g: 0, h: 0.32, x: 0.5, z: 0.1, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.61, z: 0.06, yaw: 0.85 }];
+  { m: 'elefante', g: 0, h: 0.32, x: 0.5, z: 0.1, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.61, z: 0.06, yaw: 0.85 },
+  { m: 'macaco', g: 0, h: 0.2, x: -0.14, y: 0.712, z: 0.02, yaw: 0.25 }, { m: 'macaco', g: 1, h: 0.19, x: 0.22, y: 0.712, z: 0.0, yaw: -0.3 }]; // os macacos em cima do telhado, como no desenho
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
   const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
@@ -1149,7 +1151,7 @@ function criarArca(cores) {
   if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
     const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.07); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
   if (PERSONAGENS) CONVES.forEach(c => { if (!PERSONAGENS[c.m + '_g'] || !DESENHO_BICHO(c.m)) return; const gi = montarBicho(c.m, DESENHO_BICHO(c.m)[c.g], cores, c.h);
-    gi.position.set(c.x, bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = c.m + c.g; arca.add(gi); });
+    gi.position.set(c.x, c.y ?? bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = c.m + c.g; arca.add(gi); });
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
@@ -1879,6 +1881,8 @@ function coresExemplo() {
   poe(N.base, [54, 120, 200]); poe(N.tunica, [246, 236, 200]); poe(N.tunica2, [226, 52, 48]); poe(N.faixa, [250, 208, 50]); poe(N.gola, [96, 186, 72]);
   (DADOS.girafas || []).forEach(g => { poe(g.corpo, [250, 208, 50]); poe(g.manchas, [233, 120, 40]); poe([g.crina, g.chifres, g.topete], [160, 80, 40]); poe(g.focinho, [246, 220, 170]); poe(g.orelha, [240, 160, 170]); });
   (DADOS.zebras || []).forEach((z, i) => { poe(z.corpo, [246, 243, 236]); poe([z.listras, z.crina], i ? [134, 70, 176] : [40, 40, 44]); poe(z.focinho, [170, 172, 178]); poe(z.orelha, [240, 160, 170]); });
+  (DADOS.elefantes || []).forEach((e, i) => { poe(e.corpo, i ? [233, 98, 160] : [120, 150, 190]); poe(e.orelha, [240, 160, 170]); poe(e.unhas, [246, 236, 210]); });
+  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); });
   return DADOS.regioes.map(id => mar[id] || pers[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
