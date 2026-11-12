@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.18 · 12/11/2026';
+const VERSAO = '0.19 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -622,7 +622,7 @@ async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
   const promNoe = carregarNoe().catch(e => { console.warn('[noe]', e); });
-  const promGir = carregarBicho('girafa').catch(e => { console.warn('[girafa]', e); });
+  const promGir = Promise.all(['girafa', 'zebra'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
   for (const arq of ['assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
@@ -631,7 +631,7 @@ async function carregarPersonagens() {
     } catch (e) { }
   }
   await promNoe; if (NOE_G) tudo.noe_g = NOE_G;
-  await promGir; if (BICHOS_G.girafa) tudo.girafa_g = BICHOS_G.girafa;
+  await promGir; for (const n in BICHOS_G) tudo[n + '_g'] = BICHOS_G[n];
   PERSONAGENS = tudo;
 }
 // ---------- o Noé (modelo do Tripo, assets/noe.glb): textura com as cores padrão + mapa das regiões do desenho (assets/noe_regioes.png) ----------
@@ -718,7 +718,8 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
 }
 // ---------- bichos do Tripo (assets/<nome>.glb + <nome>_regioes.png): mesma ideia do Noé, sem esqueleto ----------
 const BICHOS_G = {};
-const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'] }; // índice = valor/16 no PNG
+const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'] }; // índice = valor/16 no PNG
+const DESENHO_BICHO = m => DADOS[m + 's']; // DADOS.girafas, DADOS.zebras: as regiões de cada um no desenho
 async function carregarBicho(nome) {
   const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
     new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = `assets/${nome}_regioes.png`; })]);
@@ -797,8 +798,12 @@ function animarVida(g, t, altura) {
 const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
 // bichos em terra (12/11: as girafas voltam): esperam atrás do Noé, sobem a rampa depois dele e aparecem no convés
 // g: qual girafa do desenho (DADOS.girafas), h: escala, atraso: segundos depois do Próximo, vel: velocidade relativa à do Noé
-const FILA = [{ m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 }];
-const CONVES = [{ g: 0, h: 0.44, x: 0.52, z: 0.07, yaw: -0.3 }, { g: 1, h: 0.49, x: 0.65, z: -0.07, yaw: -0.55 }]; // as girafas no convés da popa (na proa o telhado pega na cabeça delas)
+// zebras (12/11): do outro lado da rampa, sobem depois das girafas, trotando
+const FILA = [{ m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 },
+  { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 }];
+// como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
+const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.62, z: -0.05, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.54, z: -0.11, yaw: -0.75 },
+  { m: 'zebra', g: 0, h: 0.31, x: 0.52, z: 0.07, yaw: 0.4 }, { m: 'zebra', g: 1, h: 0.31, x: 0.6, z: -0.07, yaw: 1.2 }];
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
   const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
@@ -869,10 +874,10 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   const apoios = new THREE.Group(), casca = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9, map: madeira }), miolo = new THREE.MeshStandardMaterial({ color: 0xe0b077, roughness: 0.9 });
   for (const x of [-0.42, 0.42]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.42, 16), [casca, miolo, miolo]); l.rotation.x = Math.PI / 2; l.position.set(x, 0.048, 0); apoios.add(l); }
   g.add(apoios);
-  const bichos = []; FILA.forEach((f, i) => { if (!PERSONAGENS || !PERSONAGENS[f.m + '_g'] || !DADOS.girafas) return;
-    const inst = montarBicho(f.m, DADOS.girafas[f.g], cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = Math.PI / 2 + (i % 2 ? 0.12 : -0.08);
+  const bichos = []; FILA.forEach((f, i) => { if (!PERSONAGENS || !PERSONAGENS[f.m + '_g'] || !DESENHO_BICHO(f.m)) return;
+    const inst = montarBicho(f.m, DESENHO_BICHO(f.m)[f.g], cores, f.h); inst.position.set(f.x, 0, f.z); inst.rotation.y = (f.yaw ?? Math.PI / 2) + (i % 2 ? 0.12 : -0.08);
     inst.userData.mats = materiaisDe(inst); inst.userData.fila = f; inst.userData.yaw = inst.rotation.y; g.add(inst); bichos.push(inst); });
-  const bichosArca = bichos.map(b => { const a = arca.getObjectByName('girafa' + b.userData.fila.g); if (a) { a.userData.mats = materiaisDe(a); opacidade(a, 0); } return a; });
+  const bichosArca = bichos.map(b => { const a = arca.getObjectByName(b.userData.fila.m + b.userData.fila.g); if (a) { a.userData.mats = materiaisDe(a); opacidade(a, 0); } return a; });
   let noeChao = null, sNoe = null; if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
     noeChao = montarNoe(mapa, cores, 0.4); noeChao.position.set(-0.88, 0, 0.74); noeChao.rotation.y = Math.PI / 2; noeChao.userData.yaw = Math.PI / 2; noeChao.userData.mats = materiaisDe(noeChao); g.add(noeChao);
     sNoe = sombraChao(0.2, 0.17, 0.55); g.add(sNoe); }
@@ -1134,9 +1139,9 @@ function criarArca(cores) {
   }
   // Noé no convés da proa (na frente da cabine não cabe: o beiral do telhado pega na cabeça dele), virado um pouco para quem olha
   if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
-    const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.01); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
-  if (PERSONAGENS && PERSONAGENS.girafa_g && DADOS.girafas) CONVES.forEach(c => { const gi = montarBicho('girafa', DADOS.girafas[c.g], cores, c.h);
-    gi.position.set(c.x, bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = 'girafa' + c.g; arca.add(gi); });
+    const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.07); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
+  if (PERSONAGENS) CONVES.forEach(c => { if (!PERSONAGENS[c.m + '_g'] || !DESENHO_BICHO(c.m)) return; const gi = montarBicho(c.m, DESENHO_BICHO(c.m)[c.g], cores, c.h);
+    gi.position.set(c.x, bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = c.m + c.g; arca.add(gi); });
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
   otimizar(arca);
   return raiz;
