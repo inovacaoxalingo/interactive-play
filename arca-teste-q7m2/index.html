@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.22 · 12/11/2026';
+const VERSAO = '0.23 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -251,7 +251,7 @@ const SOM = (() => {
     else if (nome === 'trovao') trovao(t, x);
     else if (nome === 'agua') { const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = ruido(); s.loop = true; fl.type = 'lowpass'; fl.Q.value = 2;
       fl.frequency.setValueAtTime(220, t); fl.frequency.exponentialRampToValueAtTime(1300, t + 2.6); fl.frequency.exponentialRampToValueAtTime(400, t + 5);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.26, t + 1.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 5.2); s.connect(fl); fl.connect(g); g.connect(gEf); s.start(t); s.stop(t + 5.3); }
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 1.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 5.2); s.connect(fl); fl.connect(g); g.connect(gEf); s.start(t); s.stop(t + 5.3); }
     else if (nome === 'splash') { sopro(t, { f: 1900, f2: 650, q: 0.8, pico: 0.3 * x, a: 0.004, dec: 0.38 }); tom(t, { f: 330, f2: 90, pico: 0.16 * x, dec: 0.12 }); }
     else if (nome === 'arco') { const notas = [1047, 1175, 1319, 1568, 1760, 2093, 2349]; for (let i = 0; i < x; i++) { const f = notas[i % notas.length];
       [[1, 0.075, 1.5], [2.756, 0.028, 0.7], [5.404, 0.012, 0.35]].forEach(([m, p, d]) => tom(t + i * 0.12, { f: f * m, pico: p, a: 0.002, dec: d })); } }
@@ -273,8 +273,8 @@ const SOM = (() => {
   }
   function ambiente(chuva, mar) { // a cada quadro: chuva 0..1, mar 0..1
     chuvaA = chuva; if (!ctx) return; mixar(); if (!pronto() && !laco.chuva && !laco.mar) return;
-    const fala = atual && atual.src ? 0.7 : 1; // a chuva e o mar dão espaço para a voz
-    [['chuva', chuva * 0.38 * fala], ['mar', mar * (1 - 0.7 * chuva) * 0.2 * fala]].forEach(([n, v]) => { if (v < 0.002 && !laco[n]) return; if (!laco[n] && !pronto()) return;
+    const fala = atual && atual.src ? 0.35 : 1; // a chuva e o mar dão bastante espaço para a voz (no celular o chiado cobria a Cleo)
+    [['chuva', chuva * 0.2 * fala], ['mar', mar * (1 - 0.7 * chuva) * 0.14 * (atual && atual.src ? 0.5 : 1)]].forEach(([n, v]) => { if (v < 0.002 && !laco[n]) return; if (!laco[n] && !pronto()) return;
       const L = abrirLaco(n); if (Math.abs(v - L.v) > 0.003) { L.v = v; L.g.gain.setTargetAtTime(v, ctx.currentTime, 0.25); } });
   }
   function fecharLacos() { Object.values(laco).forEach(L => { L.g.gain.setTargetAtTime(0, ctx.currentTime, 0.2); try { L.s.stop(ctx.currentTime + 1); } catch (e) {} }); laco = {}; chuvaA = 0; }
@@ -303,7 +303,7 @@ async function narrarComeco(h) { // depois da leitura: a arca em terra e o Noé 
   if (historia === h && h.etapa === 0) { h.livre = true; $('#bProximo').classList.add('chama'); }
 }
 async function narrarChuva(h) { // começou a chover: trovão, a fala da chuva, a água sobe com a fala da arca boiando
-  SOM.efeito('trovao', 1); setTimeout(() => { if (historia === h) SOM.efeito('trovao', 0.45); }, 3900);
+  SOM.efeito('trovao', 0.7); setTimeout(() => { if (historia === h) SOM.efeito('trovao', 0.3); }, 3900);
   await esperar(650); if (historia !== h) return;
   await SOM.falar('VO_H05_CHUVA'); if (historia !== h) return;
   DUR_SUBIDA = 5200; tSubida = Math.max(h.tChuva + 2000 * LENTO, performance.now() + 200); await esperar(tSubida - performance.now()); if (historia !== h) return;
@@ -1261,6 +1261,7 @@ function definirPose(T, confiavel) {
   if (DEBUG) window.__arcaT = T;
   mAlvo.set(T[0][0], T[0][1], T[0][2], T[0][3], -T[1][0], -T[1][1], -T[1][2], -T[1][3], -T[2][0], -T[2][1], -T[2][2], -T[2][3], 0, 0, 0, 1);
   const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); mAlvo.decompose(p, q, s);
+  if (!DEMO && Math.abs(new THREE.Vector3(0, 0, 1).applyQuaternion(q).dot(p.clone().normalize())) < 0.3) return; // visto a mais de ~72° de lado: pose errada
   const agora = performance.now(), dt = Math.min(0.5, Math.max(0.016, (agora - tPose) / 1000));
   if (poseVista && agora - ultimaVez < 1500) { // salto isolado (leitura errada de um quadro): só aceita se o próximo confirmar
     const salto = p.distanceTo(pA) / Math.max(1, pA.length()), giro = q.angleTo(qA);
@@ -1331,14 +1332,15 @@ async function abrirCamera() {
   await montarControle(); prepararAR();
   ativo = true; recomecar(); passo(); animar();
 }
+function tirarArcaAR() { if (arcaAR) { ancora.remove(arcaAR); descartar(arcaAR); arcaAR = null; } if (ancora) ancora.visible = false; poseVista = false; sumiuEm = 0; }
 function recomecar() {
-  MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
+  tirarArcaAR(); MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; $('#bProximo').classList.remove('chama'); historia = null; $('#guia').classList.remove('some');
   $('#prog').style.display = 'none'; $('#prog i').style.width = '0'; achouDesde = 0; disseLendo = false; tAviso = performance.now();
   status('Aponte para o quebra-cabeça inteiro', VH > VW ? 'Dica: deite o celular para caber melhor' : 'Deixe ele dentro do quadro pontilhado');
   SOM.calar(); if (!DEMO) SOM.falar('VO_MIRE');
 }
-function fecharCamera() { ativo = false; historia = null; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
+function fecharCamera() { ativo = false; historia = null; tirarArcaAR(); if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; mostrar('inicio'); }
 // ---------- acompanhamento rápido por janelinhas (depois da leitura) ----------
 // a foto da leitura, endireitada, vira o "molde"; em cada quadro novo, cada janelinha do molde é procurada perto de onde estava
 // (correlação normalizada: aguenta luz diferente). Bem mais leve que o reconhecimento completo, então acompanha mais vezes por segundo.
