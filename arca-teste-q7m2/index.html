@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.26 · 12/11/2026';
+const VERSAO = '0.27 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -817,10 +817,10 @@ const FILA = [{ m: 'macaco', g: 0, h: 0.21, x: -0.64, z: 0.93, atraso: 0, vel: 1
   { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 },
   { m: 'elefante', g: 0, h: 0.44, x: 0.38, z: 0.88, atraso: 4.2, vel: 1.25, yaw: -Math.PI / 2 }, { m: 'elefante', g: 1, h: 0.42, x: 0.4, z: 0.6, atraso: 4.9, vel: 1.25, yaw: -Math.PI / 2 }]; // elefantes (12/11): depois das zebras
 // como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
-const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.62, z: -0.05, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.54, z: -0.11, yaw: -0.75 },
-  { m: 'zebra', g: 0, h: 0.31, x: 0.55, z: -0.08, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.63, z: -0.1, yaw: 1.1 },
-  { m: 'elefante', g: 0, h: 0.32, x: 0.5, z: 0.1, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.61, z: 0.06, yaw: 0.85 },
-  { m: 'macaco', g: 0, h: 0.2, x: -0.14, y: 0.712, z: 0.02, yaw: 0.25 }, { m: 'macaco', g: 1, h: 0.19, x: 0.22, y: 0.712, z: 0.0, yaw: -0.3 }]; // os macacos em cima do telhado, como no desenho
+const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.6, z: -0.1, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.48, z: -0.16, yaw: -0.75 },
+  { m: 'zebra', g: 0, h: 0.31, x: 0.46, z: -0.15, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.61, z: -0.12, yaw: 1.1 },
+  { m: 'elefante', g: 0, h: 0.32, x: 0.44, z: 0.15, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.6, z: 0.1, yaw: 0.85 },
+  { m: 'macaco', g: 0, h: 0.2, x: -0.12, y: 0.712, z: 0.02, yaw: 0.25 }, { m: 'macaco', g: 1, h: 0.19, x: 0.16, y: 0.712, z: 0.0, yaw: -0.3 }]; // os macacos em cima do telhado, como no desenho
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
   const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
@@ -1075,7 +1075,7 @@ function contornoCaixa(mesh, esp = 0.004) { // para caixas: a mesma caixa um pou
 }
 function geo(pos, uv, ind) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(ind); g.computeVertexNormals(); return g; }
 // casco: barriga cheia, as duas pontas sobem bem (formato de arca), borda levemente aberta
-const CL = 1.44, CB = 0.29;
+const CL = 1.44, CB = 0.32; // CB maior (12/11): casco mais largo, convés com lugar para os bichos
 const quilhaY = s => -0.13 + 0.21 * Math.pow(Math.abs(s), 3.2);
 const bordaY = u => { const s = 2 * u - 1; return 0.22 + 0.15 * s * s + 0.07 * Math.pow(s, 8); };
 function meiaBoca(s) { return CB * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(s), 2.1)), 0.5); }
@@ -1126,7 +1126,7 @@ function criarArca(cores) {
     poe(new THREE.Mesh(new THREE.TubeGeometry(curva, 36, 0.019, 12, false), mat(cor)), 0.005);
     const bola = new THREE.Mesh(new THREE.SphereGeometry(0.027, 20, 14), mat(cor)); bola.position.copy(curva.getPoint(1)); poe(bola, 0.005); }
   // cabine
-  const LC = 0.78, DC = 0.18, Y0 = bordaY(0.5) - 0.055, YW = Y0 + 0.28, YR = YW + 0.22, XC = 0.02;
+  const LC = 0.62, DC = 0.18, Y0 = bordaY(0.5) - 0.055, YW = Y0 + 0.28, YR = YW + 0.22, XC = 0.02;
   { const tp = texParede(cores), parede = matT(tp), ponta = mat(corR(cores, 19)), tampa = mat(MADEIRA, 0.8);
     const cab = new THREE.Mesh(new THREE.BoxGeometry(LC, YW - Y0, 2 * DC), [ponta, ponta, tampa, tampa, parede, parede]); cab.position.set(XC, (Y0 + YW) / 2, 0); poe(cab, 0.005);
     // molduras 3D das janelas, com peitoril
@@ -1162,7 +1162,7 @@ function criarArca(cores) {
   }
   // Noé no convés da proa (na frente da cabine não cabe: o beiral do telhado pega na cabeça dele), virado um pouco para quem olha
   if (PERSONAGENS && PERSONAGENS.noe_g && DADOS.noe) { const mapa = { ...DADOS.noe, manto: DADOS.noe.base, cajado: [170, 115, 60], pes: [150, 95, 55], boca: [120, 35, 45] };
-    const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.07); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
+    const xn = -0.53, un = 0.5 + xn / CL, noe = montarNoe(mapa, cores, 0.4); noe.position.set(xn, bordaY(un) - 0.055 - 0.004, 0.1); noe.rotation.y = 0.35; noe.name = 'noe'; arca.add(noe); }
   if (PERSONAGENS) CONVES.forEach(c => { if (!PERSONAGENS[c.m + '_g'] || !DESENHO_BICHO(c.m)) return; const gi = montarBicho(c.m, DESENHO_BICHO(c.m)[c.g], cores, c.h);
     gi.position.set(c.x, c.y ?? bordaY(0.5 + c.x / CL) - 0.075, c.z); gi.rotation.y = c.yaw; gi.name = c.m + c.g; arca.add(gi); });
   arca.traverse(o => { if (o.isMesh && !o.userData.contorno) { o.castShadow = true; o.receiveShadow = true; } });
@@ -1250,8 +1250,8 @@ function colocarArcaAR(arca, cores) {
   g.add(marAR, boia); arcaAR = g; g.userData.boia = boia; g.userData.arca = arca;
   const vida = criarVida({ zSalto: 0.52, yVoo: 0.62, esc: 1 }); if (vida) { vida.userData.aoEvento = eventoVida; boia.add(vida); g.userData.vida = vida; }
   const terra = criarTerra(cores, arca); g.add(terra); g.userData.terra = terra; historia = { etapa: 0, t0: performance.now(), tChuva: 0, fimChuva: 0 };
-  const e = DADOS.alvo[0] / 2048 / k, arco = criarArco(cores, e); // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
-  if (arco) { arco.position.set((ARCO_D.cx * DADOS.alvo[0] / 2048 - cx) / k, 0, retanguloAR().z0 + 0.22); g.add(arco); g.userData.arco = arco; }
+  const e = DADOS.alvo[0] / 2048 / k * 1.65, arco = criarArco(cores, e); // 12/11: maior que no desenho, para aparecer por cima da arca // mesmo lugar do desenho: à direita, no fundo do quebra-cabeça
+  if (arco) { arco.position.set(0.3, 0, retanguloAR().z0 + 0.12); g.add(arco); g.userData.arco = arco; }
   ancora.add(g); tSubida = performance.now(); DUR_SUBIDA = 1800;
 }
 function projecaoAR() {
