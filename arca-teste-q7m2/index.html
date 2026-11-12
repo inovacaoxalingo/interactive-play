@@ -43,7 +43,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 #deitar b{font-size:22px;font-weight:800}#deitar p{margin:0;font-size:15px;line-height:1.4;opacity:.9;max-width:320px}
 #deitar .cel{width:54px;height:92px;border:4px solid #fff;border-radius:12px;animation:deita 2.2s ease-in-out infinite}
 @keyframes deita{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
-#deitar button{margin-top:6px;border:0;background:transparent;color:#fff;text-decoration:underline;font-size:13px;opacity:.75;cursor:pointer}
+#deitar button{margin-top:10px;border:0;background:#ffc93c;color:#0d2d57;font-weight:800;font-size:17px;border-radius:999px;padding:12px 44px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
 #camera.ativa.empe:not(.demo) #deitar{display:flex}
 #camera.ativa.empe:not(.demo) .topo{z-index:6}#camera.ativa.empe:not(.demo) .status,#camera.ativa.empe:not(.demo) .bsom{visibility:hidden}
 .topo{position:absolute;left:0;right:0;top:0;padding:max(12px,env(safe-area-inset-top)) 12px 0;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;pointer-events:none}
@@ -104,7 +104,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
   <video id="video" playsinline muted autoplay></video>
   <canvas id="ar"></canvas>
   <div class="guia" id="guia"></div>
-  <div id="deitar"><div class="cel"></div><b>Deite o celular</b><p>O quebra-cabeça é deitado: com o celular deitado ele cabe inteiro na tela e a leitura fica melhor.</p><p style="font-size:13px">Se a tela não girar, ligue a rotação automática do celular.</p><button type="button" id="bEmPe">Continuar com o celular em pé</button></div>
+  <div id="deitar"><div class="cel"></div><b>Deite o celular</b><p>O quebra-cabeça é deitado: com o celular deitado ele cabe inteiro na tela e a leitura fica melhor.</p><p style="font-size:13px">Se a tela não girar, ligue a rotação automática do celular.</p><button type="button" id="bEmPe">OK</button></div>
   <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
   <p class="legenda" id="legenda" aria-live="polite"></p>
   <div class="progresso" id="prog"><i></i></div>
@@ -135,7 +135,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.34 · 12/11/2026';
+const VERSAO = '0.35 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
