@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.17 · 12/11/2026';
+const VERSAO = '0.17.1 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -635,7 +635,9 @@ async function carregarPersonagens() {
 // ---------- o Noé (modelo do Tripo, assets/noe.glb): textura com as cores padrão + mapa das regiões do desenho (assets/noe_regioes.png) ----------
 // cada texel da textura sabe a que parte do desenho pertence; na leitura, a parte recebe a cor pintada e mantém o sombreado da textura
 let NOE_G = null;
-const NOE_PARTES = [null, 'cabelo', 'bigode', 'pele', 'sobrancelha', 'orelha', 'mao', 'manto', 'tunica', 'tunica2', 'faixa', 'gola']; // índice = valor/16 no PNG
+// índice = valor/16 no PNG; a orelha (6 px no desenho, colada na manga) segue a cor do rosto e a sobrancelha (só uma, 12 px) segue a do cabelo:
+// partes tão pequenas não dão leitura confiável pela câmera
+const NOE_PARTES = [null, 'cabelo', 'bigode', 'pele', 'cabelo', 'pele', 'mao', 'manto', 'tunica', 'tunica2', 'faixa', 'gola'];
 const NOE_LUM = [null, 'cabelo', 'bigode', 'pele', 'sobrancelha', 'orelha', 'mao', 'manto', 'tunica', 'barra', 'faixa', 'gola'];
 const NOE_POSE = { bracoE: -0.75, antebracoE: -1.9 };              // o braço livre levantado para acenar (radianos, em z)
 async function carregarNoe() {
