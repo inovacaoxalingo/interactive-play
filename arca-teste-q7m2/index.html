@@ -127,14 +127,14 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.32 · 12/11/2026';
+const VERSAO = '0.33 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
   let gpu = ''; try { const gl = document.createElement('canvas').getContext('webgl'), ext = gl && gl.getExtension('WEBGL_debug_renderer_info'); gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''; } catch (e) { }
   const mem = navigator.deviceMemory || 8, nucleos = navigator.hardwareConcurrency || 8, fraca = /PowerVR|Mali-(T|G3|G5[0-7])|Adreno \(TM\) [3-5]\d\d/i.test(gpu);
   const auto = mem <= 2 || (fraca && mem <= 3) ? 0 : (mem <= 4 || nucleos <= 4 || fraca ? 1 : 2);
-  const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : auto; return { nivel, fixo: !!q, gpu, mem }; })();
+  const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : auto; return { nivel, base: nivel, fixo: !!q, gpu, mem }; })(); // base: nível do aparelho, fixo (decide os modelos); nivel: pode baixar sozinho, mas só mexe na resolução da tela
 const RAZAO_3D = [1, 1.25, 2], RAZAO_AR = [0.85, 1, 1.5];
 function perdeuContexto() { // o celular ficou sem memória de vídeo: recarrega no nível mais leve
   if (/qualidade=baixa/.test(location.search)) { status('O celular ficou sem memória', 'Feche outros apps e tente de novo'); return; }
@@ -672,7 +672,7 @@ async function carregarNoe() {
     new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = 'assets/noe_regioes.png'; })]);
   const src = g.scene.getObjectByProperty('isMesh', true), ex = g.scene.userData, tex = src.material.map, geo = src.geometry;
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const W = QUAL.nivel === 0 ? Math.min(512, tex.image.width) : tex.image.width, H = QUAL.nivel === 0 ? Math.min(512, tex.image.height) : tex.image.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H; // celular fraco: textura em 512
+  const W = QUAL.base === 0 ? Math.min(512, tex.image.width) : tex.image.width, H = QUAL.base === 0 ? Math.min(512, tex.image.height) : tex.image.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H; // celular fraco: textura em 512
   const cx = cv.getContext('2d', { willReadFrequently: true }); cx.imageSmoothingEnabled = true;
   cx.drawImage(tex.image, 0, 0, W, H); cx.imageSmoothingEnabled = false; const orig = cx.getImageData(0, 0, W, H);
   cx.clearRect(0, 0, W, H); cx.drawImage(imR, 0, 0, W, H); const rd = cx.getImageData(0, 0, W, H).data, reg = new Uint8Array(W * H);
@@ -702,7 +702,7 @@ function montarNoe(mapa, cores, escala) { // mesma interface de montarPersonagem
   corpo.add(B.corpo); const esq = new THREE.Skeleton(nomes.map(k => B[k])); corpo.bind(esq); corpo.castShadow = true; corpo.receiveShadow = true; corpo.frustumCulled = false; raiz.add(corpo);
   const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide });
   cont.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = position + normal * 0.0035;'); };
-  if (QUAL.nivel > 0) { const linha = new THREE.SkinnedMesh(G.geo, cont); linha.bind(esq); linha.frustumCulled = false; linha.userData.contorno = true; raiz.add(linha); }
+  if (QUAL.base > 0) { const linha = new THREE.SkinnedMesh(G.geo, cont); linha.bind(esq); linha.frustumCulled = false; linha.userData.contorno = true; raiz.add(linha); }
   raiz.userData.pecas = B; raiz.scale.setScalar(escala * 1.04); // o modelo tem 0,98 de altura; o anterior tinha 1,02
   return raiz;
 }
@@ -747,7 +747,7 @@ async function carregarBicho(nome) {
   const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
     new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = `assets/${nome}_regioes.png`; })]);
   const src = g.scene.getObjectByProperty('isMesh', true), tex = src.material.map; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const W = QUAL.nivel === 0 ? Math.min(512, tex.image.width) : tex.image.width, H = QUAL.nivel === 0 ? Math.min(512, tex.image.height) : tex.image.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H; // celular fraco: textura em 512
+  const W = QUAL.base === 0 ? Math.min(512, tex.image.width) : tex.image.width, H = QUAL.base === 0 ? Math.min(512, tex.image.height) : tex.image.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H; // celular fraco: textura em 512
   const cx = cv.getContext('2d', { willReadFrequently: true }); cx.imageSmoothingEnabled = true;
   cx.drawImage(tex.image, 0, 0, W, H); cx.imageSmoothingEnabled = false; const orig = cx.getImageData(0, 0, W, H);
   cx.clearRect(0, 0, W, H); cx.drawImage(imR, 0, 0, W, H); const rd = cx.getImageData(0, 0, W, H).data, reg = new Uint8Array(W * H);
@@ -780,7 +780,7 @@ function montarBicho(nome, mapa, cores, escala) { // mapa: parte -> região do d
   const corpo = new THREE.Mesh(G.geo, new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, envMapIntensity: 0.5 })); corpo.castShadow = true; corpo.receiveShadow = true; raiz.add(corpo);
   const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide }), esp = (0.0015 / escala).toFixed(5);
   cont.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${esp};`); };
-  if (QUAL.nivel > 0) { const linha = new THREE.Mesh(G.geo, cont); linha.userData.contorno = true; raiz.add(linha); }
+  if (QUAL.base > 0) { const linha = new THREE.Mesh(G.geo, cont); linha.userData.contorno = true; raiz.add(linha); }
   raiz.scale.setScalar(escala); return raiz;
 }
 function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o do cajado fica parado
@@ -882,7 +882,7 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   const capim = new THREE.Mesh(new THREE.PlaneGeometry(wc, dc), new THREE.MeshLambertMaterial({ map: texturaCapim(w, d, M), transparent: true, alphaTest: 0.02 }));
   capim.rotation.x = -Math.PI / 2; capim.position.set(cxr, 0.003, czr); capim.renderOrder = 2; g.add(capim);
   // tufinhos de capim em 3D espalhados (menos embaixo da arca e da rampa)
-  const NT = [250, 550, 900][QUAL.nivel], tufos = new THREE.InstancedMesh(tufoGeo(), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), NT), o = new THREE.Object3D(), cor = new THREE.Color();
+  const NT = [250, 550, 900][QUAL.base], tufos = new THREE.InstancedMesh(tufoGeo(), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), NT), o = new THREE.Object3D(), cor = new THREE.Color();
   const tons = [0x4f9f35, 0x5fb641, 0x6cc24a, 0x7fd05a, 0x57ad3c]; let n = 0;
   for (let i = 0; i < NT * 3 && n < NT; i++) { const x = r.x0 + 0.04 + rnd() * (w - 0.08), z = r.z0 + 0.04 + rnd() * (d - 0.08);
     if (Math.abs(x) < 0.8 && Math.abs(z) < 0.3) continue; if (Math.abs(x - XR) < 0.17 && z > TOPO_RAMPA[2] - 0.05 && z < PE_RAMPA + 0.06) continue;
@@ -1239,9 +1239,9 @@ function luzesAR(cena) { // por cima da câmera: luz vinda de quem segura o celu
 let rAR = null, cenaAR = null, camAR = null, ancora = null, arcaAR = null, poseAlvo = null, poseVista = false, ultimaVez = 0;
 function prepararAR() {
   if (rAR) return;
-  rAR = new THREE.WebGLRenderer({ canvas: $('#ar'), alpha: true, antialias: QUAL.nivel > 0, preserveDrawingBuffer: DEBUG, powerPreference: 'high-performance' });
+  rAR = new THREE.WebGLRenderer({ canvas: $('#ar'), alpha: true, antialias: QUAL.base > 0, preserveDrawingBuffer: DEBUG, powerPreference: 'high-performance' });
   $('#ar').addEventListener('webglcontextlost', e => { e.preventDefault(); perdeuContexto(); });
-  rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
+  rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.base], devicePixelRatio)); rAR.outputColorSpace = THREE.SRGBColorSpace;
   cenaAR = new THREE.Scene(); camAR = new THREE.Camera(); luzesAR(cenaAR);
   ancora = new THREE.Group(); ancora.matrixAutoUpdate = false; ancora.visible = false; cenaAR.add(ancora);
   const [mw, mh] = DADOS.alvo;
@@ -1559,8 +1559,8 @@ async function passo() {
   if (DEBUG) { mostrarDepuracao(info, performance.now() - t0); window.__nDet = (window.__nDet || 0) + 1; window.__det = { achou, info, vis: ancora && ancora.visible, ms: Math.round(performance.now() - t0) }; }
   // depois da leitura só acompanha (até ~30 vezes por segundo). Celular fraco: o acompanhamento espera um pouco mais entre uma rodada e outra,
   // para sobrar tempo de desenhar a cena (antes ele ocupava o processador inteiro e a imagem ficava em ~4 quadros por segundo)
-  const custo = performance.now() - t0, folga = [1.6, 0.9, 0][QUAL.nivel];
-  setTimeout(passo, lendo ? (QUAL.nivel < 2 ? custo * folga * 0.5 : 0) : Math.max(4, 33 - custo, custo * folga));
+  const custo = performance.now() - t0, folga = [1.6, 0.9, 0][QUAL.base];
+  setTimeout(passo, lendo ? (QUAL.base < 2 ? custo * folga * 0.5 : 0) : Math.max(4, 33 - custo, custo * folga));
 }
 function terminarLeitura() {
   criarMolde(); // a mesma foto e posição da última leitura viram o molde do acompanhamento
@@ -1576,14 +1576,14 @@ function falarOrientacao(achou) { // a Cleo ajuda quando o quebra-cabeça some: 
   if (lendo && agora - ultimaVez > 9000 && agora - tAviso > 15000) { tAviso = agora; SOM.falar('VO_MIRE'); return; } // ainda não achou: repete o pedido
   if (!lendo && agora - ultimaVez > 2500 && (!historia || historia.livre)) { tAviso = agora; SOM.falar('VO_PERDEU'); }
 }
-function animar() { if (!ativo) return; desenharAR(); fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); }
+function animar() { if (!ativo) return; desenharAR(); if (!lendo) fpsAR(performance.now(), () => rAR.setPixelRatio(Math.min(RAZAO_AR[QUAL.nivel], devicePixelRatio))); requestAnimationFrame(animar); } // na leitura o processador fica ocupado de propósito: não conta como lentidão
 function resumoEst() { const ok = EST.filter(e => e.ok).length, ms = EST.reduce((s, e) => s + e.ms, 0) / Math.max(1, EST.length);
   return { acerto: EST.length ? Math.round(100 * ok / EST.length) : 0, ms: Math.round(ms), n: EST.length }; }
 function mostrarDepuracao(info, ms) {
   const el = $('#dbg'); el.style.display = 'block';
   if (!el.firstChild) { el.innerHTML = '<div id="dtx"></div><canvas id="dcv"></canvas><div class="cores" id="dco"></div><button id="bDiag" type="button" style="margin-top:6px;width:100%;border:0;border-radius:8px;padding:8px;font-weight:800;background:#ffc933;color:#0d2d57">Salvar diagnóstico</button>'; $('#bDiag').onclick = salvarDiagnostico; }
   const r = resumoEst();
-  $('#dtx').textContent = `v${VERSAO} · ${VW}x${VH} → ${NW}x${NH} · ${Math.round(ms)}ms · ${info} · acerto ${r.acerto}% · fps ${window.__fps || '?'} · qualidade ${QUAL.nivel} · fotos ${fotos.length} · saltos ${saltos}`;
+  $('#dtx').textContent = `v${VERSAO} · ${VW}x${VH} → ${NW}x${NH} · ${Math.round(ms)}ms · ${info} · acerto ${r.acerto}% · fps ${window.__fps || '?'} · qualidade ${QUAL.base}/${QUAL.nivel} · fotos ${fotos.length} · saltos ${saltos}`;
   const dc = $('#dcv'); dc.width = NW / 2; dc.height = NH / 2; const x = dc.getContext('2d'); x.drawImage(cv, 0, 0, NW / 2, NH / 2);
   if (Hc && performance.now() - tHc < 1500) { const [mw, mh] = DADOS.alvo; x.strokeStyle = '#18c964'; x.lineWidth = 2; x.beginPath(); [[0, 0], [mw, 0], [mw, mh], [0, mh]].forEach(([a, b], i) => { const [u, v] = aplica(Hc, a, b); i ? x.lineTo(u / 2, v / 2) : x.moveTo(u / 2, v / 2); }); x.closePath(); x.stroke(); }
   if (coresAtuais && !$('#dco').childElementCount) $('#dco').innerHTML = (coresAtuais.mar ? `<i style="background:rgb(${coresAtuais.mar});width:44px" title="água"></i>` : '') + coresAtuais.map(c => `<i style="background:rgb(${c})"></i>`).join('');
@@ -1643,7 +1643,7 @@ function corDoMar(cores) { // a leitura da câmera já traz a cor do mar (ponto 
   const d = corDominante(itens, total); return d ? d.c.map(v => Math.round(v * 255)) : MAR_PADRAO.perto;
 }
 function criarMar(cores) {
-  const g = new THREE.PlaneGeometry(26, 26, [90, 130, 170][QUAL.nivel], [90, 130, 170][QUAL.nivel]); g.rotateX(-Math.PI / 2);
+  const g = new THREE.PlaneGeometry(26, 26, [90, 130, 170][QUAL.base], [90, 130, 170][QUAL.base]); g.rotateX(-Math.PI / 2);
   const u = {
     uT: { value: 0 }, uPerto: { value: cor3(corDoMar(cores)) }, uLonge: { value: cor3(corDoMar(cores)) }, // um tom só: o mais pintado no mar
     uCeu: { value: new THREE.Color(0xd8efff) }, uNevoa: { value: new THREE.Color(0xcfe9ff) }, uSol: { value: new THREE.Vector3(-1.2, 2.2, 1.8).normalize() },
@@ -1807,7 +1807,7 @@ function criarAquario(cores) {
       #include <colorspace_fragment>
     }`));
   lados.renderOrder = 3;
-  const SEG = [70, 110, 160][QUAL.nivel], gs = new THREE.PlaneGeometry(W, D, SEG, Math.round(SEG * D / W)); gs.rotateX(-Math.PI / 2); // menos vértices no celular fraco
+  const SEG = [70, 110, 160][QUAL.base], gs = new THREE.PlaneGeometry(W, D, SEG, Math.round(SEG * D / W)); gs.rotateX(-Math.PI / 2); // menos vértices no celular fraco
   gs.setAttribute('topo', new THREE.Float32BufferAttribute(new Float32Array(gs.attributes.position.count).fill(1), 1));
   const superficie = new THREE.Mesh(gs, mat(vAgua, `
     uniform float uT, uNivel; uniform vec3 uCor, uCamL; uniform vec2 uMin, uMax; uniform vec4 uArca; varying vec3 vL; varying float vH;
@@ -1854,13 +1854,13 @@ function abrir3D(cores) {
   mostrar('ver3d'); $('#bHistoria').hidden = true; // só aparece no exemplo
   if (cam3 && !mexeu3) zoomAlvo.delete(cam3);
   if (!r3) {
-    r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: QUAL.nivel > 0, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
-    $('#cena').addEventListener('webglcontextlost', e => { e.preventDefault(); perdeuContexto(); }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio));
+    r3 = new THREE.WebGLRenderer({ canvas: $('#cena'), antialias: QUAL.base > 0, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+    $('#cena').addEventListener('webglcontextlost', e => { e.preventDefault(); perdeuContexto(); }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.base], devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
     cena3 = new THREE.Scene(); cena3.fog = new THREE.Fog(0xcfe9ff, 7, 18); ambiente(r3, cena3);
     cena3.add(criarCeu()); cena3.add(criarNuvens());
     cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 60); cam3.position.set(-0.75, 0.55, 1.75);
-    const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.nivel > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
+    const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.base > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
     ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; }); zoomSuave(ctl3, cam3, $('#ver3d'));
   }
