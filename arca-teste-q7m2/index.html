@@ -127,7 +127,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.19 · 12/11/2026';
+const VERSAO = '0.21 · 12/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   const nivel = q ? { alta: 2, media: 1, baixa: 0 }[q] : ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 ? 1 : 2); return { nivel, fixo: !!q }; })();
@@ -622,7 +622,7 @@ async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
   const promNoe = carregarNoe().catch(e => { console.warn('[noe]', e); });
-  const promGir = Promise.all(['girafa', 'zebra'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
+  const promGir = Promise.all(['girafa', 'zebra', 'elefante'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
   for (const arq of ['assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
@@ -718,7 +718,7 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
 }
 // ---------- bichos do Tripo (assets/<nome>.glb + <nome>_regioes.png): mesma ideia do Noé, sem esqueleto ----------
 const BICHOS_G = {};
-const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'] }; // índice = valor/16 no PNG
+const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'], elefante: [null, 'corpo', 'orelha', 'unhas'] }; // índice = valor/16 no PNG
 const DESENHO_BICHO = m => DADOS[m + 's']; // DADOS.girafas, DADOS.zebras: as regiões de cada um no desenho
 async function carregarBicho(nome) {
   const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
@@ -800,10 +800,12 @@ const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.
 // g: qual girafa do desenho (DADOS.girafas), h: escala, atraso: segundos depois do Próximo, vel: velocidade relativa à do Noé
 // zebras (12/11): do outro lado da rampa, sobem depois das girafas, trotando
 const FILA = [{ m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 },
-  { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 }];
+  { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 },
+  { m: 'elefante', g: 0, h: 0.44, x: 0.38, z: 0.88, atraso: 4.2, vel: 1.25, yaw: -Math.PI / 2 }, { m: 'elefante', g: 1, h: 0.42, x: 0.4, z: 0.6, atraso: 4.9, vel: 1.25, yaw: -Math.PI / 2 }]; // elefantes (12/11): depois das zebras
 // como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
 const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.62, z: -0.05, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.54, z: -0.11, yaw: -0.75 },
-  { m: 'zebra', g: 0, h: 0.31, x: 0.52, z: 0.07, yaw: 0.4 }, { m: 'zebra', g: 1, h: 0.31, x: 0.6, z: -0.07, yaw: 1.2 }];
+  { m: 'zebra', g: 0, h: 0.31, x: 0.55, z: -0.08, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.63, z: -0.1, yaw: 1.1 },
+  { m: 'elefante', g: 0, h: 0.32, x: 0.5, z: 0.1, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.61, z: 0.06, yaw: 0.85 }];
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
   const W = 1024, H = Math.round(W * d / w), R = 46, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), rnd = rndSem(11);
@@ -955,12 +957,18 @@ function luzDoTempo(cena, chuva) { // com chuva a luz baixa e fica azulada; quan
   L.amb.intensity = L.a0 * (1 - 0.28 * f); L.sol.intensity = L.s0 * (1 - 0.5 * f); L.hemi.intensity = L.h0 * (1 - 0.3 * f);
   L.sol.color.copy(L.c0).lerp(L.cChuva, f); if (cena.background) cena.backgroundIntensity = 1 - 0.4 * f;
 }
+function tempoEmbarque() { // segundos (depois do Próximo) até o último bicho entrar na arca
+  const pe = [XR + 0.1, 0, PE_RAMPA + 0.02], dentro = [XR, 0.44, 0.04], d = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const tem = f => PERSONAGENS && PERSONAGENS[f.m + '_g'] && DESENHO_BICHO(f.m);
+  return FILA.filter(tem).reduce((m, f) => Math.max(m, f.atraso + (d([f.x, 0, f.z], pe) + d(pe, TOPO_RAMPA) + d(TOPO_RAMPA, dentro)) / (VEL_BICHO * (f.vel || 1))), 0);
+}
 function proximoEvento() {
   if (!historia) return; const agora = performance.now();
   if (historia.etapa === 0) { const h = historia; h.etapa = 2; h.t0 = agora; h.tChuva = 0; h.livre = false; $('#bProximo').disabled = true; $('#bProximo').classList.remove('chama');
     status('O Noé está subindo na arca', 'E olha a chuva chegando…', true);
-    setTimeout(() => { if (historia === h) SOM.efeito('porta'); }, 5750 * LENTO); // "…e Deus fechou a porta."
-    SOM.falar('VO_H04_SOBE').then(() => { if (historia === h) h.tChuva = Math.max(h.t0 + 5000 * LENTO, performance.now() + 350); }); } // a chuva espera a fala
+    const emb = tempoEmbarque() * 1000; // a porta fecha quando o último bicho entra; a chuva espera a fala e o embarque
+    setTimeout(() => { if (historia === h) SOM.efeito('porta'); }, Math.max(5750, emb + 150) * LENTO); // "…e Deus fechou a porta."
+    SOM.falar('VO_H04_SOBE').then(() => { if (historia === h) h.tChuva = Math.max(h.t0 + Math.max(5000, emb + 600) * LENTO, performance.now() + 350); }); }
 }
 $('#bProximo').addEventListener('click', proximoEvento);
 if (DEBUG) window.__historia = () => ({ h: historia, b: arcaAR && arcaAR.userData.terra ? arcaAR.userData.terra.userData.bichos.map(b => [b.userData.fila.m, ...b.position.toArray().map(v => +v.toFixed(2)), b.visible]) : null });
@@ -1154,9 +1162,11 @@ function criarArco(cores, escala) { // escala: unidades 3D por px do desenho. Se
   const g = new THREE.Group(), meia = (r1, r2, prof) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r2, 0, Math.PI, false); sh.absarc(0, 0, r1, Math.PI, 0, true);
     const geo = new THREE.ExtrudeGeometry(sh, { depth: prof, bevelEnabled: false, curveSegments: 56 }); geo.translate(0, 0, -prof / 2); return geo; };
   const R0 = ARCO_D.r0 * escala, P = ARCO_D.passo * escala, prof = P * 0.55, linha = P * 0.1, faixas = [];
-  const fundo = new THREE.Mesh(meia(R0 - 6 * P - linha, R0 + linha, prof * 0.8), new THREE.MeshBasicMaterial({ color: 0x1d1b20 })); fundo.position.z = -prof * 0.2; g.add(fundo);
-  cs.forEach((c, i) => { const m = new THREE.Mesh(meia(R0 - (i + 1) * P + linha / 2, R0 - i * P - linha / 2, prof), new THREE.MeshLambertMaterial({ color: cor3(c), emissive: cor3(c, 0.3) }));
-    g.add(m); faixas.push(m); });
+  // um pouco translúcido e pintado dos dois lados: os traços pretos são só os arcos finos entre as faixas (sem a placa preta de trás)
+  const fundo = new THREE.Group(), traco = new THREE.MeshBasicMaterial({ color: 0x1d1b20, transparent: true, opacity: 0.9 }); g.add(fundo);
+  for (let i = 0; i <= cs.length; i++) fundo.add(new THREE.Mesh(meia(R0 - i * P - linha, R0 - i * P + linha, prof * 1.02), traco));
+  cs.forEach((c, i) => { const m = new THREE.Mesh(meia(R0 - (i + 1) * P + linha / 2, R0 - i * P - linha / 2, prof), new THREE.MeshLambertMaterial({ color: cor3(c), emissive: cor3(c, 0.3), transparent: true, opacity: 0.78, side: THREE.DoubleSide, depthWrite: false }));
+    m.renderOrder = 2; g.add(m); faixas.push(m); });
   g.userData.faixas = faixas; g.userData.fundo = fundo; return g;
 }
 function otimizar(arca) { // junta as peças que usam o mesmo material: a arca passa de ~150 para ~30 desenhos por quadro
@@ -1850,13 +1860,19 @@ function coresExemplo() {
   let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const arco = { 2: [226, 52, 48], 3: [246, 133, 36], 6: [250, 208, 50], 11: [96, 186, 72], 13: [40, 82, 170], 14: [134, 70, 176] };
   const mar = { ...arco, 347: [40, 120, 210], 357: [30, 100, 190], 330: [90, 170, 230], 331: [90, 170, 230], 355: [70, 150, 220], 358: [40, 120, 210], 359: [30, 100, 190], 348: [250, 208, 50], 349: [96, 186, 72], 354: [70, 150, 220] };
-  return DADOS.regioes.map(id => mar[id] || pal[Math.floor(rnd() * pal.length)]);
+  // o Noé e os bichos: cores que uma criança usaria para cada parte (se não, sairiam sorteadas da paleta)
+  const pers = {}, poe = (ids, c) => [].concat(ids).forEach(id => { if (id !== undefined) pers[id] = c; });
+  const N = DADOS.noe || {}; poe([N.cabelo, N.barba, N.sobrancelha], [150, 95, 55]); poe(N.bigode, [96, 58, 32]); poe([N.pele, N.orelha, N.mao], [244, 196, 160]);
+  poe(N.base, [54, 120, 200]); poe(N.tunica, [246, 236, 200]); poe(N.tunica2, [226, 52, 48]); poe(N.faixa, [250, 208, 50]); poe(N.gola, [96, 186, 72]);
+  (DADOS.girafas || []).forEach(g => { poe(g.corpo, [250, 208, 50]); poe(g.manchas, [233, 120, 40]); poe([g.crina, g.chifres, g.topete], [160, 80, 40]); poe(g.focinho, [246, 220, 170]); poe(g.orelha, [240, 160, 170]); });
+  (DADOS.zebras || []).forEach((z, i) => { poe(z.corpo, [246, 243, 236]); poe([z.listras, z.crina], i ? [134, 70, 176] : [40, 40, 44]); poe(z.focinho, [170, 172, 178]); poe(z.orelha, [240, 160, 170]); });
+  return DADOS.regioes.map(id => mar[id] || pers[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
 // ---------- botões ----------
 $('#versao').textContent = 'Protótipo · versão ' + VERSAO;
 $('#bCamera').onclick = abrirCamera;
-$('#bExemplo').onclick = async () => { await carregarDados(); abrir3D(coresExemplo()); };
+$('#bExemplo').onclick = async () => { await carregarDados(); if (!PROM_PERS) PROM_PERS = carregarPersonagens(); await PROM_PERS; abrir3D(coresExemplo()); };
 $('#cVoltar').onclick = fecharCamera;
 document.querySelectorAll('.bsom').forEach(b => { b.onclick = () => SOM.alternar(); });
 $('#bDeNovo').onclick = recomecar;
