@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.37 · 13/11/2026';
+const VERSAO = '0.38 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -188,14 +188,14 @@ const FALAS = { // código do arquivo: [texto da legenda, duração em s, pedaç
   VO_LENDO: ['Segure parado… Estou olhando as cores que você pintou!', 5.38, [[0.0, "Segure parado…"], [2.78, "Estou olhando as cores que você pintou!"]]],
   VO_PERDEU: ['Opa! Aponte o celular de novo para o quebra-cabeça.', 3.76],
   VO_H01_NOE: ['Há muito tempo, vivia um homem chamado Noé. Ele amava a Deus e cuidava de todos com carinho.', 8.27, [[0.0, "Há muito tempo, vivia um homem chamado Noé."], [4.63, "Ele amava a Deus e cuidava de todos com carinho."]]],
-  VO_H02_ARCA: ['Deus pediu a Noé que construísse uma arca bem grande. E olha só: a arca ficou com as cores que você pintou!', 8.14, [[0.0, "Deus pediu a Noé que construísse uma arca bem grande."], [4.32, "E olha só: a arca ficou com as cores que você pintou!"]]],
+  VO_H02_ARCA: ['Deus pediu a Noé que construísse uma arca bem grande. E olha só: a arca ficou com as cores que você pintou!', 8.14, [[0.0, "Deus pediu a Noé que construísse uma arca bem grande."], [4.5, "E olha só: a arca ficou com as cores que você pintou!"]]],
   // 12/11: os bichos esperam em terra e sobem junto com o Noé (falas novas; sem o áudio ainda, a legenda fica o mesmo tempo na tela)
-  VO_H03B_ANIMAIS: ['E os animais vieram, de dois em dois: macaquinhos, girafas, zebras e elefantes. Toque em Próximo para todos subirem na arca!', 12.72, [[0.0, "E os animais vieram, de dois em dois:"], [3.44, "macaquinhos, girafas, zebras e elefantes."], [7.64, "Toque em Próximo para todos subirem na arca!"]]],
-  VO_H04B_SOBE: ['Lá vão os macaquinhos, o Noé, as girafas, as zebras e os elefantes, subindo a rampa! Quando todos entraram, Deus fechou a porta.', 8.07, [[0.0, "Lá vão os macaquinhos, o Noé, as girafas,"], [2.56, "as zebras e os elefantes, subindo a rampa!"], [5.51, "Quando todos entraram, Deus fechou a porta."]]],
+  VO_H03B_ANIMAIS: ['E os animais vieram, de dois em dois: macaquinhos, girafas, zebras e elefantes. Toque em Próximo para todos subirem na arca!', 12.72, [[0.0, "E os animais vieram, de dois em dois:"], [3.46, "macaquinhos, girafas, zebras e elefantes."], [7.64, "Toque em Próximo para todos subirem na arca!"]]],
+  VO_H04B_SOBE: ['Lá vão os macaquinhos, o Noé, as girafas, as zebras e os elefantes, subindo a rampa! Quando todos entraram, Deus fechou a porta.', 8.07, [[0.0, "Lá vão os macaquinhos, o Noé, as girafas,"], [3.08, "as zebras e os elefantes, subindo a rampa!"], [5.3, "Quando todos entraram, Deus fechou a porta."]]],
   VO_H05_CHUVA: ['Então começou a chover. Choveu quarenta dias e quarenta noites!', 6.07, [[0.0, "Então começou a chover."], [4.07, "Choveu quarenta dias e quarenta noites!"]]],
-  VO_H06_BOIA: ['A água subiu, subiu… e a arca boiou, bem segura, com todos lá dentro.', 6.77, [[0.0, "A água subiu, subiu…"], [3.97, "e a arca boiou, bem segura, com todos lá dentro."]]],
-  VO_H07_ARCOIRIS: ['Um dia, a chuva parou. E no céu apareceu um arco-íris! É o sinal da promessa de Deus: nunca mais um dilúvio vai cobrir a terra.', 12.43, [[0.0, "Um dia, a chuva parou."], [2.56, "E no céu apareceu um arco-íris!"], [6.66, "É o sinal da promessa de Deus:"], [10.11, "nunca mais um dilúvio vai cobrir a terra."]]],
-  VO_H07B_SEMARCO: ['Um dia, a chuva parou. Deus prometeu que nunca mais um dilúvio ia cobrir a terra, e deu o arco-íris como sinal. Que tal pintar o arco-íris do seu quebra-cabeça?', 12.85, [[0.0, "Um dia, a chuva parou."], [2.69, "Deus prometeu que nunca mais um dilúvio ia cobrir a terra,"], [7.44, "e deu o arco-íris como sinal."], [10.07, "Que tal pintar o arco-íris do seu quebra-cabeça?"]]],
+  VO_H06_BOIA: ['A água subiu, subiu… e a arca boiou, bem segura, com todos lá dentro.', 6.77, [[0.0, "A água subiu, subiu…"], [1.84, "e a arca boiou, bem segura, com todos lá dentro."]]],
+  VO_H07_ARCOIRIS: ['Um dia, a chuva parou. E no céu apareceu um arco-íris! É o sinal da promessa de Deus: nunca mais um dilúvio vai cobrir a terra.', 12.43, [[0.0, "Um dia, a chuva parou."], [1.43, "E no céu apareceu um arco-íris!"], [4.41, "É o sinal da promessa de Deus:"], [7.95, "nunca mais um dilúvio vai cobrir a terra."]]],
+  VO_H07B_SEMARCO: ['Um dia, a chuva parou. Deus prometeu que nunca mais um dilúvio ia cobrir a terra, e deu o arco-íris como sinal. Que tal pintar o arco-íris do seu quebra-cabeça?', 12.85, [[0.0, "Um dia, a chuva parou."], [2.69, "Deus prometeu que nunca mais um dilúvio ia cobrir a terra,"], [7.44, "e deu o arco-íris como sinal."], [10.15, "Que tal pintar o arco-íris do seu quebra-cabeça?"]]],
   VO_H09_FIM: ['Noé, sua família e todos os animais estavam salvos. E Deus cuidou de todos eles, como cuida de você. Fim!', 11.6, [[0.0, "Noé, sua família e todos os animais estavam salvos."], [5.53, "E Deus cuidou de todos eles, como cuida de você."], [10.45, "Fim!"]]],
   VO_H08_CONVITE: ['Agora ande em volta com o celular e veja a sua arca de todos os lados!', 5.16],
   VO_H08B_GIRE: ['Agora arraste com o dedo e veja a sua arca de todos os lados!', 4.61],
@@ -248,7 +248,8 @@ const SOM = (() => {
   // ----- falas: uma de cada vez; sem som (ou sem o arquivo) a legenda fica o mesmo tempo na tela e a história anda igual -----
   function legenda(txt) { const el = $('#legenda'); if (!el) return; if (txt) { el.textContent = txt; el.classList.add('on'); } else el.classList.remove('on'); }
   function legendaPartes(a, f) { // a legenda acompanha a fala: cada pedaço aparece quando a Cleo começa a dizer ele
-    const ps = f[2] || [[0, f[0]]]; legenda(ps[0][1]); a.leg = ps.slice(1).map(([t, txt]) => setTimeout(() => { if (atual === a) legenda(txt); }, t * 1000)); }
+    const lat = ctx && ligado && ctx.state === 'running' ? Math.min(0.5, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; // o som sai do alto-falante um pouco depois (iPhone, fone bluetooth)
+    const ps = f[2] || [[0, f[0]]]; legenda(ps[0][1]); a.leg = ps.slice(1).map(([t, txt]) => setTimeout(() => { if (atual === a) legenda(txt); }, (t + lat) * 1000)); }
   function acabar(a, ok) {
     if (atual !== a) return; atual = null; clearTimeout(a.timer); (a.leg || []).forEach(clearTimeout); if (DEBUG) console.log('[som] fim', a.nome, ok ? 'ok' : 'cortada', Math.round(performance.now() - a.t0) + 'ms');
     if (a.src) { const s = a.src, g = a.g; a.src = null; s.onended = null; if (!ok) { g.gain.setTargetAtTime(0, ctx.currentTime, 0.04); try { s.stop(ctx.currentTime + 0.25); } catch (e) {} } }
@@ -812,6 +813,8 @@ const demoSemPintura = () => (/[?&]demo=1/.test(location.search) || window.ARCA_
 function montarBicho(nome, mapa, cores, escala) { // mapa: parte -> região do desenho (ou lista de regiões, ou cor fixa)
   const G = BICHOS_G[nome], raiz = new THREE.Group(); let map = G.tex;
   if (cores && !demoSemPintura()) { const cor = G.partes.map(p => { if (!p) return null; const m = mapa[p]; if (m === undefined) return null; return Array.isArray(m) ? corDeVarias(cores, m, p === 'corpo' || p === 'pelo' ? 0.3 : 0.05) : corR(cores, m); });
+    if (nome === 'zebra') { const il = G.partes.indexOf('listras'), ic = G.partes.indexOf('crina'), cinza = c => { if (!c) return false; const l = (c[0] + c[1] + c[2]) / 3; return Math.max(...c) - Math.min(...c) < 32 && l > 55 && l < 215; };
+      if (cinza(cor[il]) && cor[ic] && !cinza(cor[ic]) && !(Math.min(...cor[ic]) > 215)) cor[il] = cor[ic]; } // listra cinza (mal lida ou caneta fraca): fica da cor da crina
     map = texturaRecolorida(G, cor, JSON.stringify(cor)); }
   const corpo = new THREE.Mesh(G.geo, new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, envMapIntensity: 0.5 })); corpo.castShadow = true; corpo.receiveShadow = true; raiz.add(corpo);
   const cont = new THREE.MeshBasicMaterial({ color: 0x1d1b20, side: THREE.BackSide }), esp = (0.0015 / escala).toFixed(5);
@@ -824,15 +827,24 @@ function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o
   if (p.cabeca) { p.cabeca.rotation.z = Math.sin(t * 1.4) * 0.06; p.cabeca.rotation.y = Math.sin(t * 0.8) * 0.15; }
 }
 // ---------- vida em volta da arca: um golfinho que salta de vez em quando, gaivotas que passam voando, cardumes e um peixinho que pula ----------
-let GEO_PEIXE = null;
-function geoPeixe() { // corpo oval + rabo, de frente para +x, com 1 de comprimento mais ou menos
-  if (GEO_PEIXE) return GEO_PEIXE;
-  const corpo = new THREE.SphereGeometry(0.5, 12, 8); corpo.scale(1, 0.55, 0.36);
-  const rabo = new THREE.ConeGeometry(0.26, 0.34, 4); rabo.rotateZ(Math.PI / 2); rabo.scale(1, 1, 0.3); rabo.translate(-0.6, 0, 0);
-  const aleta = new THREE.ConeGeometry(0.1, 0.2, 4); aleta.scale(1.6, 1, 0.25); aleta.translate(0.02, 0.3, 0);
-  return (GEO_PEIXE = mergeGeometries([corpo.toNonIndexed(), rabo.toNonIndexed(), aleta.toNonIndexed()], false));
+const GEO_PEIXE = {};
+function geoPeixe(cCorpo, cAleta) { // peixinho de desenho, de frente para +x (1 de comprimento): corpo, rabo bifurcado, barbatanas de outra cor e olhos
+  const chave = cCorpo + '/' + cAleta; if (GEO_PEIXE[chave]) return GEO_PEIXE[chave];
+  const pinta = (g, hex) => { g = g.index ? g.toNonIndexed() : g; const c = new THREE.Color(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; };
+  const chapa = (pts, prof) => { const sh = new THREE.Shape(); pts.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: prof, bevelEnabled: false }); g.translate(0, 0, -prof / 2); return g; };
+  const corpo = new THREE.SphereGeometry(0.5, 14, 10); corpo.scale(1, 0.55, 0.36);
+  const rabo = chapa([[0, 0.02], [-0.3, 0.27], [-0.2, 0], [-0.3, -0.27], [0, -0.02]], 0.05); rabo.translate(-0.4, 0, 0);
+  const dorso = chapa([[-0.18, 0], [0.14, 0], [-0.14, 0.2]], 0.035); dorso.translate(0, 0.22, 0);
+  const partes = [pinta(corpo, cCorpo), pinta(rabo, cAleta), pinta(dorso, cAleta)];
+  for (const lz of [1, -1]) {
+    const lado = new THREE.SphereGeometry(1, 8, 6); lado.scale(0.13, 0.025, 0.07); lado.rotateZ(-0.35); lado.rotateX(lz * 0.6); lado.translate(0.02, -0.1, lz * 0.16); partes.push(pinta(lado, cAleta));
+    const olho = new THREE.SphereGeometry(0.075, 10, 8); olho.translate(0.29, 0.07, lz * 0.12); partes.push(pinta(olho, 0xffffff));
+    const pupila = new THREE.SphereGeometry(0.042, 8, 6); pupila.translate(0.315, 0.075, lz * 0.17); partes.push(pinta(pupila, 0x1d1b20)); }
+  return (GEO_PEIXE[chave] = mergeGeometries(partes, false));
 }
-const CARDUMES = [{ x: -0.95, z: 0.62, r: 0.16, w: 0.45, cor: 0xff8a1f }, { x: 1.0, z: 0.5, r: 0.13, w: -0.55, cor: 0xffd23f }, { x: 0.15, z: -0.72, r: 0.18, w: 0.38, cor: 0x3fa9ff }];
+const CARDUMES = [{ x: -0.95, z: 0.62, r: 0.16, w: 0.45, cor: 0xff8a1f, aleta: 0xffe14d }, { x: 1.0, z: 0.5, r: 0.13, w: -0.55, cor: 0xffd23f, aleta: 0x2f7bff }, { x: 0.15, z: -0.72, r: 0.18, w: 0.38, cor: 0x3fa9ff, aleta: 0xff5c8a }];
 const PEIXE_P = DEBUG && /peixe=1/.test(location.search) ? 3 : 7.3;
 const SALTO_P = DEBUG && /salto=1/.test(location.search) ? 2.6 : 11, GAIVOTA_P = DEBUG && /gaivota=1/.test(location.search) ? 16 : 34; // períodos (s); no teste ficam direto
 function criarVida(opc) { // opc: zSalto (onde o golfinho salta, na frente da arca), yVoo (altura das gaivotas), esc (tamanho do percurso)
@@ -843,9 +855,9 @@ function criarVida(opc) { // opc: zSalto (onde o golfinho salta, na frente da ar
   const anelGeo = new THREE.RingGeometry(0.72, 1, 28);
   for (let i = 0; i < 4; i++) { const a = new THREE.Mesh(anelGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); a.rotation.x = -Math.PI / 2; a.visible = false; g.add(a); u.aneis.push(a); }
   // cardumes: 8 peixinhos cada, nadando em roda e furando a água de leve (um desenho só para cada cardume: leve no celular)
-  const tp = 0.075 * (opc.tam || 1); u.cardumes = CARDUMES.map((c, k) => { const m = new THREE.InstancedMesh(geoPeixe(), new THREE.MeshStandardMaterial({ color: c.cor, roughness: 0.45, envMapIntensity: 0.5 }), 8);
+  const tp = 0.09 * (opc.tam || 1); u.cardumes = CARDUMES.map((c, k) => { const m = new THREE.InstancedMesh(geoPeixe(c.cor, c.aleta), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, envMapIntensity: 0.5 }), 8);
     m.visible = false; m.frustumCulled = false; m.userData = { ...c, k, esc: tp * (0.85 + 0.1 * k) }; g.add(m); return m; });
-  u.peixe = new THREE.Mesh(geoPeixe(), new THREE.MeshStandardMaterial({ color: 0xff6f3c, roughness: 0.4, envMapIntensity: 0.5 })); u.peixe.scale.setScalar(0.12 * (opc.tam || 1)); u.peixe.visible = false; g.add(u.peixe);
+  u.peixe = new THREE.Mesh(geoPeixe(0xff6f3c, 0x8e5cff), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, envMapIntensity: 0.5 })); u.peixe.scale.setScalar(0.12 * (opc.tam || 1)); u.peixe.visible = false; g.add(u.peixe);
   g.userData = u; return g;
 }
 function animarVida(g, t, altura) {
@@ -999,7 +1011,7 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   [[0.95, 0.88, -0.62, 0.62], [-0.25, 0.98, -0.95, 0.5], [1.4, 0.74, 0.05, 0.42]].forEach(([x, y, z, e], i) => { const nv = new THREE.Group();
     lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matB); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
     nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.x0 = x; bom.add(nv); });
-  const sol = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaSol(), transparent: true, depthWrite: false })); sol.position.set(-1.0, 0.92, -0.72); sol.scale.set(0.4, 0.4, 1); sol.name = 'sol'; bom.add(sol); g.add(bom);
+  const sol = solEmPe(corDoSol(cores), 0.4); sol.position.set(-1.0, 0.92, -0.72); bom.add(sol); g.add(bom);
   g.userData = { bom, matB, sol, capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
 }
@@ -1043,11 +1055,24 @@ function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fi
   if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = u.matN2.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); n.scale.y = n.scale.x * (0.96 + 0.04 * Math.sin(agora / 700 + i * 2)); }); }
   return inten;
 }
-function texturaSol() { // sol de desenho: raios, rosto sorrindo e bochechas
+function corDoSol(cores) { // a cor que a criança pintou no sol do desenho (sem pintura: amarelo)
+  const c = cores && DADOS.sol !== undefined ? corR(cores, DADOS.sol) : null;
+  return c && !(Math.min(...c) > 215 && Math.max(...c) - Math.min(...c) < 22) ? c : [255, 217, 59];
+}
+function solEmPe(cor, tam) { // o sol fica em pé no mesmo sentido do cenário e só gira em volta do "para cima" para olhar para a câmera
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(tam, tam), new THREE.MeshBasicMaterial({ map: texturaSol(cor), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  const v = new THREE.Vector3(); m.name = 'sol';
+  m.rotation.order = 'YXZ'; // vira para a câmera (Y), inclina um pouco para ela (X) sem deitar
+  m.onBeforeRender = (r, cena, cam) => { if (!m.parent) return; cam.getWorldPosition(v); m.parent.worldToLocal(v); const dx = v.x - m.position.x, dy = v.y - m.position.y, dz = v.z - m.position.z;
+    m.rotation.set(-0.6 * Math.atan2(dy, Math.hypot(dx, dz)), Math.atan2(dx, dz), m.userData.giro || 0); m.updateMatrixWorld(); };
+  return m;
+}
+function texturaSol(cor = [255, 217, 59]) { // sol de desenho com a cor pintada: raios, rosto sorrindo e bochechas
   const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), C = 128;
-  g.fillStyle = '#ffb21f'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.beginPath(); g.moveTo(C + Math.cos(a - 0.13) * 74, C + Math.sin(a - 0.13) * 74); g.lineTo(C + Math.cos(a) * 124, C + Math.sin(a) * 124); g.lineTo(C + Math.cos(a + 0.13) * 74, C + Math.sin(a + 0.13) * 74); g.closePath(); g.fill(); }
-  g.fillStyle = '#ffd93b'; g.strokeStyle = '#1d1b20'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 78, 0, 2 * Math.PI); g.fill(); g.stroke();
-  g.fillStyle = '#ff9a7a'; [[-40, 20], [40, 20]].forEach(([dx, dy]) => { g.beginPath(); g.ellipse(C + dx, C + dy, 13, 8, 0, 0, 2 * Math.PI); g.fill(); });
+  const rgb = (c, f) => `rgb(${c.map(x => Math.round(Math.min(255, x * f))).join(',')})`;
+  g.fillStyle = rgb(cor, 0.82); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.beginPath(); g.moveTo(C + Math.cos(a - 0.13) * 74, C + Math.sin(a - 0.13) * 74); g.lineTo(C + Math.cos(a) * 124, C + Math.sin(a) * 124); g.lineTo(C + Math.cos(a + 0.13) * 74, C + Math.sin(a + 0.13) * 74); g.closePath(); g.fill(); }
+  g.fillStyle = rgb(cor, 1); g.strokeStyle = '#1d1b20'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 78, 0, 2 * Math.PI); g.fill(); g.stroke();
+  g.fillStyle = 'rgba(255,120,120,0.55)'; [[-40, 20], [40, 20]].forEach(([dx, dy]) => { g.beginPath(); g.ellipse(C + dx, C + dy, 13, 8, 0, 0, 2 * Math.PI); g.fill(); });
   g.fillStyle = '#1d1b20'; [[-26, -12], [26, -12]].forEach(([dx, dy]) => { g.beginPath(); g.ellipse(C + dx, C + dy, 7, 10, 0, 0, 2 * Math.PI); g.fill(); });
   g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); g.arc(C, C + 6, 30, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
@@ -1055,7 +1080,7 @@ function texturaSol() { // sol de desenho: raios, rosto sorrindo e bochechas
 function animarClima(terra, t, nivel, chuva) {
   const u = terra.userData, R = u.rect;
   if (u.bom) { const a = Math.max(0, 1 - chuva * 2.2); u.bom.visible = a > 0.02; u.matB.opacity = a; u.sol.material.opacity = a; // tempo bom antes e depois da chuva
-    if (u.bom.visible) { u.sol.material.rotation = 0.06 * Math.sin(t * 0.8); u.bom.children.forEach((n, i) => { if (n.userData.x0 !== undefined) n.position.x = n.userData.x0 + 0.06 * Math.sin(t * 0.12 + i * 2); }); } }
+    if (u.bom.visible) { u.sol.userData.giro = 0.06 * Math.sin(t * 0.8); u.bom.children.forEach((n, i) => { if (n.userData.x0 !== undefined) n.position.x = n.userData.x0 + 0.06 * Math.sin(t * 0.12 + i * 2); }); } }
   u.respingos.forEach((m, i) => { const ud = m.userData, ativo = i < Math.floor(u.respingos.length * chuva); if (!ativo) { m.visible = false; return; }
     const f = t / ud.per + ud.fase, ciclo = Math.floor(f), q = f - ciclo;
     if (ciclo !== ud.ciclo) { ud.ciclo = ciclo; let x, z, k = 0; do { x = R.x0 + 0.08 + Math.random() * (R.x1 - R.x0 - 0.16); z = R.z0 + 0.08 + Math.random() * (R.z1 - R.z0 - 0.16); } while (Math.abs(x) < 0.75 && Math.abs(z) < 0.28 && ++k < 6); ud.x = x; ud.z = z; }
@@ -1995,7 +2020,7 @@ function abrir3D(cores) {
     $('#cena').addEventListener('webglcontextlost', e => { e.preventDefault(); perdeuContexto(); }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.base], devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
     cena3 = new THREE.Scene(); cena3.fog = new THREE.Fog(0xcfe9ff, 7, 18); ambiente(r3, cena3);
-    cena3.add(criarCeu()); cena3.add(criarNuvens()); { const sol = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaSol(), transparent: true, depthWrite: false, fog: false })); sol.position.set(-4.6, 3.4, -9.5); sol.scale.set(2.2, 2.2, 1); cena3.add(sol); } // o sol sorridente lá no céu
+    cena3.add(criarCeu()); cena3.add(criarNuvens()); { const sol = solEmPe(corDoSol(null), 2.2); sol.position.set(-4.6, 3.4, -9.5); cena3.add(sol); cena3.userData.solDesenho = sol; } // o sol sorridente lá no céu (userData.sol é a luz)
     cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 60); cam3.position.set(-0.75, 0.55, 1.75);
     const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.base > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
@@ -2004,6 +2029,7 @@ function abrir3D(cores) {
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
+  if (cena3.userData.solDesenho) { const m = cena3.userData.solDesenho.material; if (m.map) m.map.dispose(); m.map = texturaSol(corDoSol(cores)); m.needsUpdate = true; } // o sol com a cor pintada
   if (cena3.userData.vida) { cena3.remove(cena3.userData.vida); descartar(cena3.userData.vida); } { const v = criarVida({ zSalto: 0.95, yVoo: 1.35, esc: 1.5, tam: 1.15 }); if (v) { v.userData.aoEvento = tipo => { if (tipo !== 'gaivotas') SOM.efeito('splash', tipo === 'entra' ? 0.8 : 0.5); }; cena3.add(v); } cena3.userData.vida = v; }
   if (cena3.userData.arco) { cena3.remove(cena3.userData.arco); descartar(cena3.userData.arco); cena3.userData.arco = null; }
   { const arco = criarArco(cores, 2.3 / ARCO_D.r0); if (arco) { arco.position.set(3.4, -0.3, -6.5); arco.rotation.y = -0.35; arco.traverse(o => { if (o.material) o.material.fog = false; }); cena3.add(arco); cena3.userData.arco = arco; } }
@@ -2049,7 +2075,7 @@ function coresExemplo() {
   (DADOS.girafas || []).forEach(g => { poe(g.corpo, [250, 208, 50]); poe(g.manchas, [233, 120, 40]); poe([g.crina, g.chifres, g.topete], [160, 80, 40]); poe(g.focinho, [246, 220, 170]); poe(g.orelha, [240, 160, 170]); });
   (DADOS.zebras || []).forEach((z, i) => { poe(z.corpo, [246, 243, 236]); poe([z.listras, z.crina], i ? [134, 70, 176] : [40, 40, 44]); poe(z.focinho, [170, 172, 178]); poe(z.orelha, [240, 160, 170]); });
   (DADOS.elefantes || []).forEach((e, i) => { poe(e.corpo, i ? [233, 98, 160] : [120, 150, 190]); poe(e.orelha, [240, 160, 170]); poe(e.unhas, [246, 236, 210]); });
-  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); });
+  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); }); poe(DADOS.sol, [255, 205, 40]);
   return DADOS.regioes.map(id => mar[id] || pers[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
