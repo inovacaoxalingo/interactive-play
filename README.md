@@ -7,7 +7,7 @@ Publicado em https://inovacaoxalingo.github.io/interactive-play/
 |---|---|
 | `corpo-humano/` | Quebra-cabeça Conhecendo o Corpo Humano (ref. 53309) |
 | `conhecendo-os-planetas/` | Quebra-cabeça Conhecendo os Planetas (ref. 53265) |
-| `arca-de-noe/` | Quebra-cabeça Arca de Noé para colorir (ref. 2084.3), marca Arca Toys — página própria, fora da lista da entrada |
+| `arca-de-noe/` | Quebra-cabeça para colorir Arca de Noé (ref. 2084.3), marca Arca Toys — página própria, fora da lista da entrada |
 
 Cada produto fica em uma pasta própria, com o seu `index.html` e a pasta `assets/`.
 

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Arca de Noé para colorir em 3D · Arca Toys</title>
-<meta name="description" content="Pinte o quebra-cabeça Arca de Noé para colorir (ref. 2084.3), aponte a câmera e veja a arca em 3D com as cores que você pintou, com a história narrada.">
+<title>Quebra-cabeça para colorir Arca de Noé em 3D · Arca Toys</title>
+<meta name="description" content="Pinte o Quebra-cabeça para colorir Arca de Noé (ref. 2084.3), da Arca Toys, aponte a câmera e veja a arca em 3D com as cores que você pintou, com a história narrada.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Arca de Noé para colorir em 3D · Arca Toys">
+<meta property="og:title" content="Quebra-cabeça para colorir Arca de Noé em 3D · Arca Toys">
 <meta property="og:description" content="Pinte o quebra-cabeça, aponte a câmera e veja a arca em 3D com as cores que você pintou.">
 <meta property="og:image" content="https://inovacaoxalingo.github.io/interactive-play/arca-de-noe/assets/capa.jpg">
 <meta property="og:url" content="https://inovacaoxalingo.github.io/interactive-play/arca-de-noe/">
@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/icone-180.png">
 <!-- Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima — arquivo comum do site, com as frases da Arca -->
 <script src="../assets/aceite.js?v=2" data-idade="3" data-politica="../privacidade.html"
-  data-sub="A Arca de Noé em 3D, da Arca Toys, foi feita para brincar junto com o quebra-cabeça para colorir."
+  data-sub="Este app da Arca Toys foi feito para brincar junto com o Quebra-cabeça para colorir Arca de Noé."
   data-camera="A câmera só reconhece o quebra-cabeça e lê as cores pintadas. Nenhuma foto ou vídeo sai do aparelho."
   data-guarda="A preferência de som fica só neste aparelho."
   data-para="para melhorar o app"></script>
@@ -32,7 +32,7 @@
   window.dataLayer = window.dataLayer || [];
   window.gtag = function () { window.dataLayer.push(arguments); };
   window.gtag('js', new Date());
-  window.gtag('config', ID, { content_group: 'Arca Toys - Arca de Noé para colorir (ref. 2084.3)', allow_google_signals: false, allow_ad_personalization_signals: false });
+  window.gtag('config', ID, { content_group: 'Arca Toys - Quebra-cabeça para colorir Arca de Noé (ref. 2084.3)', allow_google_signals: false, allow_ad_personalization_signals: false });
   var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
   document.head.appendChild(s);
   });
@@ -121,7 +121,7 @@ body.girar #camera .ui,body.girar #camera.demo #ar,body.girar #ver3d{inset:auto;
 <body>
 <section id="inicio" class="tela ativa">
   <div class="miolo">
-    <p class="marca"><span>Ref. 2084.3</span> Arca Toys · quebra-cabeça para colorir</p>
+    <p class="marca"><span>Ref. 2084.3</span> Arca Toys · Quebra-cabeça para colorir Arca de Noé</p>
     <h1>Pinte a arca e veja ela em 3D</h1>
     <p class="sub">A câmera reconhece o quebra-cabeça e monta a arca de Noé em 3D com as cores que você pintou.</p>
     <div class="quadro"><img src="assets/desenho.webp" alt="Desenho da arca de Noé para colorir" width="900" height="615"></div>
@@ -177,7 +177,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '1.0 · 13/11/2026';
+const VERSAO = '1.0.1 · 13/11/2026';
 const medir = (nome, p) => { try { window.medir && window.medir(nome, p); } catch (e) {} }; // contagem anônima (só se o adulto permitiu no aviso)
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
@@ -1850,7 +1850,7 @@ function salvarDiagnostico() { // uma imagem só, para mandar por WhatsApp: foto
   if (H) { const [mw, mh] = DADOS.alvo, k = fw / NW; x.strokeStyle = '#18c964'; x.lineWidth = 4; x.beginPath(); [[0, 0], [mw, 0], [mw, mh], [0, mh]].forEach(([a, b], i) => { const [u, v] = aplica(H, a, b); i ? x.lineTo(u * k, v * k) : x.moveTo(u * k, v * k); }); x.closePath(); x.stroke(); }
   x.drawImage(cv, 0, fh + 10, 480, Math.round(480 * NH / NW));
   const r = resumoEst(), u = EST.ultimo || {}, cr = window.__arcaCores || {};
-  const linhas = [`Arca Toys · Arca de Noé para colorir (ref. 2084.3) · v${VERSAO} · gerado em ${new Date().toLocaleString('pt-BR')}`, navigator.userAgent.slice(0, 110), `câmera ${VW}x${VH} · reconhecimento ${NW}x${NH} · qualidade ${QUAL.base}/${QUAL.nivel} · ${TRAB ? "trabalhador" : "sem trabalhador"} · fps ${window.__fps || '?'}`,
+  const linhas = [`Arca Toys · Quebra-cabeça para colorir Arca de Noé (ref. 2084.3) · v${VERSAO} · gerado em ${new Date().toLocaleString('pt-BR')}`, navigator.userAgent.slice(0, 110), `câmera ${VW}x${VH} · reconhecimento ${NW}x${NH} · qualidade ${QUAL.base}/${QUAL.nivel} · ${TRAB ? "trabalhador" : "sem trabalhador"} · fps ${window.__fps || '?'}`,
     `acerto ${r.acerto}% em ${r.n} tentativas · ${r.ms} ms por tentativa · saltos descartados ${saltos}`, `último: ${u.modo || '-'} · pares ${u.n || '-'} · erro ${u.rms ? u.rms.toFixed(2) : '-'} px`,
     `fotos lidas ${fotos.length} · branco ${cr.branco || '-'} · preto ${cr.preto || '-'} · acerto pelo desenho ${REFINO ? REFINO.n + ' pontos, ' + REFINO.rms + ' px (corrigiu ' + REFINO.desl + ' px)' : 'não'} · molde ${MOLDE ? MOLDE.janelas.length + ' janelas' : 'não'}`, `água ${cr.mar ? cr.mar + ' (' + cr.marParte + '% do mar)' : 'sem pintura → azul'} · foco ${window.__focal ? window.__focal.padrao + ' → ' + (window.__focal.estimada || '-') : '-'}`, `peças 3D ${window.__pecas ? window.__pecas.antes + ' → ' + window.__pecas.depois : '-'}`];
   x.fillStyle = '#1d1b20'; x.font = '600 17px system-ui, sans-serif'; linhas.forEach((l, i) => x.fillText(l, 500, fh + 34 + i * 26));
