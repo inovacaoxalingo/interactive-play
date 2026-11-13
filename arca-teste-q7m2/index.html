@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.39 · 13/11/2026';
+const VERSAO = '0.40 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -2139,7 +2139,7 @@ function prepararDemo(img) {
 function iniciarDemo() { // lê as cores da foto como o app faz com a câmera e monta a história do começo
   const e = VW / 2048, Hd = [e, 0, 0, 0, e, 0, 0, 0, 1]; FULL = null; TEXF = null; fotos = [];
   for (let i = 0; i < PRECISA; i++) fotos.push(amostrarFoto(Hd)); guardarTexturas(Hd);
-  lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras;
+  lendo = false; const r = calcularCores(fotos); coresAtuais = coresExemplo(); coresAtuais.mar = r.mar; // a história usa as mesmas cores do "Ver um exemplo pintado" (da foto, só a cor do mar)
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
   $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false; $('#bFim').hidden = false;
