@@ -1,12 +1,18 @@
 /* Interactive Play – aviso para o adulto na primeira visita e escolha da contagem anônima (Google Analytics).
    Usado pela página de entrada e pelos jogos. A escolha fica salva só neste navegador.
-   Uso: <script src=".../assets/aceite.js?v=1" data-idade="6" data-politica=".../privacidade.html"></script> no <head>, antes dos outros scripts.
+   Uso: <script src=".../assets/aceite.js?v=2" data-idade="6" data-politica=".../privacidade.html"></script> no <head>, antes dos outros scripts.
+   Um produto de outra marca (ex.: Arca Toys) troca as frases com data-sub, data-camera, data-guarda e data-para; sem eles vale o texto do Interactive Play.
    Os jogos chamam XalingoAceite.aoPermitir(funçãoQueLigaOGA): ela só roda se o adulto permitir. */
 (function () {
   'use strict';
   var CHAVE = 'xalingo_interactive_play_aceite', VERSAO = 1;
   var me = document.currentScript || {};
-  var cfg = { idade: (me.dataset && me.dataset.idade) || '', politica: (me.dataset && me.dataset.politica) || 'privacidade.html', auto: !(me.dataset && me.dataset.auto === '0') };
+  var ds = me.dataset || {}, limpo = function (x) { return String(x || '').replace(/[<>&"]/g, ''); };
+  var cfg = { idade: ds.idade || '', politica: ds.politica || 'privacidade.html', auto: ds.auto !== '0',
+    sub: limpo(ds.sub) || 'Os jogos Interactive Play da Xalingo foram feitos para brincar junto com o quebra-cabeça.',
+    camera: limpo(ds.camera) || 'A câmera só reconhece o quebra-cabeça ou lê o QR code. Nenhuma foto ou vídeo sai do aparelho.',
+    guarda: limpo(ds.guarda) || 'Medalhas e preferências ficam só neste aparelho.',
+    para: limpo(ds.para) || 'para melhorar os jogos' };
   var fila = [], estado = null;
   try { estado = JSON.parse(localStorage.getItem(CHAVE) || 'null'); } catch (e) { estado = null; }
   if (estado && estado.v !== VERSAO) estado = null;
@@ -54,12 +60,12 @@
     var idade = cfg.idade ? 'Indicado a partir de ' + cfg.idade + ' anos, com um adulto por perto.' : 'Feito para crianças, com um adulto por perto.';
     raiz.innerHTML = '<div class="xa-caixa">' +
       '<h2 id="xa-t">Olá! Antes de começar, um aviso para o adulto</h2>' +
-      '<p class="xa-sub">Os jogos Interactive Play da Xalingo foram feitos para brincar junto com o quebra-cabeça.</p>' +
+      '<p class="xa-sub">' + cfg.sub + '</p>' +
       '<ul>' +
       '<li><span>👧</span><span>' + idade + ' Com a câmera, brinque parado e em um lugar seguro.</span></li>' +
-      '<li><span>📷</span><span>A câmera só reconhece o quebra-cabeça ou lê o QR code. Nenhuma foto ou vídeo sai do aparelho.</span></li>' +
-      '<li><span>🔒</span><span>Sem cadastro, sem pagamento e sem propaganda. Medalhas e preferências ficam só neste aparelho.</span></li>' +
-      '<li><span>📊</span><span>Se você permitir, contamos os acessos de forma anônima (Google Analytics, sem publicidade) para melhorar os jogos.</span></li>' +
+      '<li><span>📷</span><span>' + cfg.camera + '</span></li>' +
+      '<li><span>🔒</span><span>Sem cadastro, sem pagamento e sem propaganda. ' + cfg.guarda + '</span></li>' +
+      '<li><span>📊</span><span>Se você permitir, contamos os acessos de forma anônima (Google Analytics, sem publicidade) ' + cfg.para + '.</span></li>' +
       '</ul>' +
       '<div class="xa-bts"><button class="xa-sim" type="button">Permitir a contagem anônima e começar</button><button class="xa-nao" type="button">Começar sem a contagem</button></div>' +
       '<p class="xa-rod">Você pode mudar esta escolha quando quiser. <a href="' + cfg.politica + '" target="_blank" rel="noopener">Política de privacidade</a></p>' +
