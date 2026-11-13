@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.44 · 13/11/2026';
+const VERSAO = '0.45 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -1017,7 +1017,7 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   [[0.95, 0.88, -0.62, 0.62], [-0.25, 0.98, -0.95, 0.5], [1.4, 0.74, 0.05, 0.42]].forEach(([x, y, z, e], i) => { const nv = new THREE.Group();
     lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matB); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
     nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.x0 = x; bom.add(nv); });
-  const sol = solEmPe(corDoSol(cores), 0.4); sol.position.set(-1.0, 0.92, -0.72); bom.add(sol); g.add(bom);
+  const sol = solEmPe(corDoSol(cores), 0.4); sol.position.set(-1.12, 1.12, -0.5); bom.add(sol); g.add(bom);
   const passaros = criarPassaros(cores); g.add(passaros);
   g.userData = { bom, matB, sol, passaros, capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
@@ -1070,16 +1070,35 @@ function criarPassaros(cores, tam = 1) {
   lista.forEach((p, k) => { const pad = PASSARO_PADRAO[k % PASSARO_PADRAO.length], cor = {};
     for (const parte of ['corpo', 'asa', 'barriga', 'bico']) { const c = cores ? corR(cores, p[parte]) : null; cor[parte] = sem(c) ? null : c; }
     cor.corpo = cor.corpo || pad.corpo; cor.asa = cor.asa || cor.corpo; cor.barriga = cor.barriga || pad.barriga; cor.bico = cor.bico || pad.bico;
-    const mat = c => new THREE.MeshStandardMaterial({ color: cor3(c), roughness: 0.6, envMapIntensity: 0.4 }), esf = (r, sx, sy, sz, m, x, y, z) => { const e = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), m); e.scale.set(sx, sy, sz); e.position.set(x, y, z); return e; };
-    const ave = new THREE.Group(), mc = mat(cor.corpo), ma = mat(cor.asa);
-    ave.add(esf(1, 1, 0.78, 0.78, mc, 0, 0, 0), esf(0.62, 1, 1, 1, mc, 0.72, 0.42, 0), esf(1, 0.72, 0.55, 0.62, mat(cor.barriga), 0.18, -0.22, 0));
-    const bico = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.42, 10), mat(cor.bico)); bico.rotation.z = -Math.PI / 2; bico.position.set(1.42, 0.36, 0); ave.add(bico);
+    const mat = c => new THREE.MeshStandardMaterial({ color: cor3(c), roughness: 0.6, envMapIntensity: 0.4 }), esf = (r, sx, sy, sz, m, x, y, z) => { const e = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), m); e.scale.set(sx, sy, sz); e.position.set(x, y, z); return e; };
+    // 13/11: passarinho orgânico — corpo de uma peça só (cabeça, peito e rabo fundidos, barriga clara pintada na própria malha), asas e rabo recortados em penas
+    const igual = cor.asa.every((v, i) => Math.abs(v - cor.corpo[i]) < 14), ponta = igual ? cor.corpo.map(v => v * 0.66) : cor.asa;
+    const ave = new THREE.Group(), mc = mat(cor.corpo), ma = mat(ponta), mb = mat(cor.bico); mc.side = ma.side = THREE.DoubleSide;
+    { const geo = new THREE.SphereGeometry(1, 30, 22), P = geo.attributes.position, C = new Float32Array(P.count * 3), cc = cor3(cor.corpo), cb = cor3(cor.barriga), O = [0.12, 0.18, 0];
+      const smin = (a, b, k) => { const h = Math.max(0, Math.min(1, 0.5 + 0.5 * (b - a) / k)); return b + (a - b) * h - k * h * (1 - h); };
+      const sdf = (x, y, z) => { const corpo = (Math.hypot(x / 0.74, y / 0.6, z / 0.56) - 1) * 0.56, cab = Math.hypot(x - 0.4, y - 0.46, z) - 0.5;
+        const u = Math.max(0, Math.min(1, (-0.35 - x) / 0.5)), rabo = Math.hypot(x + 0.35 + 0.5 * u, y - 0.02 - 0.1 * u, z * 0.8) - (0.3 - 0.2 * u); return smin(smin(corpo, cab, 0.3), rabo, 0.22); };
+      for (let i = 0; i < P.count; i++) { const dx = P.getX(i), dy = P.getY(i), dz = P.getZ(i); let lo = 0, hi = 1.8; for (let n = 0; n < 18; n++) { const m = (lo + hi) / 2; if (sdf(O[0] + dx * m, O[1] + dy * m, O[2] + dz * m) < 0) lo = m; else hi = m; }
+        const x = O[0] + dx * lo, y = O[1] + dy * lo, z = O[2] + dz * lo; P.setXYZ(i, x, y, z);
+        const e = Math.hypot((x - 0.24) / 0.6, (y + 0.24) / 0.5, z / 0.5), f = Math.max(0, Math.min(1, (1.03 - e) / 0.06)), w = f * f * (3 - 2 * f); // a barriga: mancha oval no peito, de borda macia
+        C[i * 3] = cc.r + (cb.r - cc.r) * w; C[i * 3 + 1] = cc.g + (cb.g - cc.g) * w; C[i * 3 + 2] = cc.b + (cb.b - cc.b) * w; }
+      geo.setAttribute('color', new THREE.BufferAttribute(C, 3)); geo.computeVertexNormals();
+      ave.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, envMapIntensity: 0.4 }))); }
+    const bico = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 12), mb); bico.rotation.z = -Math.PI / 2 - 0.12; bico.scale.z = 0.85; bico.position.set(0.98, 0.4, 0); ave.add(bico);
     const branco = new THREE.MeshBasicMaterial({ color: 0xffffff }), preto = new THREE.MeshBasicMaterial({ color: 0x1d1b20 });
-    for (const z of [1, -1]) { ave.add(esf(0.15, 1, 1, 1, branco, 1.02, 0.6, z * 0.4), esf(0.085, 1, 1, 1, preto, 1.1, 0.62, z * 0.49)); }
-    ave.add(esf(0.13, 1, 1, 1, mc, 0.66, 1.06, 0.05), esf(0.11, 1, 1, 1, mc, 0.5, 1.02, -0.04)); // o topetinho
-    const cauda = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.8, 4), ma); cauda.scale.set(1, 1, 0.25); cauda.rotation.z = Math.PI / 2 + 0.25; cauda.position.set(-1.15, 0.15, 0); ave.add(cauda);
-    ave.userData.asas = [1, -1].map(z => { const piv = new THREE.Group(); piv.position.set(0.05, 0.35, z * 0.5); const w = esf(1, 0.62, 0.09, 0.62, ma, 0, 0, z * 0.55); w.rotation.y = z * 0.35; piv.add(w); piv.userData.z = z; ave.add(piv); return piv; });
-    ave.scale.setScalar(0.06 * tam * (k === 2 ? 0.8 : 1)); ave.userData.k = k; g.add(ave); });
+    for (const z of [1, -1]) { ave.add(esf(0.095, 0.7, 1.12, 1, preto, 0.77, 0.6, z * 0.31), esf(0.03, 1, 1, 1, branco, 0.83, 0.66, z * 0.345)); // olhos pretos com um brilho
+      ave.add(esf(0.07, 1.6, 0.6, 0.7, mb, 0.1, -0.44, z * 0.15)); } // pezinhos encolhidos no voo
+    // pena(s): contorno recortado (u = para fora, v = para a frente), com espessura e borda arredondada; mapa(u, v, w) põe no lugar
+    const recorte = (pts, esp, mapa) => { const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) { const q = pts[i]; q.length === 4 ? sh.quadraticCurveTo(q[0], q[1], q[2], q[3]) : sh.lineTo(q[0], q[1]); } sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: esp, bevelEnabled: true, bevelThickness: esp * 0.5, bevelSize: 0.025, bevelSegments: 2, curveSegments: 8 }), P = geo.attributes.position;
+      for (let i = 0; i < P.count; i++) { const r = mapa(P.getX(i), P.getY(i), P.getZ(i) - esp / 2); P.setXYZ(i, r[0], r[1], r[2]); } geo.computeVertexNormals(); return geo; };
+    const ASA = [[0, 0.3], [0.5, 0.44, 0.9, 0.36], [1.34, 0.32, 1.02, 0.07], [1.38, -0.05, 0.95, -0.2], [1.2, -0.44, 0.74, -0.4], [0.3, -0.48, 0, -0.26]];
+    const DENTRO = [[0, 0.27], [0.34, 0.38, 0.56, 0.3], [0.8, 0.26, 0.62, 0.08], [0.84, -0.03, 0.58, -0.14], [0.72, -0.34, 0.46, -0.3], [0.2, -0.36, 0, -0.22]];
+    ave.userData.asas = [1, -1].map(z => { const piv = new THREE.Group(); piv.position.set(0.06, 0.22, z * 0.42); piv.userData.z = z;
+      piv.add(new THREE.Mesh(recorte(ASA, 0.05, (u, v, w) => [v, w + 0.1 * u * u, z * u]), ma), new THREE.Mesh(recorte(DENTRO, 0.07, (u, v, w) => [v, w + 0.1 * u * u + 0.012, z * u]), mc)); // a asa arqueia de leve para cima
+      ave.add(piv); return piv; });
+    ave.add(new THREE.Mesh(recorte([[0, 0.13], [0.78, 0.52, 0.5, 0.13], [0.98, 0, 0.5, -0.13], [0.78, -0.52, 0, -0.13]], 0.05, (u, v, w) => [-0.66 - u, 0.06 + w + 0.16 * u, v]), ma)); // rabo de três penas
+    ave.scale.setScalar(0.075 * tam * (k === 2 ? 0.8 : 1)); ave.userData.k = k; g.add(ave); });
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   return g;
 }
@@ -1095,7 +1114,7 @@ function corDoSol(cores) { // a cor que a criança pintou no sol do desenho (sem
   return c && !(Math.min(...c) > 215 && Math.max(...c) - Math.min(...c) < 22) ? c : [255, 217, 59];
 }
 function solEmPe(cor, tam) { // o sol fica em pé no mesmo sentido do cenário e só gira em volta do "para cima" para olhar para a câmera
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(tam, tam), new THREE.MeshBasicMaterial({ map: texturaSol(cor), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(tam, tam), new THREE.MeshBasicMaterial({ map: texturaSol(cor), transparent: true, alphaTest: 0.35, depthWrite: true, side: THREE.DoubleSide, fog: false })); m.renderOrder = -1; // 13/11: escreve profundidade e sai antes da água e do arco-íris: eles passam na frente ou atrás do sol inteiro, sem entrar nele
   const v = new THREE.Vector3(); m.name = 'sol';
   m.rotation.order = 'YXZ'; // vira para a câmera (Y), inclina um pouco para ela (X) sem deitar
   m.onBeforeRender = (r, cena, cam) => { if (!m.parent) return; cam.getWorldPosition(v); m.parent.worldToLocal(v); const dx = v.x - m.position.x, dy = v.y - m.position.y, dz = v.z - m.position.z;
@@ -1103,7 +1122,7 @@ function solEmPe(cor, tam) { // o sol fica em pé no mesmo sentido do cenário e
   return m;
 }
 function texturaSol(cor = [255, 217, 59]) { // sol de desenho com a cor pintada: raios, rosto sorrindo e bochechas
-  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), C = 128;
+  const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'), C = 128; g.scale(2, 2);
   const rgb = (c, f) => `rgb(${c.map(x => Math.round(Math.min(255, x * f))).join(',')})`;
   g.fillStyle = rgb(cor, 0.82); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.beginPath(); g.moveTo(C + Math.cos(a - 0.13) * 74, C + Math.sin(a - 0.13) * 74); g.lineTo(C + Math.cos(a) * 124, C + Math.sin(a) * 124); g.lineTo(C + Math.cos(a + 0.13) * 74, C + Math.sin(a + 0.13) * 74); g.closePath(); g.fill(); }
   g.fillStyle = rgb(cor, 1); g.strokeStyle = '#1d1b20'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 78, 0, 2 * Math.PI); g.fill(); g.stroke();
