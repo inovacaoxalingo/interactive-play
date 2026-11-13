@@ -37,12 +37,13 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 #video,#ar{position:absolute;inset:0;width:100%;height:100%}
 #video{object-fit:cover;min-width:100%;min-height:100%}
 #ar{pointer-events:none}
-.guia{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,calc(80vh*1.464));aspect-ratio:1.464;border:3px dashed rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none}
+.ui{position:absolute;inset:0;pointer-events:none;container-type:size}.ui #deitar{pointer-events:auto}
+.guia{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,calc(80vh*1.464));width:min(90cqw,calc(84cqh*1.464));aspect-ratio:1.464;border:3px dashed rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none}
 .guia.some{opacity:0}
 #deitar{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:rgba(13,45,87,.94);color:#fff;text-align:center;z-index:5}
 #deitar b{font-size:22px;font-weight:800}#deitar p{margin:0;font-size:15px;line-height:1.4;opacity:.9;max-width:320px}
-#deitar .cel{width:54px;height:92px;border:4px solid #fff;border-radius:12px;animation:deita 2.2s ease-in-out infinite}
-@keyframes deita{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+#deitar .cel{width:92px;height:54px;border:4px solid #fff;border-radius:12px;animation:deita 2.4s ease-in-out infinite}
+@keyframes deita{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
 #deitar button{margin-top:10px;border:0;background:#ffc93c;color:#0d2d57;font-weight:800;font-size:17px;border-radius:999px;padding:12px 44px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
 #camera.ativa.empe:not(.demo) #deitar{display:flex}
 #camera.ativa.empe:not(.demo) .topo{z-index:6}#camera.ativa.empe:not(.demo) .status,#camera.ativa.empe:not(.demo) .bsom{visibility:hidden}
@@ -59,7 +60,7 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 .barra button[hidden]{display:none}
 .bsom{border:0;background:rgba(255,255,255,.92);color:var(--mar2);border-radius:999px;width:46px;height:40px;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center;flex:none}
 .bsom[aria-pressed=false]{background:rgba(255,255,255,.7)}
-.legenda{position:absolute;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,6px);width:max-content;max-width:min(600px,calc(100vw - 32px));margin:0;background:rgba(13,45,87,.72);color:#fff;border-radius:12px;padding:7px 13px;font-size:14px;line-height:1.38;font-weight:600;text-align:center;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
+.legenda{position:absolute;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,6px);width:max-content;max-width:min(600px,calc(100vw - 32px));max-width:min(600px,calc(100cqw - 32px));margin:0;background:rgba(13,45,87,.72);color:#fff;border-radius:12px;padding:7px 13px;font-size:14px;line-height:1.38;font-weight:600;text-align:center;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
 @media (max-height:500px){.legenda{font-size:13px;padding:6px 12px;bottom:calc(66px + env(safe-area-inset-bottom))}}
 .legenda.on{opacity:1;transform:translate(-50%,0)}
 .barra button.chama{animation:chama 1.2s ease-in-out infinite}
@@ -71,6 +72,8 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 #cena{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .dica3d{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));background:rgba(13,45,87,.78);color:#fff;font-size:13.5px;font-weight:600;border-radius:999px;padding:7px 14px;white-space:nowrap;pointer-events:none}
 /* depuração (?debug=1) */
+/* celular em pé com a tela travada: a interface (e a cena 3D, fora da câmera) fica deitada */
+body.girar #camera .ui,body.girar #camera.demo #ar,body.girar #ver3d{inset:auto;left:50%;top:50%;width:var(--H,100vh);height:var(--W,100vw);transform:translate(-50%,-50%) rotate(var(--giro,90deg))}
 #dbg{position:absolute;right:8px;bottom:90px;width:min(46vw,360px);background:rgba(0,0,0,.7);color:#bdf;font:11px/1.35 ui-monospace,monospace;border-radius:8px;padding:6px;display:none;z-index:5}
 #dbg canvas{width:100%;display:block;margin-top:4px;background:#fff}
 #dbg .cores{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
@@ -103,8 +106,9 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
 <section id="camera" class="tela">
   <video id="video" playsinline muted autoplay></video>
   <canvas id="ar"></canvas>
+  <div class="ui">
   <div class="guia" id="guia"></div>
-  <div id="deitar"><div class="cel"></div><b>Deite o celular</b><p>O quebra-cabeça é deitado: com o celular deitado ele cabe inteiro na tela e a leitura fica melhor.</p><p style="font-size:13px">Se a tela não girar, ligue a rotação automática do celular.</p><button type="button" id="bEmPe">OK</button></div>
+  <div id="deitar"><div class="cel"></div><b>Deite o celular</b><p>O quebra-cabeça é deitado: segure o celular deitado, assim ele cabe inteiro na tela e a leitura fica melhor.</p><button type="button" id="bEmPe">OK</button></div>
   <div class="topo"><button class="voltar" id="cVoltar" type="button">‹ Voltar</button><div class="status" id="status">Abrindo a câmera…</div><button class="bsom" type="button" aria-pressed="true" aria-label="Som ligado">🔊</button></div>
   <p class="legenda" id="legenda" aria-live="polite"></p>
   <div class="progresso" id="prog"><i></i></div>
@@ -112,8 +116,10 @@ ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%
     <button id="bDeNovo" type="button" hidden>Ler as cores de novo</button>
     <button id="bProximo" class="prim" type="button" hidden>Próximo ›</button>
     <button id="bVer3d" class="prim" type="button" hidden>Ver em 3D</button>
+    <button id="bFim" type="button" hidden>Pular para o fim ⏭</button>
   </div>
   <div id="dbg"></div>
+  </div>
 </section>
 
 <section id="ver3d" class="tela">
@@ -135,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.35 · 12/11/2026';
+const VERSAO = '0.37 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -152,25 +158,45 @@ function medidorFPS() { let n = 0, t0 = 0; return (agora, aoBaixar) => { if (!t0
   if (dt > 2500) { const fps = n * 1000 / dt; n = 0; t0 = agora; window.__fps = Math.round(fps); if (fps < 24 && QUAL.nivel > Math.max(0, QUAL.base - 1) && !QUAL.fixo) { QUAL.nivel--; aoBaixar(); } } }; }
 const fps3D = medidorFPS(), fpsAR = medidorFPS();
 const TELAS = ['inicio', 'camera', 'ver3d'];
-function mostrar(t) { TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); if (t === 'camera' && typeof stream !== 'undefined' && stream && !DEMO_ATIVO()) setTimeout(renovarVideo, 0); }
+// ---------- tudo deitado: com o celular em pé (rotação travada) a interface gira 90° para quem segura o celular deitado ----------
+const TOQUE = matchMedia('(pointer: coarse)').matches, IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let TELA = 'inicio', GIRO = 0, ladoGiro = 90, contaLado = 0;
+function atualizarGiro() {
+  const de = document.documentElement; de.style.setProperty('--W', innerWidth + 'px'); de.style.setProperty('--H', innerHeight + 'px');
+  const g = TOQUE && innerHeight > innerWidth && TELA !== 'inicio' ? ladoGiro : 0;
+  if (g !== GIRO) { GIRO = g; document.body.classList.toggle('girar', !!g); de.style.setProperty('--giro', g + 'deg'); }
+}
+addEventListener('resize', atualizarGiro); addEventListener('orientationchange', () => setTimeout(atualizarGiro, 200));
+addEventListener('devicemotion', e => { // de que lado o celular foi deitado (topo para a esquerda ou para a direita)
+  const a = e.accelerationIncludingGravity; if (!a || a.x == null) return; const gx = IOS ? -a.x : a.x, lado = gx > 4 ? 90 : gx < -4 ? -90 : 0;
+  if (!lado || lado === ladoGiro) { contaLado = 0; return; } if (++contaLado < 8) return; contaLado = 0; ladoGiro = lado; atualizarGiro(); });
+function pedirSensor() { // iPhone: o sensor de posição precisa de licença, pedida no toque do botão
+  try { if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission) DeviceMotionEvent.requestPermission().catch(() => {}); } catch (e) {} }
+const paraVista = (x, y) => GIRO === 90 ? [y, innerWidth - x] : GIRO === -90 ? [innerHeight - y, x] : [x, y];
+function toqueDeitado(el) { // a cena 3D girada: o arrastar do dedo também gira, para o "arrastar para o lado" girar a arca para o lado
+  ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(tipo => el.addEventListener(tipo, e => {
+    if (!GIRO || e.__deitado) return; e.stopImmediatePropagation(); const [x, y] = paraVista(e.clientX, e.clientY);
+    const n = new PointerEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y, screenX: x, screenY: y, pointerId: e.pointerId, pointerType: e.pointerType, isPrimary: e.isPrimary, button: e.button, buttons: e.buttons, width: e.width, height: e.height, pressure: e.pressure });
+    n.__deitado = true; el.dispatchEvent(n); }, true)); }
+function mostrar(t) { TELA = t; atualizarGiro(); TELAS.forEach(n => $('#' + n).classList.toggle('ativa', n === t)); SOM.tela(t); if (t === 'camera' && typeof stream !== 'undefined' && stream && !DEMO_ATIVO()) setTimeout(renovarVideo, 0); }
 const DEMO_ATIVO = () => /[?&]demo=1/.test(location.search) || !!window.ARCA_DEMO;
 
 // ---------- som: a narração (voz Cleo, Google AI Studio), a música de fundo e os efeitos (feitos aqui mesmo, sem arquivo) ----------
 // a música: "Peaceful Acoustic Melody", Universfield (Pixabay, sem Content ID, baixada em 08/11/2026)
-const FALAS = { // código do arquivo: [texto da legenda, duração em s]
+const FALAS = { // código do arquivo: [texto da legenda, duração em s, pedaços da legenda [início em s, texto] tirados das pausas do áudio (fontes/audio/legendas.py)]
   VO_MIRE: ['Aponte o celular para o seu quebra-cabeça pintado.', 3.81],
-  VO_LENDO: ['Segure parado… Estou olhando as cores que você pintou!', 5.38],
+  VO_LENDO: ['Segure parado… Estou olhando as cores que você pintou!', 5.38, [[0.0, "Segure parado…"], [2.78, "Estou olhando as cores que você pintou!"]]],
   VO_PERDEU: ['Opa! Aponte o celular de novo para o quebra-cabeça.', 3.76],
-  VO_H01_NOE: ['Há muito tempo, vivia um homem chamado Noé. Ele amava a Deus e cuidava de todos com carinho.', 8.27],
-  VO_H02_ARCA: ['Deus pediu a Noé que construísse uma arca bem grande. E olha só: a arca ficou com as cores que você pintou!', 8.14],
+  VO_H01_NOE: ['Há muito tempo, vivia um homem chamado Noé. Ele amava a Deus e cuidava de todos com carinho.', 8.27, [[0.0, "Há muito tempo, vivia um homem chamado Noé."], [4.63, "Ele amava a Deus e cuidava de todos com carinho."]]],
+  VO_H02_ARCA: ['Deus pediu a Noé que construísse uma arca bem grande. E olha só: a arca ficou com as cores que você pintou!', 8.14, [[0.0, "Deus pediu a Noé que construísse uma arca bem grande."], [4.32, "E olha só: a arca ficou com as cores que você pintou!"]]],
   // 12/11: os bichos esperam em terra e sobem junto com o Noé (falas novas; sem o áudio ainda, a legenda fica o mesmo tempo na tela)
-  VO_H03B_ANIMAIS: ['E os animais vieram, de dois em dois: macaquinhos, girafas, zebras e elefantes. Toque em Próximo para todos subirem na arca!', 12.72],
-  VO_H04B_SOBE: ['Lá vão os macaquinhos, o Noé, as girafas, as zebras e os elefantes, subindo a rampa! Quando todos entraram, Deus fechou a porta.', 8.07],
-  VO_H05_CHUVA: ['Então começou a chover. Choveu quarenta dias e quarenta noites!', 6.07],
-  VO_H06_BOIA: ['A água subiu, subiu… e a arca boiou, bem segura, com todos lá dentro.', 6.77],
-  VO_H07_ARCOIRIS: ['Um dia, a chuva parou. E no céu apareceu um arco-íris! É o sinal da promessa de Deus: nunca mais um dilúvio vai cobrir a terra.', 12.43],
-  VO_H07B_SEMARCO: ['Um dia, a chuva parou. Deus prometeu que nunca mais um dilúvio ia cobrir a terra, e deu o arco-íris como sinal. Que tal pintar o arco-íris do seu quebra-cabeça?', 12.85],
-  VO_H09_FIM: ['Noé, sua família e todos os animais estavam salvos. E Deus cuidou de todos eles, como cuida de você. Fim!', 11.6],
+  VO_H03B_ANIMAIS: ['E os animais vieram, de dois em dois: macaquinhos, girafas, zebras e elefantes. Toque em Próximo para todos subirem na arca!', 12.72, [[0.0, "E os animais vieram, de dois em dois:"], [3.44, "macaquinhos, girafas, zebras e elefantes."], [7.64, "Toque em Próximo para todos subirem na arca!"]]],
+  VO_H04B_SOBE: ['Lá vão os macaquinhos, o Noé, as girafas, as zebras e os elefantes, subindo a rampa! Quando todos entraram, Deus fechou a porta.', 8.07, [[0.0, "Lá vão os macaquinhos, o Noé, as girafas,"], [2.56, "as zebras e os elefantes, subindo a rampa!"], [5.51, "Quando todos entraram, Deus fechou a porta."]]],
+  VO_H05_CHUVA: ['Então começou a chover. Choveu quarenta dias e quarenta noites!', 6.07, [[0.0, "Então começou a chover."], [4.07, "Choveu quarenta dias e quarenta noites!"]]],
+  VO_H06_BOIA: ['A água subiu, subiu… e a arca boiou, bem segura, com todos lá dentro.', 6.77, [[0.0, "A água subiu, subiu…"], [3.97, "e a arca boiou, bem segura, com todos lá dentro."]]],
+  VO_H07_ARCOIRIS: ['Um dia, a chuva parou. E no céu apareceu um arco-íris! É o sinal da promessa de Deus: nunca mais um dilúvio vai cobrir a terra.', 12.43, [[0.0, "Um dia, a chuva parou."], [2.56, "E no céu apareceu um arco-íris!"], [6.66, "É o sinal da promessa de Deus:"], [10.11, "nunca mais um dilúvio vai cobrir a terra."]]],
+  VO_H07B_SEMARCO: ['Um dia, a chuva parou. Deus prometeu que nunca mais um dilúvio ia cobrir a terra, e deu o arco-íris como sinal. Que tal pintar o arco-íris do seu quebra-cabeça?', 12.85, [[0.0, "Um dia, a chuva parou."], [2.69, "Deus prometeu que nunca mais um dilúvio ia cobrir a terra,"], [7.44, "e deu o arco-íris como sinal."], [10.07, "Que tal pintar o arco-íris do seu quebra-cabeça?"]]],
+  VO_H09_FIM: ['Noé, sua família e todos os animais estavam salvos. E Deus cuidou de todos eles, como cuida de você. Fim!', 11.6, [[0.0, "Noé, sua família e todos os animais estavam salvos."], [5.53, "E Deus cuidou de todos eles, como cuida de você."], [10.45, "Fim!"]]],
   VO_H08_CONVITE: ['Agora ande em volta com o celular e veja a sua arca de todos os lados!', 5.16],
   VO_H08B_GIRE: ['Agora arraste com o dedo e veja a sua arca de todos os lados!', 4.61],
   VO_X01_GOLFINHO: ['Olha! Um golfinho pulando!', 2.01],
@@ -221,8 +247,10 @@ const SOM = (() => {
   }
   // ----- falas: uma de cada vez; sem som (ou sem o arquivo) a legenda fica o mesmo tempo na tela e a história anda igual -----
   function legenda(txt) { const el = $('#legenda'); if (!el) return; if (txt) { el.textContent = txt; el.classList.add('on'); } else el.classList.remove('on'); }
+  function legendaPartes(a, f) { // a legenda acompanha a fala: cada pedaço aparece quando a Cleo começa a dizer ele
+    const ps = f[2] || [[0, f[0]]]; legenda(ps[0][1]); a.leg = ps.slice(1).map(([t, txt]) => setTimeout(() => { if (atual === a) legenda(txt); }, t * 1000)); }
   function acabar(a, ok) {
-    if (atual !== a) return; atual = null; clearTimeout(a.timer); if (DEBUG) console.log('[som] fim', a.nome, ok ? 'ok' : 'cortada', Math.round(performance.now() - a.t0) + 'ms');
+    if (atual !== a) return; atual = null; clearTimeout(a.timer); (a.leg || []).forEach(clearTimeout); if (DEBUG) console.log('[som] fim', a.nome, ok ? 'ok' : 'cortada', Math.round(performance.now() - a.t0) + 'ms');
     if (a.src) { const s = a.src, g = a.g; a.src = null; s.onended = null; if (!ok) { g.gain.setTargetAtTime(0, ctx.currentTime, 0.04); try { s.stop(ctx.currentTime + 0.25); } catch (e) {} } }
     legenda(''); mixar(); a.fim(ok); const w = esperando; esperando = []; w.forEach(r => r());
   }
@@ -238,7 +266,7 @@ const SOM = (() => {
       if (ctx.state !== 'running' && !document.hidden) await Promise.race([ctx.resume().catch(() => {}), esperar(600)]);
       if (meu !== serie) return false; }
     return new Promise(fim => {
-      const a = { nome, fim, src: null, g: null, timer: 0, t0: performance.now(), dur: f[1] * 1000 }; atual = a; legenda(f[0]); if (DEBUG) console.log('[som] fala', nome, pronto() && !!buf[nome] ? 'voz' : 'legenda', Math.round(performance.now()));
+      const a = { nome, fim, src: null, g: null, timer: 0, t0: performance.now(), dur: f[1] * 1000 }; atual = a; legendaPartes(a, f); if (DEBUG) console.log('[som] fala', nome, pronto() && !!buf[nome] ? 'voz' : 'legenda', Math.round(performance.now()));
       if (pronto() && buf[nome] && !document.hidden) { const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = buf[nome]; s.connect(g); g.connect(gVoz);
         s.onended = () => acabar(a, true); s.start(); a.src = s; a.g = g; a.timer = setTimeout(() => acabar(a, true), a.dur + 1500); } // por segurança, se o "fim" não vier
       else a.timer = setTimeout(() => acabar(a, true), a.dur);
@@ -335,13 +363,13 @@ async function narrarFim(h) { // a chuva parou: arco-íris (ou o convite para pi
   await esperar(300); if (historia !== h) return;
   await SOM.falar(temArco ? 'VO_H07_ARCOIRIS' : 'VO_H07B_SEMARCO'); if (historia !== h) return;
   await esperar(400); if (historia !== h) return; await SOM.falar('VO_H09_FIM'); if (historia !== h) return; // o fim da história
-  $('#bProximo').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
+  $('#bProximo').hidden = true; $('#bFim').hidden = true; $('#bDeNovo').hidden = false; $('#bVer3d').hidden = false;
   status('A arca está boiando!', DEMO ? 'Arraste para girar e ver de todos os lados' : 'Ande em volta com o celular para ver de todos os lados', true);
   await esperar(500); if (historia !== h) return;
   await SOM.falar(DEMO ? 'VO_H08B_GIRE' : 'VO_H08_CONVITE'); if (historia === h) h.livre = true;
 }
 function eventoVida(tipo) { // o golfinho sai/entra na água, as gaivotas chegam
-  if (tipo !== 'gaivotas' && ancora && ancora.visible) SOM.efeito('splash', tipo === 'entra' ? 1 : 0.6);
+  if (tipo !== 'gaivotas' && ancora && ancora.visible) SOM.efeito('splash', tipo === 'entra' ? 1 : tipo === 'peixe' ? 0.35 : 0.6); if (tipo === 'peixe') return;
   const h = historia; if (!h || !h.livre || !h.fimChuva || SOM.falando) return; // as falas extras só depois da história, uma vez cada
   if (tipo === 'sai' && !h.disseGolfinho) { h.disseGolfinho = true; SOM.falar('VO_X01_GOLFINHO'); }
   if (tipo === 'gaivotas' && !h.disseGaivotas) { h.disseGaivotas = true; SOM.falar('VO_X02_GAIVOTAS'); }
@@ -795,7 +823,17 @@ function acenar(p, t) { // o Noé acena com o braço livre (ombro e cotovelo); o
   if (p.bracoE) p.bracoE.rotation.z = (p.bracoE.userData.r0 || 0) + Math.sin(t * 5) * 0.22; if (p.antebracoE) p.antebracoE.rotation.z = (p.antebracoE.userData.r0 || 0) + Math.sin(t * 5 + 0.6) * 0.3;
   if (p.cabeca) { p.cabeca.rotation.z = Math.sin(t * 1.4) * 0.06; p.cabeca.rotation.y = Math.sin(t * 0.8) * 0.15; }
 }
-// ---------- vida em volta da arca: um golfinho que salta de vez em quando e gaivotas que passam voando ----------
+// ---------- vida em volta da arca: um golfinho que salta de vez em quando, gaivotas que passam voando, cardumes e um peixinho que pula ----------
+let GEO_PEIXE = null;
+function geoPeixe() { // corpo oval + rabo, de frente para +x, com 1 de comprimento mais ou menos
+  if (GEO_PEIXE) return GEO_PEIXE;
+  const corpo = new THREE.SphereGeometry(0.5, 12, 8); corpo.scale(1, 0.55, 0.36);
+  const rabo = new THREE.ConeGeometry(0.26, 0.34, 4); rabo.rotateZ(Math.PI / 2); rabo.scale(1, 1, 0.3); rabo.translate(-0.6, 0, 0);
+  const aleta = new THREE.ConeGeometry(0.1, 0.2, 4); aleta.scale(1.6, 1, 0.25); aleta.translate(0.02, 0.3, 0);
+  return (GEO_PEIXE = mergeGeometries([corpo.toNonIndexed(), rabo.toNonIndexed(), aleta.toNonIndexed()], false));
+}
+const CARDUMES = [{ x: -0.95, z: 0.62, r: 0.16, w: 0.45, cor: 0xff8a1f }, { x: 1.0, z: 0.5, r: 0.13, w: -0.55, cor: 0xffd23f }, { x: 0.15, z: -0.72, r: 0.18, w: 0.38, cor: 0x3fa9ff }];
+const PEIXE_P = DEBUG && /peixe=1/.test(location.search) ? 3 : 7.3;
 const SALTO_P = DEBUG && /salto=1/.test(location.search) ? 2.6 : 11, GAIVOTA_P = DEBUG && /gaivota=1/.test(location.search) ? 16 : 34; // períodos (s); no teste ficam direto
 function criarVida(opc) { // opc: zSalto (onde o golfinho salta, na frente da arca), yVoo (altura das gaivotas), esc (tamanho do percurso)
   if (!PERSONAGENS || !PERSONAGENS.golfinho || !PERSONAGENS.gaivota) return null;
@@ -803,7 +841,11 @@ function criarVida(opc) { // opc: zSalto (onde o golfinho salta, na frente da ar
   u.golfinho = montarPersonagem(PERSONAGENS.golfinho, PERSONAGENS.golfinho.cores, null, 0.2 * (opc.tam || 1)); u.golfinho.visible = false; g.add(u.golfinho);
   for (let i = 0; i < 2; i++) { const gv = montarPersonagem(PERSONAGENS.gaivota, PERSONAGENS.gaivota.cores, null, 0.13 * (opc.tam || 1)); gv.visible = false; g.add(gv); u.gaivotas.push(gv); }
   const anelGeo = new THREE.RingGeometry(0.72, 1, 28);
-  for (let i = 0; i < 2; i++) { const a = new THREE.Mesh(anelGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); a.rotation.x = -Math.PI / 2; a.visible = false; g.add(a); u.aneis.push(a); }
+  for (let i = 0; i < 4; i++) { const a = new THREE.Mesh(anelGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); a.rotation.x = -Math.PI / 2; a.visible = false; g.add(a); u.aneis.push(a); }
+  // cardumes: 8 peixinhos cada, nadando em roda e furando a água de leve (um desenho só para cada cardume: leve no celular)
+  const tp = 0.075 * (opc.tam || 1); u.cardumes = CARDUMES.map((c, k) => { const m = new THREE.InstancedMesh(geoPeixe(), new THREE.MeshStandardMaterial({ color: c.cor, roughness: 0.45, envMapIntensity: 0.5 }), 8);
+    m.visible = false; m.frustumCulled = false; m.userData = { ...c, k, esc: tp * (0.85 + 0.1 * k) }; g.add(m); return m; });
+  u.peixe = new THREE.Mesh(geoPeixe(), new THREE.MeshStandardMaterial({ color: 0xff6f3c, roughness: 0.4, envMapIntensity: 0.5 })); u.peixe.scale.setScalar(0.12 * (opc.tam || 1)); u.peixe.visible = false; g.add(u.peixe);
   g.userData = u; return g;
 }
 function animarVida(g, t, altura) {
@@ -823,12 +865,31 @@ function animarVida(g, t, altura) {
     gv.position.set(x, y, z); gv.rotation.set(0, Math.atan2(-vz, vx), 0.25 * Math.sin(tg * 0.9 + i * 2));
     const amp = 0.5 * Math.max(0.08, Math.sin(tg * 0.5 + i * 1.7)), bat = Math.sin(t * 8.5 + i) * amp, pz = gv.userData.pecas;
     if (pz.asaE) pz.asaE.rotation.x = bat; if (pz.asaD) pz.asaD.rotation.x = -bat; });
+  // cardumes
+  const ob = u.tmp || (u.tmp = new THREE.Object3D());
+  u.cardumes.forEach(m => { const c = m.userData; m.visible = true;
+    for (let i = 0; i < 8; i++) { const th = c.w * t + i * 0.42 + c.k, rr = (c.r + 0.025 * Math.sin(i * 2.3 + t * 0.7)) * E, x = c.x * E + rr * Math.cos(th), z = c.z * E + rr * Math.sin(th);
+      const pulo = Math.pow(Math.max(0, Math.sin(t * 0.9 + i * 0.55 + c.k * 2)), 14), y = altura(x, z, t) - 0.012 + 0.012 * Math.sin(t * 3 + i * 1.7) + 0.05 * pulo * (u.tam || 1);
+      ob.position.set(x, y, z); const sg = Math.sign(c.w); ob.rotation.set(0, Math.atan2(-sg * Math.cos(th), -sg * Math.sin(th)), 0.6 * pulo * Math.cos(t * 6 + i)); // de frente para onde nada
+      ob.scale.setScalar(c.esc * (0.9 + 0.2 * ((i * 37) % 7) / 7)); ob.updateMatrix(); m.setMatrixAt(i, ob.matrix); }
+    m.instanceMatrix.needsUpdate = true; });
+  // um peixinho que pula sozinho, cada vez num lado da arca
+  const kp = Math.floor((t + 3.1) / PEIXE_P), pp = t + 3.1 - kp * PEIXE_P, dp = 0.95, dirp = kp % 2 ? 1 : -1, lado = [[-0.95, 0.15], [0.95, -0.1], [-0.35, 0.62], [0.5, -0.55]][kp % 4], xp0 = lado[0] * E, zp = lado[1] * E, Lp = 0.36 * (u.tam || 1), Hp = 0.18 * (u.tam || 1);
+  u.peixe.visible = pp < dp;
+  if (u.peixe.visible) { const q = pp / dp, x = xp0 + dirp * (q - 0.5) * Lp, y = Hp * Math.sin(Math.PI * q) - 0.03 + altura(x, zp, t);
+    u.peixe.position.set(x, y, zp); u.peixe.rotation.set(0, dirp > 0 ? 0 : Math.PI, Math.atan2(Hp * Math.PI * Math.cos(Math.PI * q), Lp) + 0.4 * Math.sin(pp * 20) * 0.2); }
+  [[2, xp0 - dirp * Lp / 2, pp], [3, xp0 + dirp * Lp / 2, pp - dp + 0.15]].forEach(([i, x, ta]) => { const a = u.aneis[i], vis = ta > 0 && ta < 0.7; a.visible = vis;
+    if (vis) { const q = ta / 0.7; a.position.set(x, 0.012 + altura(x, zp, t), zp); a.scale.setScalar((0.03 + 0.1 * q) * (u.tam || 1)); a.material.opacity = 0.75 * (1 - q) * (1 - q); } });
+  if (u.aoEvento) { const ppa = u.kpAnt === kp ? u.ppAnt : -1; if (ppa < 0.12 && pp >= 0.12 && pp < dp) u.aoEvento('peixe'); u.kpAnt = kp; u.ppAnt = pp; }
   if (u.aoEvento) { // para o som: o golfinho fura a água ao sair e ao entrar; as gaivotas chegam
     const pa = u.kAnt === k ? u.phAnt : u.kAnt === k - 1 ? -1 : 1e9, pga = u.kgAnt === kg ? u.pgAnt : u.kgAnt === kg - 1 ? -1 : 1e9; // começou outro ciclo entre dois quadros: conta do começo
     if (pa < 0.22 && ph >= 0.22) u.aoEvento('sai'); if (pa < 1.64 && ph >= 1.64) u.aoEvento('entra'); if (pga < 2.5 && pg >= 2.5) u.aoEvento('gaivotas'); u.kAnt = k; u.phAnt = ph; u.kgAnt = kg; u.pgAnt = pg; }
 }
 // ---------- a história: começa em terra firme (capim por cima do quebra-cabeça), os bichos embarcam pela rampa, o Noé sobe, chove e vira mar ----------
-const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
+const CL_ = (DEBUG && +(location.search.match(/[?&]cl=([\d.]+)/) || [])[1]) || 1.6, CB_ = (DEBUG && +(location.search.match(/[?&]cb=([\d.]+)/) || [])[1]) || 0.38;
+const CL = CL_, CB = CB_; // tamanho do casco: comprimento e meia-largura (13/11: 1,44 x 0,32 → 1,6 x 0,38, para nenhum bicho ficar com a perna para fora)
+if (DEBUG) window.__casco = { CL, CB, kx: 1, kz: 1 };
+const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24 * CB / 0.32], ARCA_TERRA = 0.13; // rampa na proa, lado de quem olha; a arca apoiada no chão (quilha em -0.13)
 // bichos em terra (12/11: as girafas voltam): esperam atrás do Noé, sobem a rampa depois dele e aparecem no convés
 // g: qual girafa do desenho (DADOS.girafas), h: escala, atraso: segundos depois do Próximo, vel: velocidade relativa à do Noé
 // zebras (12/11): do outro lado da rampa, sobem depois das girafas, trotando
@@ -839,7 +900,7 @@ const FILA = [{ m: 'macaco', g: 0, h: 0.21, x: -0.64, z: 0.93, atraso: 0, vel: 1
 // como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
 const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.6, z: -0.1, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.48, z: -0.16, yaw: -0.75 },
   { m: 'zebra', g: 0, h: 0.31, x: 0.46, z: -0.15, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.61, z: -0.12, yaw: 1.1 },
-  { m: 'elefante', g: 0, h: 0.32, x: 0.44, z: 0.15, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.6, z: 0.1, yaw: 0.85 },
+  { m: 'elefante', g: 0, h: 0.32, x: 0.44, z: 0.15, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.56, z: 0.07, yaw: 0.85 },
   { m: 'macaco', g: 0, h: 0.2, x: -0.12, y: 0.712, z: 0.02, yaw: 0.25 }, { m: 'macaco', g: 1, h: 0.19, x: 0.16, y: 0.712, z: 0.0, yaw: -0.3 }]; // os macacos em cima do telhado, como no desenho
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
@@ -893,7 +954,7 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
   const NT = [250, 550, 900][QUAL.base], tufos = new THREE.InstancedMesh(tufoGeo(), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), NT), o = new THREE.Object3D(), cor = new THREE.Color();
   const tons = [0x4f9f35, 0x5fb641, 0x6cc24a, 0x7fd05a, 0x57ad3c]; let n = 0;
   for (let i = 0; i < NT * 3 && n < NT; i++) { const x = r.x0 + 0.04 + rnd() * (w - 0.08), z = r.z0 + 0.04 + rnd() * (d - 0.08);
-    if (Math.abs(x) < 0.8 && Math.abs(z) < 0.3) continue; if (Math.abs(x - XR) < 0.17 && z > TOPO_RAMPA[2] - 0.05 && z < PE_RAMPA + 0.06) continue;
+    if (Math.abs(x) < 0.8 * CL / 1.44 && Math.abs(z) < 0.3 * CB / 0.32) continue; if (Math.abs(x - XR) < 0.17 && z > TOPO_RAMPA[2] - 0.05 && z < PE_RAMPA + 0.06) continue;
     o.position.set(x, 0.002, z); o.rotation.set(0, rnd() * 6.28, 0); o.scale.setScalar(0.7 + rnd() * 0.8); o.updateMatrix(); tufos.setMatrixAt(n, o.matrix); tufos.setColorAt(n, cor.setHex(tons[Math.floor(rnd() * tons.length)])); n++; }
   tufos.count = n; tufos.renderOrder = 2; g.add(tufos);
   // sombras de contato: a arca, a rampa e o Noé não ficam boiando no ar
@@ -933,7 +994,13 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
     lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matN); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
     const base = new THREE.Mesh(esf, matN2); base.position.set(0, 0.0, 0.01); base.scale.set(0.34, 0.075, 0.14); nv.add(base);
     nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.y0 = y; nuvens.add(nv); }); nuvens.visible = false; g.add(nuvens);
-  g.userData = { capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
+  // tempo bom: sol sorridente e nuvens branquinhas antes da chuva; somem com a chuva e voltam depois dela
+  const bom = new THREE.Group(), matB = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x9aa6b4, transparent: true, opacity: 1 });
+  [[0.95, 0.88, -0.62, 0.62], [-0.25, 0.98, -0.95, 0.5], [1.4, 0.74, 0.05, 0.42]].forEach(([x, y, z, e], i) => { const nv = new THREE.Group();
+    lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matB); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
+    nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.x0 = x; bom.add(nv); });
+  const sol = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaSol(), transparent: true, depthWrite: false })); sol.position.set(-1.0, 0.92, -0.72); sol.scale.set(0.4, 0.4, 1); sol.name = 'sol'; bom.add(sol); g.add(bom);
+  g.userData = { bom, matB, sol, capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
 }
 const VEL_BICHO = 0.42; // unidades por segundo
@@ -976,8 +1043,19 @@ function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fi
   if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = u.matN2.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); n.scale.y = n.scale.x * (0.96 + 0.04 * Math.sin(agora / 700 + i * 2)); }); }
   return inten;
 }
+function texturaSol() { // sol de desenho: raios, rosto sorrindo e bochechas
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), C = 128;
+  g.fillStyle = '#ffb21f'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.beginPath(); g.moveTo(C + Math.cos(a - 0.13) * 74, C + Math.sin(a - 0.13) * 74); g.lineTo(C + Math.cos(a) * 124, C + Math.sin(a) * 124); g.lineTo(C + Math.cos(a + 0.13) * 74, C + Math.sin(a + 0.13) * 74); g.closePath(); g.fill(); }
+  g.fillStyle = '#ffd93b'; g.strokeStyle = '#1d1b20'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 78, 0, 2 * Math.PI); g.fill(); g.stroke();
+  g.fillStyle = '#ff9a7a'; [[-40, 20], [40, 20]].forEach(([dx, dy]) => { g.beginPath(); g.ellipse(C + dx, C + dy, 13, 8, 0, 0, 2 * Math.PI); g.fill(); });
+  g.fillStyle = '#1d1b20'; [[-26, -12], [26, -12]].forEach(([dx, dy]) => { g.beginPath(); g.ellipse(C + dx, C + dy, 7, 10, 0, 0, 2 * Math.PI); g.fill(); });
+  g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); g.arc(C, C + 6, 30, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
 function animarClima(terra, t, nivel, chuva) {
   const u = terra.userData, R = u.rect;
+  if (u.bom) { const a = Math.max(0, 1 - chuva * 2.2); u.bom.visible = a > 0.02; u.matB.opacity = a; u.sol.material.opacity = a; // tempo bom antes e depois da chuva
+    if (u.bom.visible) { u.sol.material.rotation = 0.06 * Math.sin(t * 0.8); u.bom.children.forEach((n, i) => { if (n.userData.x0 !== undefined) n.position.x = n.userData.x0 + 0.06 * Math.sin(t * 0.12 + i * 2); }); } }
   u.respingos.forEach((m, i) => { const ud = m.userData, ativo = i < Math.floor(u.respingos.length * chuva); if (!ativo) { m.visible = false; return; }
     const f = t / ud.per + ud.fase, ciclo = Math.floor(f), q = f - ciclo;
     if (ciclo !== ud.ciclo) { ud.ciclo = ciclo; let x, z, k = 0; do { x = R.x0 + 0.08 + Math.random() * (R.x1 - R.x0 - 0.16); z = R.z0 + 0.08 + Math.random() * (R.z1 - R.z0 - 0.16); } while (Math.abs(x) < 0.75 && Math.abs(z) < 0.28 && ++k < 6); ud.x = x; ud.z = z; }
@@ -1006,6 +1084,14 @@ function proximoEvento() {
     SOM.falar('VO_H04B_SOBE').then(() => { if (historia === h) h.tChuva = Math.max(h.t0 + Math.max(5000, emb + 600) * LENTO, performance.now() + 350); }); }
 }
 $('#bProximo').addEventListener('click', proximoEvento);
+function pularFim() { // vai direto ao fim: todos a bordo, a arca boiando, a chuva passando; o arco-íris e a última fala continuam
+  const h0 = historia; if (!h0 || h0.fimChuva) return; const agora = performance.now();
+  SOM.calar(); // uma história nova: as falas e os tempos que estavam esperando a antiga param sozinhos
+  historia = { ...h0, etapa: 3, t0: agora - 60000, tChuva: agora - 30000, tFim: agora, livre: false, fimEmbarque: h0.fimEmbarque || agora, fimChuva: 0, tArco: 0, arcoFeito: false };
+  tSubida = agora - 20000; DUR_SUBIDA = 5200;
+  $('#bProximo').disabled = true; $('#bProximo').classList.remove('chama'); $('#bFim').hidden = true; status('Todos a bordo!', 'A arca já está boiando', true);
+}
+$('#bFim').addEventListener('click', pularFim);
 if (DEBUG) window.__historia = () => ({ h: historia, b: arcaAR && arcaAR.userData.terra ? arcaAR.userData.terra.userData.bichos.map(b => [b.userData.fila.m, ...b.position.toArray().map(v => +v.toFixed(2)), b.visible]) : null });
 // ---------- a arca 3D de brinquedo, pintada com as cores lidas de cada parte do desenho ----------
 const TINTA = '#1d1b20', PAPEL = [246, 243, 236], MADEIRA = [201, 152, 98], ESCURO = [56, 40, 32];
@@ -1095,7 +1181,6 @@ function contornoCaixa(mesh, esp = 0.004) { // para caixas: a mesma caixa um pou
 }
 function geo(pos, uv, ind) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(ind); g.computeVertexNormals(); return g; }
 // casco: barriga cheia, as duas pontas sobem bem (formato de arca), borda levemente aberta
-const CL = 1.44, CB = 0.32; // CB maior (12/11): casco mais largo, convés com lugar para os bichos
 const quilhaY = s => -0.13 + 0.21 * Math.pow(Math.abs(s), 3.2);
 const bordaY = u => { const s = 2 * u - 1; return 0.22 + 0.15 * s * s + 0.07 * Math.pow(s, 8); };
 function meiaBoca(s) { return CB * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(s), 2.1)), 0.5); }
@@ -1275,8 +1360,9 @@ function colocarArcaAR(arca, cores) {
   if (arco) { arco.position.set(0.3, 0, retanguloAR().z0 + 0.12); g.add(arco); g.userData.arco = arco; }
   ancora.add(g); tSubida = performance.now(); DUR_SUBIDA = 1800;
 }
+const tamTela = () => DEMO && GIRO ? [innerHeight, innerWidth] : [innerWidth, innerHeight]; // a demonstração gira junto com a tela; a câmera, não
 function projecaoAR() {
-  if (DEMO && camDemo) { camDemo.aspect = innerWidth / innerHeight; camDemo.updateProjectionMatrix(); camAR.projectionMatrix.copy(camDemo.projectionMatrix); camAR.projectionMatrixInverse.copy(camDemo.projectionMatrixInverse); return; }
+  if (DEMO && camDemo) { const [w, h] = tamTela(); camDemo.aspect = w / h; camDemo.updateProjectionMatrix(); camAR.projectionMatrix.copy(camDemo.projectionMatrix); camAR.projectionMatrixInverse.copy(camDemo.projectionMatrixInverse); return; }
   const Wc = innerWidth, Hc = innerHeight, sc = Math.max(Wc / VW, Hc / VH), k = sc * VW / NW, ox = (Wc - VW * sc) / 2, oy = (Hc - VH * sc) / 2;
   const f = focalAtual(), cxK = NW / 2, cyK = NH / 2, n = 10, fa = 100000;
   const a = 2 * k * f / Wc, b = 2 * (k * cxK + ox) / Wc - 1, d = 2 * k * f / Hc, c = 1 - 2 * (k * cyK + oy) / Hc;
@@ -1312,7 +1398,7 @@ const mInv = new THREE.Matrix4(); let tDesenho = 0;
 const LENTO = DEBUG ? +((location.search.match(/lento=([\d.]+)/) || [0, 1])[1]) : 1; // só para gravar vídeo de teste em câmera lenta
 function desenharAR() {
   if (!rAR || !$('#camera').classList.contains('ativa')) return;
-  rAR.setSize(innerWidth, innerHeight, false); projecaoAR();
+  rAR.setSize(...tamTela(), false); projecaoAR();
   const agora = performance.now(), dq = Math.min(0.25, Math.max(0.001, (agora - (tDesenho || agora)) / 1000)), kq = 1 - Math.exp(-dq / 0.05); tDesenho = agora; // alisa em ~50 ms, em qualquer fps
   if (DEMO && camDemo) { aplicarZoom(ctlDemo, camDemo); ctlDemo.update(); camDemo.updateMatrixWorld(); mDemo.multiplyMatrices(camDemo.matrixWorldInverse, P2W); mDemo.decompose(pA, qA, sA); pV.copy(pA); qV.copy(qA); sV.copy(sA); poseVista = true; ultimaVez = agora; }
   if (poseVista) { pV.lerp(pA, kq); qV.slerp(qA, kq); sV.lerp(sA, kq); ancora.matrix.compose(pV, qV, sV); ancora.matrixWorldNeedsUpdate = true;
@@ -1371,7 +1457,7 @@ async function abrirCamera() {
 function tirarArcaAR() { if (arcaAR) { ancora.remove(arcaAR); descartar(arcaAR); arcaAR = null; } if (ancora) ancora.visible = false; poseVista = false; sumiuEm = 0; }
 function recomecar() {
   tirarArcaAR(); MOLDE = null; TEXF = null; fotos = []; estavel = 0; ultimaH = null; lendo = true; poseVista = false;
-  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; $('#bProximo').classList.remove('chama'); historia = null; $('#guia').classList.remove('some');
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = true; $('#bFim').hidden = true; $('#bProximo').classList.remove('chama'); historia = null; $('#guia').classList.remove('some');
   $('#prog').style.display = 'none'; $('#prog i').style.width = '0'; achouDesde = 0; disseLendo = false; tAviso = performance.now();
   status('Aponte para o quebra-cabeça inteiro', 'Deixe ele dentro do quadro pontilhado');
   SOM.calar(); if (!DEMO) SOM.falar('VO_MIRE');
@@ -1618,7 +1704,7 @@ function terminarLeitura() {
   lendo = false; const t0c = performance.now(); const r = calcularCores(fotos); if (DEBUG) console.warn('tempo cores ms', Math.round(performance.now() - t0c)); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras; window.__arcaCores = r;
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
-  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false; $('#bFim').hidden = false;
   status('A arca está pronta em terra firme', 'Toque em Próximo para todos subirem na arca', true);
   narrarComeco(historia);
 }
@@ -1909,11 +1995,11 @@ function abrir3D(cores) {
     $('#cena').addEventListener('webglcontextlost', e => { e.preventDefault(); perdeuContexto(); }); r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.base], devicePixelRatio));
     r3.outputColorSpace = THREE.SRGBColorSpace; r3.shadowMap.enabled = true; r3.shadowMap.type = THREE.PCFSoftShadowMap;
     cena3 = new THREE.Scene(); cena3.fog = new THREE.Fog(0xcfe9ff, 7, 18); ambiente(r3, cena3);
-    cena3.add(criarCeu()); cena3.add(criarNuvens());
+    cena3.add(criarCeu()); cena3.add(criarNuvens()); { const sol = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaSol(), transparent: true, depthWrite: false, fog: false })); sol.position.set(-4.6, 3.4, -9.5); sol.scale.set(2.2, 2.2, 1); cena3.add(sol); } // o sol sorridente lá no céu
     cam3 = new THREE.PerspectiveCamera(36, 1, 0.05, 60); cam3.position.set(-0.75, 0.55, 1.75);
     const sol = luzes(cena3); cena3.userData.sol = sol; sol.castShadow = QUAL.base > 0; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.015; Object.assign(sol.shadow.camera, { left: -1.2, right: 1.2, top: 1.2, bottom: -1.2 });
     const esp = criarEspuma(); cena3.add(esp); cena3.userData.espuma = esp;
-    ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; }); zoomSuave(ctl3, cam3, $('#ver3d'));
+    toqueDeitado($('#cena')); ctl3 = new OrbitControls(cam3, $('#cena')); ctl3.target.set(0.02, 0.24, 0); ctl3.enableDamping = true; ctl3.minDistance = 1.0; ctl3.maxDistance = 5; ctl3.maxPolarAngle = Math.PI * 0.47; ctl3.enablePan = false; ctl3.addEventListener('start', () => { mexeu3 = true; }); zoomSuave(ctl3, cam3, $('#ver3d'));
   }
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
@@ -1970,6 +2056,7 @@ function coresExemplo() {
 // ---------- botões ----------
 $('#versao').textContent = 'Protótipo · versão ' + VERSAO;
 $('#bCamera').onclick = abrirCamera;
+$('#bExemplo').addEventListener('click', pedirSensor, true); $('#bCamera').addEventListener('click', pedirSensor, true);
 $('#bExemplo').onclick = async () => { await carregarDados(); if (!PROM_PERS) PROM_PERS = carregarPersonagens(); await PROM_PERS; abrir3D(coresExemplo()); $('#bHistoria').hidden = false; };
 // do exemplo para a história: abre a demonstração (o quebra-cabeça pintado na mesa, girando com o dedo ou o mouse)
 $('#bHistoria').onclick = () => { // vai direto para a história, no mesmo toque (assim o som já fica liberado no celular)
@@ -2015,6 +2102,7 @@ function prepararDemo(img) {
   gr.addColorStop(0, '#a9cbe6'); gr.addColorStop(0.55, '#dbe8f1'); gr.addColorStop(1, '#f2f1ec'); gc.fillStyle = gr; gc.fillRect(0, 0, 4, 256);
   cenaAR.background = new THREE.CanvasTexture(ceu); cenaAR.background.colorSpace = THREE.SRGBColorSpace; $('#video').style.display = 'none'; $('#ar').style.pointerEvents = 'auto'; $('#ar').style.touchAction = 'none';
   camDemo = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 80); camDemo.position.set(0.35, 2.15, 3.3);
+  if (!$('#ar').__deitado) { $('#ar').__deitado = true; toqueDeitado($('#ar')); }
   ctlDemo = new OrbitControls(camDemo, $('#ar')); ctlDemo.target.set(0.15, 0.1, 0.25); ctlDemo.enableDamping = true; ctlDemo.dampingFactor = 0.08;
   ctlDemo.maxPolarAngle = Math.PI * 0.46; ctlDemo.minDistance = 1.2; ctlDemo.maxDistance = 8; ctlDemo.enablePan = false; ctlDemo.update(); zoomSuave(ctlDemo, camDemo, $('#camera'));
   const S = 1 / K_AR, [cx, cy] = centroAR(); // pixel do quebra-cabeça -> mesmas unidades da arca (x direita, y para cima, z para quem olha)
@@ -2026,7 +2114,7 @@ function iniciarDemo() { // lê as cores da foto como o app faz com a câmera e 
   lendo = false; const r = calcularCores(fotos); coresAtuais = r.cores; coresAtuais.mar = r.mar; coresAtuais.texturas = r.texturas; coresAtuais.tiras = r.tiras;
   arcaAtual = criarArca(coresAtuais); colocarArcaAR(arcaAtual, coresAtuais);
   $('#guia').classList.add('some'); $('#prog').style.display = 'none';
-  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false;
+  $('#bDeNovo').hidden = true; $('#bVer3d').hidden = true; $('#bProximo').hidden = false; $('#bProximo').disabled = false; $('#bFim').hidden = false;
   status('A arca está pronta em terra firme', 'Toque em Próximo para todos subirem · arraste para girar', true);
   $('#bProximo').classList.remove('chama'); SOM.calar(); narrarComeco(historia);
 }
