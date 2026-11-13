@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.38 · 13/11/2026';
+const VERSAO = '0.39 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -202,6 +202,7 @@ const FALAS = { // código do arquivo: [texto da legenda, duração em s, pedaç
   VO_X01_GOLFINHO: ['Olha! Um golfinho pulando!', 2.01],
   VO_X02_GAIVOTAS: ['E lá vão as gaivotas, voando sobre o mar!', 3.27] };
 const esperar = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+const SEM_LEGENDA = !/[?&]legenda=1/.test(location.search);
 const SOM = (() => {
   let ctx = null, mestre, gMus, gVoz, gEf, prom = null, promVoz = null, mus = null, querMus = false, destravado = false, ligado = true, telaAtual = 'inicio';
   let an = null, atual = null, serie = 0, esperando = [], alvoM = -1, chuvaA = 0, laco = {}, ruidoB = null;
@@ -246,7 +247,7 @@ const SOM = (() => {
     if (Math.abs(v - alvoM) < 0.004) return; const desce = v < alvoM; alvoM = v; gMus.gain.setTargetAtTime(v, ctx.currentTime, desce ? 0.1 : 0.7);
   }
   // ----- falas: uma de cada vez; sem som (ou sem o arquivo) a legenda fica o mesmo tempo na tela e a história anda igual -----
-  function legenda(txt) { const el = $('#legenda'); if (!el) return; if (txt) { el.textContent = txt; el.classList.add('on'); } else el.classList.remove('on'); }
+  function legenda(txt) { const el = $('#legenda'); if (!el || SEM_LEGENDA) return; if (txt) { el.textContent = txt; el.classList.add('on'); } else el.classList.remove('on'); } // 13/11: a legenda saiu (não acompanhava a voz); volta com ?legenda=1
   function legendaPartes(a, f) { // a legenda acompanha a fala: cada pedaço aparece quando a Cleo começa a dizer ele
     const lat = ctx && ligado && ctx.state === 'running' ? Math.min(0.5, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; // o som sai do alto-falante um pouco depois (iPhone, fone bluetooth)
     const ps = f[2] || [[0, f[0]]]; legenda(ps[0][1]); a.leg = ps.slice(1).map(([t, txt]) => setTimeout(() => { if (atual === a) legenda(txt); }, (t + lat) * 1000)); }
@@ -813,6 +814,7 @@ const demoSemPintura = () => (/[?&]demo=1/.test(location.search) || window.ARCA_
 function montarBicho(nome, mapa, cores, escala) { // mapa: parte -> região do desenho (ou lista de regiões, ou cor fixa)
   const G = BICHOS_G[nome], raiz = new THREE.Group(); let map = G.tex;
   if (cores && !demoSemPintura()) { const cor = G.partes.map(p => { if (!p) return null; const m = mapa[p]; if (m === undefined) return null; return Array.isArray(m) ? corDeVarias(cores, m, p === 'corpo' || p === 'pelo' ? 0.3 : 0.05) : corR(cores, m); });
+    if (nome === 'girafa') { const it = G.partes.indexOf('topete'), ic = G.partes.indexOf('crina'); if (it >= 0 && cor[ic]) cor[it] = cor[ic]; } // o topete entre os chifres é crina também
     if (nome === 'zebra') { const il = G.partes.indexOf('listras'), ic = G.partes.indexOf('crina'), cinza = c => { if (!c) return false; const l = (c[0] + c[1] + c[2]) / 3; return Math.max(...c) - Math.min(...c) < 32 && l > 55 && l < 215; };
       if (cinza(cor[il]) && cor[ic] && !cinza(cor[ic]) && !(Math.min(...cor[ic]) > 215)) cor[il] = cor[ic]; } // listra cinza (mal lida ou caneta fraca): fica da cor da crina
     map = texturaRecolorida(G, cor, JSON.stringify(cor)); }
