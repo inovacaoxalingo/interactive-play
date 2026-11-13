@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.41 · 13/11/2026';
+const VERSAO = '0.42 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -683,7 +683,7 @@ async function carregarPersonagens() {
   if (PERSONAGENS) return;
   const tudo = {};
   const promNoe = carregarNoe().catch(e => { console.warn('[noe]', e); });
-  const promGir = Promise.all(['girafa', 'zebra', 'elefante', 'macaco'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
+  const promGir = Promise.all(['girafa', 'zebra', 'elefante', 'macaco', 'leao'].map(n => carregarBicho(n).catch(e => { console.warn('[' + n + ']', e); })));
   for (const arq of ['assets/mar.json']) { // cada arquivo traz seus personagens e um binário próprio
     try { const d = await fetch(arq).then(r => r.json());
       const bruto = Uint8Array.from(atob(d._bin), c => c.charCodeAt(0));
@@ -779,8 +779,8 @@ function montarPersonagem(d, mapa, cores, escala) { // d: peças do personagem; 
 }
 // ---------- bichos do Tripo (assets/<nome>.glb + <nome>_regioes.png): mesma ideia do Noé, sem esqueleto ----------
 const BICHOS_G = {};
-const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'], elefante: [null, 'corpo', 'orelha', 'unhas'], macaco: [null, 'pelo', 'claro'] }; // índice = valor/16 no PNG
-const DESENHO_BICHO = m => DADOS[m + 's']; // DADOS.girafas, DADOS.zebras: as regiões de cada um no desenho
+const BICHO_PARTES = { girafa: [null, 'corpo', 'manchas', 'crina', 'chifres', 'topete', 'focinho', 'orelha'], zebra: [null, 'corpo', 'listras', 'crina', 'focinho', 'orelha'], elefante: [null, 'corpo', 'orelha', 'unhas'], leao: [null, 'corpo', 'juba', 'orelha'], macaco: [null, 'pelo', 'claro'] }; // índice = valor/16 no PNG
+const DESENHO_BICHO = m => m === 'leao' ? DADOS.leoes : DADOS[m + 's']; // DADOS.girafas, DADOS.zebras: as regiões de cada um no desenho
 async function carregarBicho(nome) {
   const [g, imR] = await Promise.all([carregarGLB(`assets/${nome}.glb`),
     new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = `assets/${nome}_regioes.png`; })]);
@@ -910,11 +910,13 @@ const XR = -0.5, PE_RAMPA = 0.81, TOPO_RAMPA = [XR, 0.43, 0.24 * CB / 0.32], ARC
 const FILA = [{ m: 'macaco', g: 0, h: 0.21, x: -0.64, z: 0.93, atraso: 0, vel: 1.6 }, { m: 'macaco', g: 1, h: 0.2, x: -0.8, z: 0.95, atraso: 0.3, vel: 1.6 }, // macacos (12/11): correm na frente de todos
   { m: 'girafa', g: 0, h: 0.56, x: -1.19, z: 0.86, atraso: 0.8, vel: 1.25 }, { m: 'girafa', g: 1, h: 0.54, x: -1.19, z: 0.58, atraso: 1.6, vel: 1.25 },
   { m: 'zebra', g: 0, h: 0.37, x: -0.1, z: 0.92, atraso: 3.7, vel: 1.8, yaw: -Math.PI / 2 }, { m: 'zebra', g: 1, h: 0.36, x: -0.08, z: 0.64, atraso: 4.1, vel: 1.8, yaw: -Math.PI / 2 },
-  { m: 'elefante', g: 0, h: 0.44, x: 0.38, z: 0.88, atraso: 4.2, vel: 1.25, yaw: -Math.PI / 2 }, { m: 'elefante', g: 1, h: 0.42, x: 0.4, z: 0.6, atraso: 4.9, vel: 1.25, yaw: -Math.PI / 2 }]; // elefantes (12/11): depois das zebras
+  { m: 'elefante', g: 0, h: 0.44, x: 0.38, z: 0.88, atraso: 4.2, vel: 1.25, yaw: -Math.PI / 2 }, { m: 'elefante', g: 1, h: 0.42, x: 0.4, z: 0.6, atraso: 4.9, vel: 1.25, yaw: -Math.PI / 2 },
+  { m: 'leao', g: 0, h: 0.34, x: 0.78, z: 0.76, atraso: 5.5, vel: 1.4, yaw: -Math.PI / 2 }]; // o leão (13/11): por último, depois dos elefantes // elefantes (12/11): depois das zebras
 // como no desenho: as girafas na proa, atrás do Noé, e as zebras na popa (o beiral do telhado não deixa ninguém alto no meio)
 const CONVES = [{ m: 'girafa', g: 0, h: 0.44, x: -0.6, z: -0.1, yaw: -0.95 }, { m: 'girafa', g: 1, h: 0.48, x: -0.48, z: -0.16, yaw: -0.75 },
   { m: 'zebra', g: 0, h: 0.31, x: 0.46, z: -0.15, yaw: 0.35 }, { m: 'zebra', g: 1, h: 0.31, x: 0.61, z: -0.12, yaw: 1.1 },
   { m: 'elefante', g: 0, h: 0.32, x: 0.44, z: 0.15, yaw: 0.45 }, { m: 'elefante', g: 1, h: 0.3, x: 0.56, z: 0.07, yaw: 0.85 },
+  { m: 'leao', g: 0, h: 0.25, x: -0.02, z: 0.262, yaw: -Math.PI / 2 }, // o leão no corredor da frente, entre a cabine e a borda, olhando para a proa
   { m: 'macaco', g: 0, h: 0.2, x: -0.12, y: 0.712, z: 0.02, yaw: 0.25 }, { m: 'macaco', g: 1, h: 0.19, x: 0.16, y: 0.712, z: 0.0, yaw: -0.3 }]; // os macacos em cima do telhado, como no desenho
 function rndSem(sem) { return () => (sem = (sem * 48271) % 2147483647) / 2147483647; }
 function texturaCapim(w, d, M) { // gramado pintado: manchas claras e escuras, folhinhas, florzinhas e borda de tufos (fora dela é transparente)
@@ -2109,7 +2111,7 @@ function coresExemplo() {
   (DADOS.girafas || []).forEach(g => { poe(g.corpo, [250, 208, 50]); poe(g.manchas, [233, 120, 40]); poe([g.crina, g.chifres, g.topete], [160, 80, 40]); poe(g.focinho, [246, 220, 170]); poe(g.orelha, [240, 160, 170]); });
   (DADOS.zebras || []).forEach((z, i) => { poe(z.corpo, [246, 243, 236]); poe([z.listras, z.crina], i ? [134, 70, 176] : [40, 40, 44]); poe(z.focinho, [170, 172, 178]); poe(z.orelha, [240, 160, 170]); });
   (DADOS.elefantes || []).forEach((e, i) => { poe(e.corpo, i ? [233, 98, 160] : [120, 150, 190]); poe(e.orelha, [240, 160, 170]); poe(e.unhas, [246, 236, 210]); });
-  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); }); poe(DADOS.sol, [255, 205, 40]); (DADOS.passaros || []).forEach((p, k) => { const c = PASSARO_PADRAO[k % PASSARO_PADRAO.length]; if (p.corpo !== p.asa) poe(p.asa, c.asa); if (p.corpo !== p.barriga) poe(p.barriga, c.barriga); poe(p.bico, c.bico); poe(p.corpo, c.corpo); });
+  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); }); (DADOS.leoes || []).forEach(l => { poe(l.corpo, [250, 190, 60]); poe(l.juba, [214, 104, 38]); poe(l.orelha, [240, 160, 170]); }); poe(DADOS.sol, [255, 205, 40]); (DADOS.passaros || []).forEach((p, k) => { const c = PASSARO_PADRAO[k % PASSARO_PADRAO.length]; if (p.corpo !== p.asa) poe(p.asa, c.asa); if (p.corpo !== p.barriga) poe(p.barriga, c.barriga); poe(p.bico, c.bico); poe(p.corpo, c.corpo); });
   return DADOS.regioes.map(id => mar[id] || pers[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
