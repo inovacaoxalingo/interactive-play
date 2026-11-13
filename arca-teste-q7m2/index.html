@@ -141,7 +141,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '0.40 · 13/11/2026';
+const VERSAO = '0.41 · 13/11/2026';
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
   // celulares de entrada (Galaxy A03 Core, A13…): pouca memória ou GPU fraca começam no nível baixo/médio
@@ -1014,7 +1014,8 @@ function criarTerra(cores, arca) { // tudo o que existe antes do dilúvio
     lobos.forEach(([a, b, c, rr]) => { const m = new THREE.Mesh(esf, matB); m.position.set(a, b, c); m.scale.setScalar(rr); nv.add(m); });
     nv.position.set(x, y, z); nv.scale.setScalar(e); nv.userData.x0 = x; bom.add(nv); });
   const sol = solEmPe(corDoSol(cores), 0.4); sol.position.set(-1.0, 0.92, -0.72); bom.add(sol); g.add(bom);
-  g.userData = { bom, matB, sol, capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
+  const passaros = criarPassaros(cores); g.add(passaros);
+  g.userData = { bom, matB, sol, passaros, capim, tufos, apoios, rampa, sombras: [sArca, sRampa], sNoe, bichos, bichosArca, noeChao, noeArca, chuva, vel, LG, respingos, nuvens, matN, matN2, rect: r, pe: [XR + 0.1, 0, PE_RAMPA + 0.02], topo: TOPO_RAMPA, dentro: [XR, 0.44, 0.04] };
   return g;
 }
 const VEL_BICHO = 0.42; // unidades por segundo
@@ -1057,6 +1058,34 @@ function animarChuva(terra, agora, dtq) { // intensidade sobe quando começa, fi
   if (u.nuvens.visible) { const a = fim >= 0 ? Math.max(0, 1 - fim / 4) : Math.min(1, sc / 1.5); u.matN.opacity = u.matN2.opacity = 0.95 * a; u.nuvens.children.forEach((n, i) => { n.position.x += 0.02 * dtq; n.position.y = n.userData.y0 + 0.02 * Math.sin(agora / 1000 + i); n.scale.y = n.scale.x * (0.96 + 0.04 * Math.sin(agora / 700 + i * 2)); }); }
   return inten;
 }
+// ---------- passarinhos: os do desenho, com as cores que a criança pintou, voando na frente da arca quando faz sol ----------
+const PASSARO_PADRAO = [{ corpo: [96, 186, 72], asa: [28, 142, 84], barriga: [250, 208, 50], bico: [246, 133, 36] }, { corpo: [246, 133, 36], asa: [226, 52, 48], barriga: [250, 208, 50], bico: [250, 208, 50] }, { corpo: [54, 162, 226], asa: [40, 82, 170], barriga: [246, 236, 200], bico: [246, 133, 36] }];
+function criarPassaros(cores, tam = 1) {
+  const g = new THREE.Group(); g.name = 'passaros'; const sem = c => !c || (Math.min(...c) > 215 && Math.max(...c) - Math.min(...c) < 22);
+  const lista = DADOS.passaros || [];
+  lista.forEach((p, k) => { const pad = PASSARO_PADRAO[k % PASSARO_PADRAO.length], cor = {};
+    for (const parte of ['corpo', 'asa', 'barriga', 'bico']) { const c = cores ? corR(cores, p[parte]) : null; cor[parte] = sem(c) ? null : c; }
+    cor.corpo = cor.corpo || pad.corpo; cor.asa = cor.asa || cor.corpo; cor.barriga = cor.barriga || pad.barriga; cor.bico = cor.bico || pad.bico;
+    const mat = c => new THREE.MeshStandardMaterial({ color: cor3(c), roughness: 0.6, envMapIntensity: 0.4 }), esf = (r, sx, sy, sz, m, x, y, z) => { const e = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), m); e.scale.set(sx, sy, sz); e.position.set(x, y, z); return e; };
+    const ave = new THREE.Group(), mc = mat(cor.corpo), ma = mat(cor.asa);
+    ave.add(esf(1, 1, 0.78, 0.78, mc, 0, 0, 0), esf(0.62, 1, 1, 1, mc, 0.72, 0.42, 0), esf(1, 0.72, 0.55, 0.62, mat(cor.barriga), 0.18, -0.22, 0));
+    const bico = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.42, 10), mat(cor.bico)); bico.rotation.z = -Math.PI / 2; bico.position.set(1.42, 0.36, 0); ave.add(bico);
+    const branco = new THREE.MeshBasicMaterial({ color: 0xffffff }), preto = new THREE.MeshBasicMaterial({ color: 0x1d1b20 });
+    for (const z of [1, -1]) { ave.add(esf(0.15, 1, 1, 1, branco, 1.02, 0.6, z * 0.4), esf(0.085, 1, 1, 1, preto, 1.1, 0.62, z * 0.49)); }
+    ave.add(esf(0.13, 1, 1, 1, mc, 0.66, 1.06, 0.05), esf(0.11, 1, 1, 1, mc, 0.5, 1.02, -0.04)); // o topetinho
+    const cauda = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.8, 4), ma); cauda.scale.set(1, 1, 0.25); cauda.rotation.z = Math.PI / 2 + 0.25; cauda.position.set(-1.15, 0.15, 0); ave.add(cauda);
+    ave.userData.asas = [1, -1].map(z => { const piv = new THREE.Group(); piv.position.set(0.05, 0.35, z * 0.5); const w = esf(1, 0.62, 0.09, 0.62, ma, 0, 0, z * 0.55); w.rotation.y = z * 0.35; piv.add(w); piv.userData.z = z; ave.add(piv); return piv; });
+    ave.scale.setScalar(0.06 * tam * (k === 2 ? 0.8 : 1)); ave.userData.k = k; g.add(ave); });
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+function animarPassaros(g, t, esc = 1) { // voam em "oito" na frente da arca, batendo as asas e às vezes planando
+  g.children.forEach(ave => { const k = ave.userData.k, w = 0.32 + 0.05 * k, f = t * w + k * 2.1, A = (1.05 + 0.15 * k) * esc;
+    const x = A * Math.sin(f), z = (0.62 + 0.12 * k + 0.32 * Math.sin(2 * f)) * esc, y = (0.72 + 0.1 * k + 0.05 * Math.sin(t * 1.3 + k)) * esc;
+    const vx = A * w * Math.cos(f), vz = 0.64 * w * Math.cos(2 * f) * esc; ave.position.set(x, y, z); ave.rotation.set(0, Math.atan2(-vz, vx), -0.25 * Math.sin(2 * f) * Math.sign(vx));
+    const plana = Math.sin(t * 0.7 + k * 1.9) > 0.55, bat = plana ? 0.12 : 0.75 * Math.sin(t * 15 + k * 2);
+    ave.userData.asas.forEach(a => { a.rotation.x = -a.userData.z * bat; }); });
+}
 function corDoSol(cores) { // a cor que a criança pintou no sol do desenho (sem pintura: amarelo)
   const c = cores && DADOS.sol !== undefined ? corR(cores, DADOS.sol) : null;
   return c && !(Math.min(...c) > 215 && Math.max(...c) - Math.min(...c) < 22) ? c : [255, 217, 59];
@@ -1082,6 +1111,7 @@ function texturaSol(cor = [255, 217, 59]) { // sol de desenho com a cor pintada:
 function animarClima(terra, t, nivel, chuva) {
   const u = terra.userData, R = u.rect;
   if (u.bom) { const a = Math.max(0, 1 - chuva * 2.2); u.bom.visible = a > 0.02; u.matB.opacity = a; u.sol.material.opacity = a; // tempo bom antes e depois da chuva
+    if (u.passaros) { u.passaros.visible = a > 0.5; if (u.passaros.visible) animarPassaros(u.passaros, t); } // com chuva os passarinhos se escondem
     if (u.bom.visible) { u.sol.userData.giro = 0.06 * Math.sin(t * 0.8); u.bom.children.forEach((n, i) => { if (n.userData.x0 !== undefined) n.position.x = n.userData.x0 + 0.06 * Math.sin(t * 0.12 + i * 2); }); } }
   u.respingos.forEach((m, i) => { const ud = m.userData, ativo = i < Math.floor(u.respingos.length * chuva); if (!ativo) { m.visible = false; return; }
     const f = t / ud.per + ud.fase, ciclo = Math.floor(f), q = f - ciclo;
@@ -2031,6 +2061,7 @@ function abrir3D(cores) {
   if (mar3) { cena3.remove(mar3); descartar(mar3); } mar3 = criarMar(cores); cena3.add(mar3);
   if (arca3) { cena3.remove(arca3); descartar(arca3); } mexeu3 = false; enquadrar();
   arca3 = criarArca(cores); cena3.add(arca3);
+  if (cena3.userData.passaros) { cena3.remove(cena3.userData.passaros); descartar(cena3.userData.passaros); } cena3.userData.passaros = criarPassaros(cores, 1.3); cena3.add(cena3.userData.passaros);
   if (cena3.userData.solDesenho) { const m = cena3.userData.solDesenho.material; if (m.map) m.map.dispose(); m.map = texturaSol(corDoSol(cores)); m.needsUpdate = true; } // o sol com a cor pintada
   if (cena3.userData.vida) { cena3.remove(cena3.userData.vida); descartar(cena3.userData.vida); } { const v = criarVida({ zSalto: 0.95, yVoo: 1.35, esc: 1.5, tam: 1.15 }); if (v) { v.userData.aoEvento = tipo => { if (tipo !== 'gaivotas') SOM.efeito('splash', tipo === 'entra' ? 0.8 : 0.5); }; cena3.add(v); } cena3.userData.vida = v; }
   if (cena3.userData.arco) { cena3.remove(cena3.userData.arco); descartar(cena3.userData.arco); cena3.userData.arco = null; }
@@ -2059,6 +2090,7 @@ function anim3(tms) {
   if (c.width !== Math.round(w * r3.getPixelRatio()) || c.height !== Math.round(h * r3.getPixelRatio())) { r3.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); enquadrar(); }
   const u = mar3.userData.u; u.uT.value = t; u.uCam.value.copy(cam3.position);
   if (arca3) balancar(arca3, t);
+  if (cena3.userData.passaros) animarPassaros(cena3.userData.passaros, t, 1.5);
   if (cena3.userData.vida) animarVida(cena3.userData.vida, t, alturaMar); SOM.ambiente(0, 0.85);
   const esp = cena3.userData.espuma; if (esp) { esp.position.y = balanco.y * 0.6; esp.rotation.z = balanco.rz * 0.5; esp.material.opacity = 0.8 + 0.2 * Math.sin(t * 1.3); }
   fps3D(tms, () => { r3.setPixelRatio(Math.min(RAZAO_3D[QUAL.nivel], devicePixelRatio)); if (QUAL.nivel === 0) cena3.userData.sol.castShadow = false; });
@@ -2077,7 +2109,7 @@ function coresExemplo() {
   (DADOS.girafas || []).forEach(g => { poe(g.corpo, [250, 208, 50]); poe(g.manchas, [233, 120, 40]); poe([g.crina, g.chifres, g.topete], [160, 80, 40]); poe(g.focinho, [246, 220, 170]); poe(g.orelha, [240, 160, 170]); });
   (DADOS.zebras || []).forEach((z, i) => { poe(z.corpo, [246, 243, 236]); poe([z.listras, z.crina], i ? [134, 70, 176] : [40, 40, 44]); poe(z.focinho, [170, 172, 178]); poe(z.orelha, [240, 160, 170]); });
   (DADOS.elefantes || []).forEach((e, i) => { poe(e.corpo, i ? [233, 98, 160] : [120, 150, 190]); poe(e.orelha, [240, 160, 170]); poe(e.unhas, [246, 236, 210]); });
-  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); }); poe(DADOS.sol, [255, 205, 40]);
+  (DADOS.macacos || []).forEach(m => { poe(m.pelo, [139, 90, 43]); poe(m.claro, [242, 201, 160]); }); poe(DADOS.sol, [255, 205, 40]); (DADOS.passaros || []).forEach((p, k) => { const c = PASSARO_PADRAO[k % PASSARO_PADRAO.length]; if (p.corpo !== p.asa) poe(p.asa, c.asa); if (p.corpo !== p.barriga) poe(p.barriga, c.barriga); poe(p.bico, c.bico); poe(p.corpo, c.corpo); });
   return DADOS.regioes.map(id => mar[id] || pers[id] || pal[Math.floor(rnd() * pal.length)]);
 }
 
