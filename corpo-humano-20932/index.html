@@ -39,7 +39,7 @@
     s.dataset.idade = '4'; s.dataset.politica = politica;
     s.dataset.sub = 'Este app da Xalingo foi feito para brincar junto com o Quebra-cabeça Corpo Humano.';
     s.dataset.camera = 'A câmera só reconhece o quebra-cabeça. Nenhuma foto ou vídeo sai do aparelho. Use por pouco tempo de cada vez, para o celular não esquentar.';
-    s.dataset.guarda = 'A escolha de qualidade da imagem fica só neste aparelho.';
+    s.dataset.guarda = 'As escolhas de qualidade da imagem e de idioma ficam só neste aparelho.';
     s.dataset.para = 'para melhorar o app';
     s.onerror = falhou;
     s.onload = function () {
@@ -115,6 +115,13 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
 .menu{position:fixed;inset:0;z-index:30;overflow:auto;color-scheme:light;--azul:#164194;--azul2:#0e2c6b;color:#1b1a1f;font-family:var(--f-texto);background:linear-gradient(#eaf5ff 0,#eaf5ff 55%,#d4ebfb 100%)}
 .menu .miolo{max-width:560px;margin:0 auto;padding:max(22px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .menu .voltar-site{display:inline-flex;align-items:center;min-height:40px;margin:0 0 12px;padding:6px 14px;border-radius:999px;background:#ffffff;color:var(--azul);font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 2px 0 rgba(13,45,87,.12)}
+.menu .linha-topo{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;justify-content:space-between;margin:0 0 12px}
+.menu .linha-topo .voltar-site{margin:0}
+.idiomas{display:inline-flex;padding:3px;border-radius:999px;background:#ffffff;box-shadow:0 2px 0 rgba(13,45,87,.12)}
+.idiomas button{border:0;border-radius:999px;min-height:36px;padding:5px 13px;background:transparent;color:var(--azul);font:800 13px var(--f-texto);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.idiomas button[aria-pressed="true"]{background:var(--azul);color:#fff}
+.idiomas .curto{display:none}
+@media (max-width:440px){.idiomas .longo{display:none} .idiomas .curto{display:inline} .idiomas button{min-width:44px}}   /* no celular em pé cabem só as siglas, ao lado do link de voltar */
 .menu .marca{font-weight:800;font-size:13px;color:var(--azul);letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:8px}
 .menu .marca span{background:var(--azul);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;flex:none}
 .menu h1{font-size:30px;line-height:1.08;margin:0 0 10px;color:var(--azul2);font-weight:800}
@@ -156,6 +163,10 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
 #alterna-vista{color:#d6334a} #dancar{color:#d85f00}
 .topo{position:absolute;z-index:12;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .topo > *{pointer-events:auto}
+.topo .lado{display:flex;flex-direction:row;gap:10px}
+#idioma-app{flex-direction:column;gap:1px;color:#164194}
+#idioma-app svg{width:26px;height:26px}
+#idioma-app .cod{font:800 11px/1 var(--f-texto);letter-spacing:.05em}
 .coluna{position:absolute;z-index:10;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 82px);display:flex;flex-direction:column;gap:10px}
 .coluna.esq{left:max(10px,env(safe-area-inset-left,0px))}
 .coluna.dir{right:max(10px,env(safe-area-inset-right,0px))}
@@ -190,7 +201,7 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
 .diagnostico{position:absolute;right:8px;top:170px;margin:0;z-index:12;font:12px/1.35 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.7);color:#7dffa0;padding:6px 8px;border-radius:8px;pointer-events:none;white-space:pre}
 @media (orientation:landscape) and (max-height:520px){
   .app .legenda{top:max(10px,env(safe-area-inset-top,0px));left:calc(max(10px,env(safe-area-inset-left,0px)) + 72px);right:calc(max(10px,env(safe-area-inset-right,0px)) + 72px)}
-  .ic{width:48px;height:48px;border-radius:15px} .ic svg{width:26px;height:26px}
+  .ic{width:48px;height:48px;border-radius:15px} .ic svg{width:26px;height:26px} #idioma-app svg{width:21px;height:21px} #idioma-app .cod{font-size:10px}
   .coluna{gap:6px;bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 62px)} #corpos{gap:6px}
   .seta,.tocar{min-height:48px} .base{padding-top:18px}
 }
@@ -200,7 +211,10 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
 <body>
 <div class="menu" id="inicio">
   <div class="miolo">
-    <a class="voltar-site" href="https://inovacaoxalingo.github.io/ra/" aria-label="Voltar para a central de realidade aumentada da Xalingo">‹ Todas as experiências</a>
+    <div class="linha-topo">
+      <a class="voltar-site" href="https://inovacaoxalingo.github.io/ra/" aria-label="Voltar para a central de realidade aumentada da Xalingo">‹ Todas as experiências</a>
+      <div class="idiomas" id="idiomas" role="group" aria-label="Idioma"><button type="button" data-idioma="pt" lang="pt-BR" aria-pressed="true" aria-label="Português" title="Português"><span class="longo">Português</span><span class="curto">PT</span></button><button type="button" data-idioma="en" lang="en" aria-pressed="false" aria-label="English" title="English"><span class="longo">English</span><span class="curto">EN</span></button></div>
+    </div>
     <p class="marca"><span>Ref. 2093.2</span> Xalingo · Quebra-cabeça Corpo Humano</p>
     <h1>Monte o corpo humano e veja ele em 3D</h1>
     <p class="sub">A câmera reconhece o quebra-cabeça e mostra o corpo em pé, com os órgãos, o esqueleto e a explicação de cada parte.</p>
@@ -214,9 +228,9 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
     <button type="button" class="bt prim" id="abrir-camera">Abrir a câmera</button>
     <button type="button" class="bt sec" id="sem-camera">Ver em 3D sem câmera</button>
     <p class="erro" id="erro-camera" role="alert" hidden></p>
-    <p class="nota">Indicado para crianças a partir de 4 anos. Brinque com um adulto por perto e em um lugar seguro. Use a câmera por pouco tempo de cada vez: ligada por muito tempo, ela esquenta o celular e gasta bateria. A imagem da câmera é usada só neste aparelho para reconhecer o quebra-cabeça: nenhuma foto é enviada ou guardada. <a href="../privacidade.html" id="link-privacidade">Privacidade</a> · <a href="#" id="link-contagem">Contagem de acessos</a></p>
+    <p class="nota" id="nota-legal"><span class="txt">Indicado para crianças a partir de 4 anos. Brinque com um adulto por perto e em um lugar seguro. Use a câmera por pouco tempo de cada vez: ligada por muito tempo, ela esquenta o celular e gasta bateria. A imagem da câmera é usada só neste aparelho para reconhecer o quebra-cabeça: nenhuma foto é enviada ou guardada.</span> <a href="../privacidade.html" id="link-privacidade">Privacidade</a> · <a href="#" id="link-contagem">Contagem de acessos</a></p>
     <p class="nota qualidade"><label for="qualidade">Qualidade da imagem:</label> <select id="qualidade"><option value="auto">Automática</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa, para celulares mais antigos</option></select> <span id="qualidade-achada"></span></p>
-    <p class="nota">© Xalingo Brinquedos · versão 1.0 · 16/11/2026</p>
+    <p class="nota" id="rodape-versao">© Xalingo Brinquedos · versão 1.1 · 16/11/2026</p>
   </div>
 </div>
 <div class="app" id="app" hidden>
@@ -227,9 +241,9 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
     <div class="guia" id="guia" hidden></div>
     <div class="dica" id="dica" hidden>Aponte a câmera para um dos quebra-cabeças</div>
   </div>
-  <span class="versao">v1.0</span>
+  <span class="versao">v1.1</span>
   <div class="topo">
-    <button type="button" class="ic" id="voltar" aria-label="Voltar ao menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg></button>
+    <div class="lado"><button type="button" class="ic" id="voltar" aria-label="Voltar ao menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg></button><button type="button" class="ic" id="idioma-app" aria-label="Switch to English" title="English"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3.300 9h17.400M3.300 15h17.400M12 3c3.200 3 3.200 15 0 18M12 3c-3.200 3-3.200 15 0 18"/></g></svg><span class="cod">PT</span></button></div>
     <button type="button" class="ic" id="extras" aria-pressed="false" aria-label="Mostrar as partes extras" title="Extras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z"/></svg></button>
   </div>
   <div class="coluna esq">
@@ -265,7 +279,55 @@ html,body{height:100%;margin:0;overscroll-behavior:none}
   <button type="button" id="aj-copiar">Copiar</button><button type="button" id="aj-padrao">Padrão</button><span id="aj-aviso"></span><textarea id="aj-texto" readonly></textarea></details>
   <p id="info"></p><p id="aviso-voz"></p>
 </div>
+<script>
+/* idioma (português e inglês): ver tools/idioma-navegador.js e tools/idioma-en.js */
+(function idiomaNoNavegador(EN) {
+  var CHAVE = 'corpo-ra-idioma', ouvintes = [], originais = null, atual = 'pt', tituloPt = document.title, A = EN.ACEITE;
+  function inicial() {
+    var v = '';
+    try { var q = new URLSearchParams(location.search); v = q.get('lang') || q.get('idioma') || ''; } catch (e) { v = ''; }
+    if (!/^(pt|en)/i.test(v)) { try { v = localStorage.getItem(CHAVE) || ''; } catch (e) { v = ''; } }
+    if (!/^(pt|en)/i.test(v)) v = /^en/i.test(navigator.language || '') ? 'en' : 'pt';
+    return /^en/i.test(v) ? 'en' : 'pt';
+  }
+  function t(pt) { return atual === 'en' && Object.prototype.hasOwnProperty.call(EN.FRASES, pt) ? EN.FRASES[pt] : pt; }
+  function le(el, o) { return o === 'html' ? el.innerHTML : el.getAttribute(o); }
+  function poe(el, o, v) { if (o === 'html') el.innerHTML = v; else el.setAttribute(o, v); }
+  function poeAceite() {                               /* o aviso do adulto vem do arquivo comum do site, em português: aqui ele ganha o mesmo conteúdo em inglês */
+    var cx = document.querySelector('.xa-fundo .xa-caixa'); if (!cx) return;
+    var h = cx.querySelector('h2'), sub = cx.querySelector('.xa-sub'), itens = cx.querySelectorAll('li span:last-child'), sim = cx.querySelector('.xa-sim'), nao = cx.querySelector('.xa-nao'), rod = cx.querySelector('.xa-rod'), link = rod && rod.querySelector('a');
+    if (!h || !sub || itens.length !== 4 || !sim || !nao || !link || !rod.firstChild || rod.firstChild.nodeType !== 3) return;   /* veio noutro formato: fica como está */
+    var nos = [h, sub, itens[0], itens[1], itens[2], itens[3], sim, nao, rod.firstChild, link];
+    if (!cx.__pt) cx.__pt = nos.map(function (x) { return x.textContent; });
+    var en = [A.titulo, A.sub].concat(A.itens, [A.sim, A.nao, A.rodape + ' ', A.politica]);
+    nos.forEach(function (x, i) { x.textContent = atual === 'en' ? en[i] : cx.__pt[i]; });
+    cx.lang = atual === 'en' ? 'en' : 'pt-BR';
+  }
+  function poeTela() {
+    if (!originais) originais = EN.TELA.map(function (l) { var el = document.querySelector(l[0]); return el ? le(el, l[1]) : null; });
+    EN.TELA.forEach(function (l, i) { var el = document.querySelector(l[0]); if (el && originais[i] != null) poe(el, l[1], atual === 'en' ? l[2] : originais[i]); });
+    document.documentElement.lang = atual === 'en' ? 'en' : 'pt-BR';
+    document.title = atual === 'en' ? EN.TITULO : tituloPt;
+    Array.prototype.forEach.call(document.querySelectorAll('#idiomas button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.idioma === atual)); });
+    var cod = document.querySelector('#idioma-app .cod'); if (cod) cod.textContent = atual.toUpperCase();
+    poeAceite();
+  }
+  function muda(id) {
+    id = id === 'en' ? 'en' : 'pt'; if (id === atual) return;
+    atual = id; try { localStorage.setItem(CHAVE, id); } catch (e) { /* vale só até fechar */ }
+    poeTela();
+    ouvintes.forEach(function (f) { try { f(id); } catch (e) { console.error(e); } });
+    try { if (window.medir) window.medir('trocar_idioma', { idioma: id }); } catch (e) { /* sem contagem */ }
+  }
+  document.getElementById('idiomas').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-idioma]'); if (b) muda(b.dataset.idioma); });
+  document.getElementById('idioma-app').addEventListener('click', function () { muda(atual === 'en' ? 'pt' : 'en'); });
+  try { new MutationObserver(poeAceite).observe(document.body, { childList: true }); } catch (e) { /* sem isso o aviso fica em português */ }
+  atual = inicial(); poeTela();
+  window.Idioma = { EN: EN, t: t, muda: muda, aoMudar: function (f) { ouvintes.push(f); }, get atual() { return atual; } };
+})({"TEXTOS":{"fora":{"titulo":"the body outside","abertura":"This is our body from the outside. It has a head, a trunk, and limbs. Ready to meet each part?","partes":{"cabeca":["Head","It holds the brain, which runs the whole body.","The eyes, ears, nose, and mouth are on the head."],"olhos":["Eyes","They are for seeing.","We blink thousands of times a day to keep our eyes clean."],"orelhas":["Ears","They are for hearing.","Inside, the ear also helps you keep your balance."],"nariz":["Nose","It is for breathing and smelling.","The tiny hairs in your nose catch the dust in the air."],"boca":["Mouth","It is for eating, talking, and tasting.","The tongue tastes sweet, salty, sour, and bitter."],"cabelo":["Hair","It protects the head from the sun and the cold.","It grows a tiny bit every day."],"pescoco":["Neck","It joins the head to the trunk and lets the head turn.","Air and food pass through it."],"tronco":["Trunk","It is the middle of the body: chest, belly, and back.","The heart, the lungs, and the stomach are inside it."],"ombros":["Shoulders","They join the arms to the trunk.","The shoulder lets the arm turn in every direction."],"bracos":["Arms","They are for reaching, carrying, and hugging.","Each arm bends in three places: shoulder, elbow, and wrist."],"cotovelos":["Elbows","They bend the arms.","They work like a door hinge."],"maos":["Hands","They are for holding, feeling, and making things.","Your fingerprints are yours alone: nobody else has the same ones."],"pernas":["Legs","They hold up the body and are for walking, running, and jumping.","The strongest muscles in the body are in the legs."],"joelhos":["Knees","They bend the legs.","Without them, you could not sit, squat, or jump."],"pes":["Feet","They rest the body on the ground and keep you balanced.","Each foot has five toes, which help you not to fall."],"pele":["Skin","It covers and protects the whole body, and feels touch, heat, and cold.","It is the largest organ of the body."]}},"orgaos":{"titulo":"organs","abertura":"Now let’s look inside. Here are the organs, which work all the time to keep you alive.","partes":{"cerebro":["Brain","It runs the body: thinking, feeling, remembering, and moving.","It keeps working even while you sleep."],"olhos":["Eyes","They send pictures of what you see to the brain.","They work like two cameras."],"traqueia":["Windpipe","A tube that carries air to the lungs.","It has rings that keep it open all the time."],"pulmoes":["Lungs","They fill with air when you breathe, and pass oxygen to the blood.","There are two, one on each side of the chest."],"coracao":["Heart","It pumps blood to the whole body.","It beats without stopping, day and night."],"arterias":["Arteries","They carry blood from the heart to the body.","They are the red paths."],"veias":["Veins","They bring blood back to the heart.","They are the blue paths."],"esofago":["Food pipe","A tube that carries food from the mouth to the stomach.","It pushes food down, even if you are lying down."],"estomago":["Stomach","It mixes and squeezes the food you swallow.","It is a bag that stretches when you eat."],"figado":["Liver","It helps digest food and cleans the blood.","It is the largest gland in the body."],"delgado":["Small intestine","It takes the nutrients your body needs out of the food.","Stretched out, it is much longer than you are."],"grosso":["Large intestine","It takes the water out of what is left of the food and makes poop.","It is about one and a half meters long."]}},"esqueleto":{"titulo":"skeleton","abertura":"This is the skeleton. It holds up the body, protects the organs, and helps you move. A baby is born with about three hundred bones, and many of them join together as the baby grows.","partes":{"cranio":["Skull","It protects the brain, like a helmet.","The smallest bone in the body, the stirrup, is inside the ear."],"mandibula":["Jawbone","The bone of the chin, which holds the bottom teeth.","It is the one that moves when you chew and talk."],"coluna":["Spine","It keeps the body upright.","It is a stack of little bones called vertebrae."],"costelas":["Ribs","They protect the heart and the lungs.","There are twelve on each side."],"clavicula":["Collarbone","It joins the shoulder to the chest.","You can feel yours just below your neck."],"umero":["Humerus","The bone of the upper arm, from the shoulder to the elbow.","It is the biggest bone in the arm."],"radio":["Radius and ulna","The two bones of the forearm, from the elbow to the wrist.","They cross over each other when you turn your palm."],"ossosmao":["Hand bones","They give the hand its shape and let the fingers move.","Each hand has twenty-seven bones."],"bacia":["Hip bones","They hold up the trunk and join the legs to the body.","Doctors call them the pelvis."],"femur":["Femur","The thigh bone.","It is the biggest and strongest bone in the body."],"patela":["Kneecap","A small round bone at the front of the knee.","It protects the knee when you bend your leg."],"tibia":["Tibia and fibula","The two bones of the lower leg, from the knee to the ankle.","The tibia is the shin, which hurts when we bump it."],"ossospe":["Foot bones","They support the body and help you walk.","Each foot has twenty-six bones."]}}},"ACEITE":{"titulo":"Hello! Before you start, a note for the adult","sub":"This Xalingo app was made to play together with the Human Body Puzzle.","itens":["Recommended for ages 4 and up, with an adult nearby. With the camera on, play standing still and in a safe place.","The camera only recognizes the puzzle. No photo or video leaves the device. Use it for a short time at once, so the phone does not heat up.","No sign-up, no payment, and no advertising. The image quality choice and the language choice stay only on this device.","If you allow it, we count visits anonymously (Google Analytics, with no advertising) to improve the app."],"sim":"Allow anonymous counting and start","nao":"Start without counting","rodape":"You can change this choice whenever you want.","politica":"Privacy policy (in Portuguese)"},"TITULO":"Human Body Puzzle in 3D · Xalingo","FRASES":{"Corpo":"Body","Órgãos":"Organs","Esqueleto":"Skeleton","De novo":"Again","Pausar: ":"Pause: ","Ouvir: ":"Listen: "," de ":" of ","Abertura":"Intro","Fim":"End","Mostrar extras":"Show extras","Extras ligados":"Extras on","Abrir a câmera":"Open the camera","Abrindo a câmera…":"Opening the camera…","(neste aparelho: ":"(on this device: ","baixa":"low","média":"medium","alta":"high","Este navegador não deixa usar a câmera neste endereço. Use o botão \"Ver em 3D sem câmera\".":"This browser does not allow the camera at this address. Use the \"See it in 3D without the camera\" button.","Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão \"Ver em 3D sem câmera\".":"The camera could not be opened. Allow the camera in the browser settings and tap again, or use the \"See it in 3D without the camera\" button.","Agora é a sua vez. Toque em uma parte para ouvir de novo.":"Now it’s your turn. Tap a part to hear it again.","Hora de dançar! Dance junto com o esqueleto.":"Time to dance! Dance along with the skeleton."},"TELA":[["#inicio .voltar-site","html","‹ All experiences"],["#inicio .voltar-site","aria-label","Back to Xalingo’s augmented reality hub"],["#inicio .marca","html","\u003cspan>Ref. 2093.2\u003c/span> Xalingo · Human Body Puzzle"],["#inicio h1","html","Build the human body and see it in 3D"],["#inicio .sub","html","The camera recognizes the puzzle and shows the body standing up, with the organs, the skeleton, and an explanation of each part."],["#inicio .quadro img","alt","The two Human Body puzzles: the children on the outside and the body on the inside"],["#inicio .passos li:nth-child(1)","html","Put together one of the two puzzles and leave it in a well-lit place."],["#inicio .passos li:nth-child(2)","html","Tap “Open the camera” and point the phone at the whole puzzle."],["#inicio .passos li:nth-child(3)","html","Tap the yellow button to hear about each part."],["#aviso-nav","html","For the camera to work, open this address in \u003cb>Chrome\u003c/b> (Android) or \u003cb>Safari\u003c/b> (iPhone), and not inside Instagram, Facebook, or TikTok."],["#abrir-camera","html","Open the camera"],["#sem-camera","html","See it in 3D without the camera"],["#nota-legal .txt","html","Recommended for children aged 4 and up. Play with an adult nearby and in a safe place. Use the camera for a short time at once: left on for a long time, it heats up the phone and drains the battery. The camera image is used only on this device to recognize the puzzle: no photo is sent or stored."],["#link-privacidade","html","Privacy (in Portuguese)"],["#link-contagem","html","Visit counting"],["label[for=\"qualidade\"]","html","Image quality:"],["#qualidade option[value=\"auto\"]","html","Automatic"],["#qualidade option[value=\"alta\"]","html","High"],["#qualidade option[value=\"media\"]","html","Medium"],["#qualidade option[value=\"baixa\"]","html","Low, for older phones"],["#rodape-versao","html","© Xalingo Brinquedos · version 1.1 · November 16, 2026"],["#idiomas","aria-label","Language"],["#dica","html","Point the camera at one of the puzzles"],["#voltar","aria-label","Back to the menu"],["#voltar","title","Menu"],["#idioma-app","aria-label","Mudar para português"],["#idioma-app","title","Português"],["#extras","aria-label","Show the extra parts"],["#extras","title","Extras"],["#corpos","aria-label","Who is shown"],["#quem-menina","aria-label","Girl"],["#quem-menina","title","Girl"],["#quem-menino","aria-label","Boy"],["#quem-menino","title","Boy"],["#quem-esqueleto","aria-label","Skeleton"],["#quem-esqueleto","title","Skeleton"],["#alterna-vista","aria-label","See inside the body"],["#alterna-vista","title","Inside"],["#dancar","aria-label","Make the skeleton dance"],["#dancar","title","Dance"],["#abre-partes","aria-label","Open the list of parts"],["#abre-partes","title","Parts"],["#anterior","aria-label","Previous part"],["#proxima","aria-label","Next part"],["#pausa span","html","How about a break? Leaving the camera on for a long time heats up the phone."],["#gaveta .folha","aria-label","Parts of this explanation"],["#gaveta .cab span","html","Parts"],["#fecha-partes","aria-label","Close the list"]]});
+</script>
 <script type="module">
+const Idioma = window.Idioma, t = Idioma.t, emIngles = () => Idioma.atual === 'en', EN_TEXTOS = Idioma.EN.TEXTOS, PT_TEXTOS = {}, FALAS_DE = {}, FALAS_PEDIDAS = {}, ARQ_FALAS = { pt: 'voz/falas.json', en: 'voz/falas-en.json?v=1.1' };
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -389,6 +451,7 @@ const TEXTOS = {
     { id: 'ossospe', nome: 'Ossos do pé', frase: 'Apoiam o corpo e ajudam a andar.', curio: 'Cada pé tem vinte e seis ossos.' } ] }
 };
 const FECHO = 'Agora é a sua vez. Toque em uma parte para ouvir de novo.';
+poeConteudo();   /* se o app abriu em inglês, os textos já entram traduzidos */
 
 const paradoPeloSistema = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const estado = { corpo: 'menina', aberto: false, soBase: false, passo: 0, tocando: false };
@@ -573,9 +636,9 @@ function avisoVoz() {
     : temVoz ? 'A voz é a do navegador, só para marcar o lugar da narração gravada.' : 'Este navegador não tem voz: a explicação avança pelo tempo de leitura.';
 }
 avisoVoz();
-if (!FALAS) fetch('voz/falas.json').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { FALAS = j; avisoVoz(); } }).catch(() => { /* sem gravação: fica a voz do navegador */ });
+carregaFalas();
 function partesAtuais() { return TEXTOS[modo()].partes.filter((p) => !(estado.soBase && p.extra)); }
-function roteiro() { const M = modo(); return [{ tipo: 'abertura', chave: M + ':abertura', texto: TEXTOS[M].abertura }].concat(partesAtuais().map((p) => ({ tipo: 'parte', chave: M + ':' + p.id, parte: p, texto: p.nome + '. ' + p.frase + ' ' + p.curio })), [{ tipo: 'fecho', chave: 'fecho', texto: FECHO }]); }
+function roteiro() { const M = modo(); return [{ tipo: 'abertura', chave: M + ':abertura', texto: TEXTOS[M].abertura }].concat(partesAtuais().map((p) => ({ tipo: 'parte', chave: M + ':' + p.id, parte: p, texto: p.nome + '. ' + p.frase + ' ' + p.curio })), [{ tipo: 'fecho', chave: 'fecho', texto: t(FECHO) }]); }
 function calar() { fichaFala++; clearTimeout(tempoFala); tocador.onended = null; tocador.onerror = null; try { tocador.pause(); } catch (erro) { /* nada */ } if (temVoz) { try { window.speechSynthesis.cancel(); } catch (erro) { /* nada */ } } }
 function falar(passo, fim) {
   paraDanca(true); calar();
@@ -596,9 +659,9 @@ function falar(passo, fim) {
   function vozDoNavegador() {
   if (!temVoz) { tempoFala = setTimeout(acabou, leitura); return; }
   try {
-    const u = new SpeechSynthesisUtterance(texto); u.lang = 'pt-BR'; u.rate = 0.95;
+    const u = new SpeechSynthesisUtterance(texto); u.lang = emIngles() ? 'en-US' : 'pt-BR'; u.rate = 0.95;
     const vozes = window.speechSynthesis.getVoices() || [];
-    const v = vozes.filter((x) => /^pt[-_]BR/i.test(x.lang))[0] || vozes.filter((x) => /^pt/i.test(x.lang))[0];
+    const v = emIngles() ? vozes.filter((x) => /^en[-_]US/i.test(x.lang))[0] || vozes.filter((x) => /^en/i.test(x.lang))[0] : vozes.filter((x) => /^pt[-_]BR/i.test(x.lang))[0] || vozes.filter((x) => /^pt/i.test(x.lang))[0];
     if (v) u.voice = v;
     u.onend = () => setTimeout(acabou, 350);
     u.onerror = () => { tempoFala = setTimeout(acabou, leitura); };
@@ -629,8 +692,8 @@ function mostraPasso() {
   rotuloEl.hidden = !p; if (p) rotuloEl.textContent = p.nome;
   legendaEl.textContent = '';
   if (p) { const b = document.createElement('b'); b.textContent = p.nome + '. '; legendaEl.append(b, p.frase + ' ' + p.curio); } else legendaEl.textContent = s.texto;
-  passoEl.textContent = p ? i + ' de ' + (r.length - 2) : s.tipo === 'abertura' ? 'Abertura' : 'Fim';
-  pintaTocar(estado.tocando, i >= r.length - 1, p ? p.nome : s.tipo === 'abertura' ? { fora: 'Corpo', orgaos: 'Órgãos', esqueleto: 'Esqueleto' }[M] : 'De novo');
+  passoEl.textContent = p ? i + t(' de ') + (r.length - 2) : s.tipo === 'abertura' ? t('Abertura') : t('Fim');
+  pintaTocar(estado.tocando, i >= r.length - 1, p ? p.nome : s.tipo === 'abertura' ? t({ fora: 'Corpo', orgaos: 'Órgãos', esqueleto: 'Esqueleto' }[M]) : t('De novo'));
   for (const b of partesEl.children) {
     const ativa = !!p && b.dataset.id === p.id; b.setAttribute('aria-pressed', String(ativa));
     if (ativa && partesEl.scrollWidth > partesEl.clientWidth + 4) partesEl.scrollTo({ left: b.offsetLeft - (partesEl.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
@@ -904,7 +967,7 @@ function dancar() {
   if (!danca.rig) danca.rig = armaEsqueleto(corpoAtual);
   if (!danca.rig) return;
   danca.ligada = true; danca.fixo = null; btDanca.setAttribute('aria-pressed', 'true');
-  poeAneis(null); pontoRotulo = null; brilhaCorpo = false; rotuloEl.hidden = true; legendaEl.textContent = TEXTO_DANCA;
+  poeAneis(null); pontoRotulo = null; brilhaCorpo = false; rotuloEl.hidden = true; legendaEl.textContent = t(TEXTO_DANCA);
   const agora = performance.now() / 1000, faixa = FALAS && FALAS['musica:danca'];
   danca.inicio = danca.pediu = agora; danca.comMusica = false;
   if (faixa) {                                       /* dentro do toque no botão, para o celular deixar tocar */
@@ -975,12 +1038,12 @@ function pintaTocar(tocando, fim, nome) {            /* ícone + nome da parte +
   tocarEl.innerHTML = icone + '<span class="nome-parte"></span><small></small>';
   tocarEl.querySelector('.nome-parte').textContent = nome;
   tocarEl.querySelector('small').textContent = /^\d/.test(passoEl.textContent) ? passoEl.textContent : '';
-  tocarEl.setAttribute('aria-label', (tocando ? 'Pausar: ' : 'Ouvir: ') + nome);
+  tocarEl.setAttribute('aria-label', (tocando ? t('Pausar: ') : t('Ouvir: ')) + nome);
 }
 const soBasico = document.getElementById('so-base'), btExtras = document.getElementById('extras'), btExtrasGaveta = document.getElementById('extras-gaveta'), btVista = document.getElementById('alterna-vista'), gaveta = document.getElementById('gaveta');
 function sincroniza() {                              /* acerta os botões que dependem do estado: extras ligado, por dentro ligado, e quando "por dentro" some */
   btExtras.setAttribute('aria-pressed', String(!soBasico.checked)); btExtrasGaveta.setAttribute('aria-pressed', String(!soBasico.checked));
-  btExtrasGaveta.querySelector('span').textContent = soBasico.checked ? 'Mostrar extras' : 'Extras ligados';
+  btExtrasGaveta.querySelector('span').textContent = soBasico.checked ? t('Mostrar extras') : t('Extras ligados');
   btVista.setAttribute('aria-pressed', String(estado.aberto)); btVista.hidden = estado.corpo === 'esqueleto' || !!mind;
 }
 const alternaExtras = () => { soBasico.checked = !soBasico.checked; soBasico.dispatchEvent(new Event('change')); sincroniza(); };
@@ -995,6 +1058,30 @@ document.getElementById('abre-partes').addEventListener('click', () => abreGavet
 document.getElementById('fecha-partes').addEventListener('click', () => abreGaveta(false));
 gaveta.addEventListener('click', (ev) => { if (ev.target === gaveta || ev.target.closest('#partes button')) abreGaveta(false); });   /* fecha ao tocar fora ou ao escolher uma parte */
 soBasico.checked = true; soBasico.dispatchEvent(new Event('change')); sincroniza();     /* por padrão vem só o básico; o botão Extras liga o resto */
+
+/* ---------- idioma: português e inglês. O botão troca os textos na hora e a voz passa a vir do arquivo do idioma ---------- */
+function poeConteudo() {                             /* troca nome, frase e curiosidade de cada parte, sem mexer no resto (ids, extras, posições) */
+  for (const M of Object.keys(TEXTOS)) {
+    if (!PT_TEXTOS[M]) PT_TEXTOS[M] = { titulo: TEXTOS[M].titulo, abertura: TEXTOS[M].abertura, partes: Object.fromEntries(TEXTOS[M].partes.map((p) => [p.id, [p.nome, p.frase, p.curio]])) };
+    const de = emIngles() ? EN_TEXTOS[M] : PT_TEXTOS[M];
+    TEXTOS[M].titulo = de.titulo; TEXTOS[M].abertura = de.abertura;
+    for (const p of TEXTOS[M].partes) { const x = de.partes[p.id]; if (x) [p.nome, p.frase, p.curio] = x; }
+  }
+}
+function carregaFalas() {                            /* cada idioma tem o seu arquivo de voz, buscado só quando é usado; enquanto não chega (ou se faltar), fala a voz do navegador */
+  const id = Idioma.atual;
+  if (!FALAS_DE.pt && window.FALAS) FALAS_DE.pt = window.FALAS;                        /* voz que já veio junto com a página */
+  if (FALAS_DE[id]) { FALAS = FALAS_DE[id]; avisoVoz(); return; }
+  FALAS = null; avisoVoz();
+  if (FALAS_PEDIDAS[id]) return; FALAS_PEDIDAS[id] = true;
+  fetch(ARQ_FALAS[id]).then((r) => (r.ok ? r.json() : null)).then((j) => { FALAS_PEDIDAS[id] = false; if (!j) return; FALAS_DE[id] = j; if (Idioma.atual === id) { FALAS = j; avisoVoz(); } })
+    .catch(() => { FALAS_PEDIDAS[id] = false; /* sem gravação: fica a voz do navegador */ });
+}
+Idioma.aoMudar(() => {
+  parar(); try { vozGuia.pause(); } catch (erro) { /* nada */ }
+  poeConteudo(); carregaFalas(); montaPartes(); mostraPasso(); sincroniza(); pintaQualidade();
+  if (!botaoCamera.disabled) botaoCamera.textContent = t('Abrir a câmera');
+});
 
 /* ---------- menu de entrada: nada de câmera antes do toque em "Abrir a câmera" ---------- */
 const ALVOS = ['corpo', 'criancas'];                 /* ordem dos alvos dentro de alvos.mind */
@@ -1026,8 +1113,9 @@ function aplicaQualidade() {
   NIVEL = i >= 0 ? i : APARELHO.nivel;
   nitidez = Math.min(devicePixelRatio || 1, NITIDEZ_DO_NIVEL[NIVEL]); nitidezReduzida = false;
   render.setPixelRatio(nitidez); ajusta();
-  document.getElementById('qualidade-achada').textContent = i >= 0 ? '' : '(neste aparelho: ' + ROTULO_NIVEL[NIVEL] + ')';
+  pintaQualidade();
 }
+function pintaQualidade() { document.getElementById('qualidade-achada').textContent = NOME_NIVEL.indexOf(seletorQualidade.value) >= 0 ? '' : t('(neste aparelho: ') + t(ROTULO_NIVEL[NIVEL]) + ')'; }
 try { const guardada = PARAMS.get('qualidade') || localStorage.getItem('corpo-ra-qualidade'); if (guardada && [...seletorQualidade.options].some((o) => o.value === guardada)) seletorQualidade.value = guardada; } catch (erro) { /* sem armazenamento: fica automática */ }
 seletorQualidade.addEventListener('change', () => { try { localStorage.setItem('corpo-ra-qualidade', seletorQualidade.value); } catch (erro) { /* vale só até fechar */ } aplicaQualidade(); });
 aplicaQualidade();
@@ -1035,13 +1123,13 @@ if (window.POLITICA) document.getElementById('link-privacidade').href = window.P
 const pausaEl = document.getElementById('pausa'); let relogioPausa = 0;
 document.getElementById('pausa-ok').addEventListener('click', () => { pausaEl.hidden = true; });
 const inicioEl = document.getElementById('inicio'), appEl = document.getElementById('app'), dicaEl = document.getElementById('dica'), erroCamera = document.getElementById('erro-camera');
-const botaoCamera = document.getElementById('abrir-camera'), textoCamera = botaoCamera.innerHTML;
+const botaoCamera = document.getElementById('abrir-camera');
 const medir = (nome, p) => { try { if (window.medir) window.medir(nome, p); } catch (erro) { /* sem contagem */ } };   /* contagem anônima: só existe se o adulto permitiu no aviso do site */
 if (/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Line\//i.test(navigator.userAgent)) document.getElementById('aviso-nav').hidden = false;   /* navegador de dentro de rede social: a câmera costuma falhar */
 document.getElementById('link-contagem').addEventListener('click', (ev) => { ev.preventDefault(); if (window.XalingoAceite) window.XalingoAceite.reabrir(); else location.href = document.getElementById('link-privacidade').href; });
 document.getElementById('voltar').addEventListener('click', () => {   /* volta ao menu: cala a voz, solta a câmera e deixa tudo pronto para entrar de novo */
   parar(); fechaRA(); abreGaveta(false); mostraPasso(); sincroniza();
-  appEl.hidden = true; inicioEl.hidden = false; erroCamera.hidden = true; botaoCamera.disabled = false; botaoCamera.innerHTML = textoCamera;
+  appEl.hidden = true; inicioEl.hidden = false; erroCamera.hidden = true; botaoCamera.disabled = false; botaoCamera.textContent = t('Abrir a câmera');
 });
 function enquadra() {                                  /* sem câmera: sobe a imagem o bastante para o corpo e o quebra-cabeça não ficarem atrás dos botões */
   ajusta(); const w = caixa.clientWidth, a = caixa.clientHeight; if (!w || !a || mind) return;
@@ -1056,13 +1144,13 @@ document.getElementById('sem-camera').addEventListener('click', () => {
 });
 botaoCamera.addEventListener('click', async () => {
   pedeSensor(); destravaVozGuia();
-  botaoCamera.disabled = true; botaoCamera.firstChild.textContent = 'Abrindo a câmera…'; erroCamera.hidden = true; medir('abrir_camera');
+  botaoCamera.disabled = true; botaoCamera.textContent = t('Abrindo a câmera…'); erroCamera.hidden = true; medir('abrir_camera');
   appEl.hidden = false;                                /* a cena precisa ter tamanho para a câmera se ajustar; o menu continua por cima até dar certo */
   try { await abreRA(); inicioEl.hidden = true; sincroniza(); }
   catch (erro) {
     appEl.hidden = true;
-    erroCamera.textContent = erro && erro.message === 'sem-camera' ? 'Este navegador não deixa usar a câmera neste endereço. Use o botão "Ver em 3D sem câmera".' : 'Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão "Ver em 3D sem câmera".';
-    erroCamera.hidden = false; botaoCamera.disabled = false; botaoCamera.innerHTML = textoCamera;
+    erroCamera.textContent = t(erro && erro.message === 'sem-camera' ? 'Este navegador não deixa usar a câmera neste endereço. Use o botão "Ver em 3D sem câmera".' : 'Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão "Ver em 3D sem câmera".');
+    erroCamera.hidden = false; botaoCamera.disabled = false; botaoCamera.textContent = t('Abrir a câmera');
   }
 });
 
@@ -1209,7 +1297,7 @@ async function abreRA() {
     const relogioTeste = setInterval(() => {
       if (!mind || !painel.isConnected) { clearInterval(relogioTeste); return; }
       const agora = performance.now(), fps = quadros * 1000 / (agora - antes); quadros = 0; antes = agora;
-      painel.textContent = ['v1.0  ' + mind.video.videoWidth + 'x' + mind.video.videoHeight + (CAMERA_LEVE ? ' (leve)' : ''), fps.toFixed(0) + ' qps  tela ' + caixa.clientWidth + 'x' + caixa.clientHeight + ' @' + Math.min(devicePixelRatio, 2).toFixed(1),
+      painel.textContent = ['v1.1  ' + mind.video.videoWidth + 'x' + mind.video.videoHeight + (CAMERA_LEVE ? ' (leve)' : ''), fps.toFixed(0) + ' qps  tela ' + caixa.clientWidth + 'x' + caixa.clientHeight + ' @' + Math.min(devicePixelRatio, 2).toFixed(1),
         'alvo: ' + (ALVOS[alvoAtual] || 'nenhum') + (alvoVisto ? ' (à vista)' : ' (perdido)'), 'quem: ' + estado.corpo + ' · ' + modo(), 'firme: ' + (FIRME ? 'sim' : 'não') + '  tamanho: ' + TAMANHO_RA, 'qualidade: ' + ROTULO_NIVEL[NIVEL] + (seletorQualidade.value === 'auto' ? ' (automática)' : ' (escolhida)') + '  nitidez: ' + nitidez.toFixed(1) + (nitidezReduzida ? ' (reduzida)' : ''), APARELHO.motivo, 'lente: ' + (LENTE || 'da biblioteca') + '  prumo: ' + (cimaSensor ? 'sim, câmera errou ' + (erroPrumo * 57.3).toFixed(0) + '°' : 'sem sensor')].join(String.fromCharCode(10));
     }, 1000);
   }
