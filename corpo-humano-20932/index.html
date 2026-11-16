@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quebra-cabeça Corpo Humano em 3D · Xalingo</title>
+<meta name="description" content="Monte o Quebra-cabeça Corpo Humano (ref. 2093.2), da Xalingo, aponte a câmera e veja o corpo em pé em 3D, com os órgãos, o esqueleto e a explicação de cada parte.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Quebra-cabeça Corpo Humano em 3D · Xalingo">
+<meta property="og:description" content="Monte o quebra-cabeça, aponte a câmera e veja o corpo humano em pé em 3D.">
+<meta property="og:image" content="https://inovacaoxalingo.github.io/interactive-play/corpo-humano-20932/assets/capa.jpg">
+<meta property="og:url" content="https://inovacaoxalingo.github.io/interactive-play/corpo-humano-20932/">
+<meta name="theme-color" content="#164194">
+<link rel="icon" href="assets/icone-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch.png">
+<script>
+/* Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima.
+   No site Interactive Play vale o arquivo comum (../assets/aceite.js) e a política comum (../privacidade.html).
+   Fora do site (endereço de teste) entram as cópias que acompanham o app: assets/aceite.js e privacidade.html. */
+(function () {
+  var ID = 'G-HB9RN5N1J2';
+  window.medir = function (nome, p) { try { if (window.gtag) window.gtag('event', nome, p || {}); } catch (e) {} };
+  function ligaContagem() {                          /* Google Analytics (GA4), a mesma propriedade dos outros jogos: só no endereço publicado e só se o adulto permitir */
+    if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+    window.XalingoAceite.aoPermitir(function () {
+      if (window.gtag) return;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      window.gtag('config', ID, { content_group: 'Xalingo - Quebra-cabeça Corpo Humano (ref. 2093.2)', allow_google_signals: false, allow_ad_personalization_signals: false });
+      var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+      document.head.appendChild(s);
+    });
+  }
+  function carrega(endereco, politica, seFalhar) {
+    var s = document.createElement('script'), feito = false;
+    var falhou = function () { if (feito) return; feito = true; s.remove(); seFalhar(); };
+    s.src = endereco;
+    s.dataset.idade = '4'; s.dataset.politica = politica;
+    s.dataset.sub = 'Este app da Xalingo foi feito para brincar junto com o Quebra-cabeça Corpo Humano.';
+    s.dataset.camera = 'A câmera só reconhece o quebra-cabeça. Nenhuma foto ou vídeo sai do aparelho. Use por pouco tempo de cada vez, para o celular não esquentar.';
+    s.dataset.guarda = 'A escolha de qualidade da imagem fica só neste aparelho.';
+    s.dataset.para = 'para melhorar o app';
+    s.onerror = falhou;
+    s.onload = function () {
+      if (!window.XalingoAceite) return falhou();       /* veio outra coisa no lugar do arquivo */
+      feito = true; window.POLITICA = politica;
+      var a = document.getElementById('link-privacidade'); if (a) a.href = politica;
+      ligaContagem();
+    };
+    document.head.appendChild(s);
+  }
+  carrega('../assets/aceite.js?v=2', '../privacidade.html', function () { carrega('assets/aceite.js?v=2', 'privacidade.html', function () {}); });
+})();
+</script>
+<style>
+/* Layout: uma cena 3D grande (mesa, quebra-cabeça deitado e o corpo em pé), com a legenda da narração dentro dela;
+   embaixo vêm o tocador, quem aparece, a vista, as partes e o painel de ajustes. */
+:root{ --fundo:#eef4f1; --tinta:#17245c; --tinta-suave:#55618c; --mesa:#b98758; --sol:#f6b21b; --sobre-sol:#17245c;
+  --selo-fundo:rgba(10,18,44,.82); --selo-tinta:#ffffff; --anel:#ffd23a; --chip-fundo:#ffffff; --chip-tinta:#17245c;
+  --f-texto:system-ui,-apple-system,"Segoe UI",sans-serif; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --fundo:#0f1530; --tinta:#eef2ff; --tinta-suave:#aab3d6; --mesa:#6b4c33; color-scheme:dark } }
+:root[data-theme="dark"]{ --fundo:#0f1530; --tinta:#eef2ff; --tinta-suave:#aab3d6; --mesa:#6b4c33; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--fundo);color:var(--tinta);font-family:var(--f-texto);font-size:16px;line-height:1.45}
+:focus-visible{outline:3px solid var(--tinta-suave);outline-offset:2px}
+.pagina{max-width:1100px;margin:0 auto;padding-block:20px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+.sobre{margin:0;font-size:.76rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-suave)}
+h1{margin:0;font-size:clamp(1.4rem,1rem + 1.6vw,2rem);line-height:1.1;text-wrap:balance}
+.cena{position:relative;aspect-ratio:16/11;max-width:100%;border-radius:22px;overflow:hidden;background:var(--mesa);touch-action:none;container-type:inline-size}
+.cena canvas{display:block;width:100%;height:100%}
+.selo{position:absolute;left:12px;top:12px;font-size:.78rem;font-weight:700;background:var(--selo-fundo);color:var(--selo-tinta);padding:6px 12px;border-radius:999px}
+.fio{position:absolute;height:3px;transform-origin:0 50%;background:var(--chip-tinta);border-radius:2px;box-shadow:0 0 0 1.5px var(--chip-fundo);pointer-events:none;z-index:4}
+.rotulo{position:absolute;z-index:5;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-weight:800;font-size:clamp(12px,2.4cqw,20px);line-height:1;
+  background:var(--chip-fundo);color:var(--chip-tinta);padding:.45em .8em;border-radius:999px;border:2px solid var(--chip-tinta);box-shadow:0 3px 0 var(--chip-tinta)}
+.legenda{position:absolute;left:3cqw;right:3cqw;bottom:2.4cqw;background:var(--selo-fundo);color:var(--selo-tinta);border-radius:14px;padding:10px 16px;
+  font-weight:600;font-size:clamp(12px,2.1cqw,17px);line-height:1.3;text-align:center;pointer-events:none}
+.legenda b{font-weight:800;color:var(--anel)}
+/* com o painel aberto, a cena encolhe e fica presa no alto, para dar para mexer nos controles olhando o corpo */
+.ajustando .cena{position:sticky;top:max(8px,env(safe-area-inset-top,0px));aspect-ratio:auto;height:46vh;z-index:5}
+.tocador{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.passo{margin-left:auto;font-size:.85rem;font-weight:700;color:var(--tinta-suave);font-variant-numeric:tabular-nums}
+.grupo{display:flex;flex-direction:column;gap:6px}
+.rot{margin:0;font-size:.76rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-suave)}
+.troca{display:flex;flex-wrap:wrap;gap:8px}
+.troca button{font:700 .9rem var(--f-texto);padding:9px 14px;border-radius:12px;border:2px solid var(--tinta-suave);background:transparent;color:var(--tinta);cursor:pointer}
+.troca button[aria-pressed="true"]{background:var(--tinta);color:var(--fundo);border-color:var(--tinta)}
+.troca.chips button{border-radius:999px;padding:7px 12px;font-size:.86rem}
+.troca.chips button.extra{border-style:dashed}
+.troca.chips button[aria-pressed="true"]{background:var(--sol);border-color:var(--sol);color:var(--sobre-sol)}
+.chave{display:flex;gap:10px;align-items:center;font-weight:700;font-size:.9rem;cursor:pointer}
+.chave input{width:18px;height:18px;accent-color:var(--tinta)}
+.ajustes{border:2px solid var(--tinta-suave);border-radius:14px;padding:10px 14px}
+.ajustes summary{font-weight:800;cursor:pointer}
+.aj-corpo{display:flex;flex-direction:column;gap:12px;padding-top:12px}
+.campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 18px}
+.campo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;font-size:.88rem;font-weight:700}
+.campo input[type=range]{grid-column:1 / -1;width:100%;accent-color:var(--tinta)}
+.campo output{font-variant-numeric:tabular-nums;color:var(--tinta-suave)}
+.campo select{font:inherit;padding:6px 8px;border-radius:8px;border:2px solid var(--tinta-suave);background:var(--fundo);color:var(--tinta)}
+.aj-botoes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acao{font:700 .9rem var(--f-texto);padding:9px 14px;border-radius:12px;border:2px solid var(--tinta);background:var(--tinta);color:var(--fundo);cursor:pointer}
+.acao.leve{background:transparent;color:var(--tinta)}
+.acao.leve[aria-pressed="true"]{background:var(--sol);border-color:var(--sol);color:var(--sobre-sol)}
+.acao.forte{background:var(--sol);border-color:var(--sol);color:var(--sobre-sol);font-size:1rem;padding:11px 18px}
+#aj-aviso{font-size:.85rem;color:var(--tinta-suave)}
+#aj-texto{width:100%;font:.8rem ui-monospace,Consolas,monospace;border-radius:10px;border:2px solid var(--tinta-suave);background:var(--fundo);color:var(--tinta);padding:8px}
+.info{margin:0;font-size:.9rem;color:var(--tinta-suave);max-width:65ch}
+
+/* ===== app: menu de entrada e tela cheia com os comandos por cima (pensado primeiro para celular em pé) ===== */
+html,body{height:100%;margin:0;overscroll-behavior:none}
+@font-face{font-family:'Open Sans';src:url('assets/open-sans.woff2') format('woff2');font-weight:300 800;font-display:swap}
+:root{--f-texto:'Open Sans',system-ui,-apple-system,"Segoe UI",sans-serif}
+.menu{position:fixed;inset:0;z-index:30;overflow:auto;color-scheme:light;--azul:#164194;--azul2:#0e2c6b;color:#1b1a1f;font-family:var(--f-texto);background:linear-gradient(#eaf5ff 0,#eaf5ff 55%,#d4ebfb 100%)}
+.menu .miolo{max-width:560px;margin:0 auto;padding:max(22px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.menu .voltar-site{display:inline-flex;align-items:center;min-height:40px;margin:0 0 12px;padding:6px 14px;border-radius:999px;background:#ffffff;color:var(--azul);font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 2px 0 rgba(13,45,87,.12)}
+.menu .marca{font-weight:800;font-size:13px;color:var(--azul);letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.menu .marca span{background:var(--azul);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;flex:none}
+.menu h1{font-size:30px;line-height:1.08;margin:0 0 10px;color:var(--azul2);font-weight:800}
+.menu .sub{margin:0 0 18px;font-size:16px;line-height:1.5;color:#2d3445}
+.menu .quadro{background:#fffdf8;border-radius:14px;padding:10px;box-shadow:0 2px 0 rgba(13,45,87,.12),0 10px 28px rgba(13,45,87,.12)}
+.menu .quadro img{display:block;width:100%;height:auto;border-radius:8px}
+.menu ol.passos{list-style:none;counter-reset:p;margin:20px 0 22px;padding:0;display:grid;gap:10px}
+.menu ol.passos li{counter-increment:p;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:15.5px;line-height:1.45}
+.menu ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;display:grid;place-items:center;font-size:16px}
+.menu .bt{display:block;width:100%;border:0;border-radius:16px;padding:16px;font:800 18px var(--f-texto);cursor:pointer}
+.menu .bt.prim{background:var(--azul);color:#fff;box-shadow:0 5px 0 var(--azul2)}
+.menu .bt.prim:active{transform:translateY(3px);box-shadow:0 2px 0 var(--azul2)}
+.menu .bt.prim:disabled{opacity:.7}
+.menu .bt.sec{background:transparent;color:var(--azul);border:2px solid var(--azul);margin-top:12px;font-size:16px;padding:13px}
+.menu .nota{font-size:13px;color:#5d6475;line-height:1.5;margin:18px 0 0}
+.menu .nota a{color:var(--azul);font-weight:700}
+.menu .qualidade label{font-weight:700}
+.menu .qualidade select{font:inherit;font-weight:700;color:var(--azul);background:#ffffff;border:2px solid var(--azul);border-radius:10px;padding:5px 8px;max-width:100%}
+.menu .aviso-nav{background:#fff7dc;border:1px solid #ecd28a;color:#5a4300;border-radius:12px;padding:12px;font-size:14.5px;line-height:1.45;margin:0 0 14px}
+.menu .erro{background:#fff1ef;border:1px solid #f3b6ad;color:#7a2418;border-radius:12px;padding:12px;font-size:14.5px;line-height:1.45;margin:14px 0 0}
+.app{position:fixed;inset:0;background:#000;color:#fff;--tinta:#ffffff;--tinta-suave:#d5dcf7;--fundo:#0f1530}
+.app .cena{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;max-width:none;background:var(--mesa);isolation:isolate}   /* isolation: o vídeo da câmera entra com z-index negativo e precisa ficar preso dentro da cena */
+.ra .app .cena{background:transparent}
+.app .legenda{z-index:6;bottom:auto;top:calc(max(10px,env(safe-area-inset-top,0px)) + 68px);left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));font-size:clamp(14px,3.6vw,18px)}
+.app .rotulo{font-size:clamp(14px,4vw,20px)}
+/* quadro pontilhado para mirar no quebra-cabeça, na proporção dele (1079 x 899); some quando a câmera acha */
+.guia{position:absolute;z-index:3;left:50%;top:45%;transform:translate(-50%,-50%);width:min(86%,calc(54vh*1.2));aspect-ratio:1.2;border:3px dashed rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.22);pointer-events:none}
+.dica{position:absolute;z-index:6;left:50%;top:45%;transform:translate(-50%,-50%);background:var(--selo-fundo);color:var(--selo-tinta);font-weight:800;padding:10px 16px;border-radius:14px;text-align:center;width:max-content;max-width:70%;pointer-events:none}
+/* Comandos: botões quadrados com ícone e uma palavra, em colunas.
+   topo esquerdo = menu · topo direito = extras · coluna esquerda = quem aparece · coluna direita = lista de partes · base = voltar, tocar, avançar.
+   A coluna de quem aparece fica à esquerda porque o nome da parte flutua, quase sempre, à direita do corpo. */
+.app button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.ic{flex:none;width:58px;height:58px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:18px;border:3px solid transparent;background:rgba(255,255,255,.94);color:#17245c;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ic svg{width:32px;height:32px;fill:currentColor}
+.ic[aria-pressed="false"]{background:rgba(255,255,255,.78)}
+.ic[aria-pressed="true"]{background:#ffffff;border-color:var(--sol);box-shadow:0 0 0 3px rgba(246,178,27,.5),0 2px 8px rgba(0,0,0,.35)}
+#quem-menina{color:#ee5a6f} #quem-menino{color:#1f4e79}
+#extras[aria-pressed="false"]{color:#8a93b0} #extras[aria-pressed="true"]{color:#e3a500}
+#alterna-vista{color:#d6334a} #dancar{color:#d85f00}
+.topo{position:absolute;z-index:12;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.topo > *{pointer-events:auto}
+.coluna{position:absolute;z-index:10;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 82px);display:flex;flex-direction:column;gap:10px}
+.coluna.esq{left:max(10px,env(safe-area-inset-left,0px))}
+.coluna.dir{right:max(10px,env(safe-area-inset-right,0px))}
+#corpos{display:flex;flex-direction:column;gap:10px}
+.base{position:absolute;z-index:10;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:stretch;
+  padding:26px max(10px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  background:linear-gradient(rgba(8,12,30,0),rgba(8,12,30,.86) 45%)}
+.seta{flex:none;width:60px;min-height:60px;display:flex;align-items:center;justify-content:center;border-radius:16px;border:2px solid #ffffff;background:rgba(8,12,30,.72);color:#fff;cursor:pointer}
+.seta svg{width:28px;height:28px}
+.tocar{flex:1;min-width:0;min-height:60px;display:flex;align-items:center;gap:10px;padding:6px 16px;border-radius:16px;border:0;background:var(--sol);color:var(--sobre-sol);font:800 1.2rem var(--f-texto);cursor:pointer;text-align:left}
+.tocar svg{flex:none;width:30px;height:30px;fill:currentColor}
+.tocar .nome-parte{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tocar small{flex:none;font-size:.72rem;font-weight:700;opacity:.75}
+.pausa{position:absolute;z-index:15;left:50%;top:calc(max(10px,env(safe-area-inset-top,0px)) + 150px);transform:translateX(-50%);width:max-content;max-width:88%;display:flex;gap:12px;align-items:center;background:#ffffff;color:#17245c;font-weight:700;font-size:.95rem;line-height:1.3;border-radius:16px;padding:12px 14px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.pausa button{flex:none;border:0;border-radius:12px;padding:10px 16px;background:#164194;color:#ffffff;font:800 .95rem var(--f-texto);cursor:pointer}
+/* lista de partes: uma gaveta que entra pela direita, com um nome por linha */
+.gaveta{position:absolute;inset:0;z-index:20;background:rgba(8,12,30,.5)}
+.gaveta .folha{position:absolute;top:0;bottom:0;right:0;width:min(54%,205px);background:#0f1530;display:flex;flex-direction:column;gap:10px;box-shadow:-8px 0 24px rgba(0,0,0,.45);
+  padding:max(12px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) 10px}
+.gaveta .cab{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:1.1rem}
+.gaveta .cab button{width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid rgba(255,255,255,.6);background:transparent;color:#fff;cursor:pointer}
+.gaveta .cab svg{width:22px;height:22px}
+.chave-extras{flex:none;display:flex;align-items:center;gap:8px;min-height:46px;padding:8px 12px;border-radius:12px;border:2px solid rgba(255,255,255,.6);background:transparent;color:#fff;font:700 .92rem var(--f-texto);cursor:pointer;text-align:left}
+.chave-extras svg{flex:none;width:22px;height:22px;fill:#8a93b0}
+.chave-extras[aria-pressed="true"]{background:#ffffff;color:#17245c;border-color:#ffffff}
+.chave-extras[aria-pressed="true"] svg{fill:#e3a500}
+#partes{display:flex;flex-direction:column;gap:8px;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
+#partes button{flex:none;min-height:46px;text-align:left;font:700 .95rem/1.15 var(--f-texto);padding:8px 12px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.07);color:#fff;cursor:pointer}
+#partes button.extra{border-style:dashed}
+#partes button[aria-pressed="true"]{background:var(--sol);border-color:var(--sol);color:var(--sobre-sol)}
+.versao{position:absolute;z-index:11;left:50%;top:max(4px,env(safe-area-inset-top,0px));transform:translateX(-50%);font-size:.6rem;font-weight:700;color:#fff;opacity:.5;pointer-events:none}
+.diagnostico{position:absolute;right:8px;top:170px;margin:0;z-index:12;font:12px/1.35 ui-monospace,Consolas,monospace;background:rgba(0,0,0,.7);color:#7dffa0;padding:6px 8px;border-radius:8px;pointer-events:none;white-space:pre}
+@media (orientation:landscape) and (max-height:520px){
+  .app .legenda{top:max(10px,env(safe-area-inset-top,0px));left:calc(max(10px,env(safe-area-inset-left,0px)) + 72px);right:calc(max(10px,env(safe-area-inset-right,0px)) + 72px)}
+  .ic{width:48px;height:48px;border-radius:15px} .ic svg{width:26px;height:26px}
+  .coluna{gap:6px;bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 62px)} #corpos{gap:6px}
+  .seta,.tocar{min-height:48px} .base{padding-top:18px}
+}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div class="menu" id="inicio">
+  <div class="miolo">
+    <a class="voltar-site" href="https://inovacaoxalingo.github.io/ra/" aria-label="Voltar para a central de realidade aumentada da Xalingo">‹ Todas as experiências</a>
+    <p class="marca"><span>Ref. 2093.2</span> Xalingo · Quebra-cabeça Corpo Humano</p>
+    <h1>Monte o corpo humano e veja ele em 3D</h1>
+    <p class="sub">A câmera reconhece o quebra-cabeça e mostra o corpo em pé, com os órgãos, o esqueleto e a explicação de cada parte.</p>
+    <div class="quadro"><img src="assets/capa.jpg" alt="Os dois quebra-cabeças do Corpo Humano: as crianças por fora e o corpo por dentro" width="1200" height="514"></div>
+    <ol class="passos">
+      <li>Monte um dos dois quebra-cabeças e deixe num lugar bem iluminado.</li>
+      <li>Toque em “Abrir a câmera” e aponte o celular para o quebra-cabeça inteiro.</li>
+      <li>Toque no botão amarelo para ouvir a explicação de cada parte.</li>
+    </ol>
+    <p class="aviso-nav" id="aviso-nav" hidden>Para a câmera funcionar, abra este endereço no <b>Chrome</b> (Android) ou no <b>Safari</b> (iPhone), e não dentro do Instagram, do Facebook ou do TikTok.</p>
+    <button type="button" class="bt prim" id="abrir-camera">Abrir a câmera</button>
+    <button type="button" class="bt sec" id="sem-camera">Ver em 3D sem câmera</button>
+    <p class="erro" id="erro-camera" role="alert" hidden></p>
+    <p class="nota">Indicado para crianças a partir de 4 anos. Brinque com um adulto por perto e em um lugar seguro. Use a câmera por pouco tempo de cada vez: ligada por muito tempo, ela esquenta o celular e gasta bateria. A imagem da câmera é usada só neste aparelho para reconhecer o quebra-cabeça: nenhuma foto é enviada ou guardada. <a href="../privacidade.html" id="link-privacidade">Privacidade</a> · <a href="#" id="link-contagem">Contagem de acessos</a></p>
+    <p class="nota qualidade"><label for="qualidade">Qualidade da imagem:</label> <select id="qualidade"><option value="auto">Automática</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa, para celulares mais antigos</option></select> <span id="qualidade-achada"></span></p>
+    <p class="nota">© Xalingo Brinquedos · versão 1.0 · 16/11/2026</p>
+  </div>
+</div>
+<div class="app" id="app" hidden>
+  <div class="cena" id="cena">
+    <div class="fio" id="fio" hidden></div>
+    <div class="rotulo" id="rotulo" hidden></div>
+    <div class="legenda" id="legenda" aria-live="polite"></div>
+    <div class="guia" id="guia" hidden></div>
+    <div class="dica" id="dica" hidden>Aponte a câmera para um dos quebra-cabeças</div>
+  </div>
+  <span class="versao">v1.0</span>
+  <div class="topo">
+    <button type="button" class="ic" id="voltar" aria-label="Voltar ao menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg></button>
+    <button type="button" class="ic" id="extras" aria-pressed="false" aria-label="Mostrar as partes extras" title="Extras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z"/></svg></button>
+  </div>
+  <div class="coluna esq">
+    <div id="corpos" role="group" aria-label="Quem aparece">
+      <button type="button" class="ic" id="quem-menina" data-corpo="menina" aria-pressed="true" aria-label="Menina" title="Menina"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><circle cx="12" cy="8.300" r="5.300"/><path d="M12 13.600V22M8.200 18.200h7.600"/></g></svg></button>
+      <button type="button" class="ic" id="quem-menino" data-corpo="menino" aria-pressed="false" aria-label="Menino" title="Menino"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.500" cy="14.500" r="5.500"/><path d="M13.500 10.500L20.200 3.800M14.600 3.800h5.600v5.600"/></g></svg></button>
+      <button type="button" class="ic" id="quem-esqueleto" data-corpo="esqueleto" aria-pressed="false" aria-label="Esqueleto" title="Esqueleto"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-45 12 12)"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6.500" y="10.200" width="11" height="3.600"/><circle cx="5.600" cy="9.500" r="2.600"/><circle cx="5.600" cy="14.500" r="2.600"/><circle cx="18.400" cy="9.500" r="2.600"/><circle cx="18.400" cy="14.500" r="2.600"/></g><g fill="#f6efd2" stroke="none"><rect x="6.500" y="10.200" width="11" height="3.600"/><circle cx="5.600" cy="9.500" r="2.600"/><circle cx="5.600" cy="14.500" r="2.600"/><circle cx="18.400" cy="9.500" r="2.600"/><circle cx="18.400" cy="14.500" r="2.600"/></g></g></svg></button>
+    </div>
+    <button type="button" class="ic" id="alterna-vista" aria-pressed="false" aria-label="Ver o corpo por dentro" title="Por dentro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.500l-1.400-1.300C5.400 14.500 3 12.200 3 9.200 3 6.800 4.900 5 7.200 5c1.400 0 2.700.7 3.500 1.700L12 8.200l1.300-1.500C14.100 5.700 15.400 5 16.800 5 19.100 5 21 6.800 21 9.200c0 3-2.400 5.300-7.600 10z"/></svg></button>
+    <button type="button" class="ic" id="dancar" aria-pressed="false" aria-label="Fazer o esqueleto dançar" title="Dançar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.200L21 2.500V16h-2V7.600l-8 1.800v9.100H9z"/><circle cx="7.600" cy="18.500" r="3.400"/><circle cx="17.600" cy="16" r="3.400"/></svg></button>
+  </div>
+  <div class="coluna dir">
+    <button type="button" class="ic" id="abre-partes" aria-label="Abrir a lista de partes" title="Partes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.500h3v3H4zm5 .500h11v2H9zm-5 4.500h3v3H4zm5 .500h11v2H9zm-5 4.500h3v3H4zm5 .500h11v2H9z"/></svg></button>
+  </div>
+  <div class="base">
+    <button type="button" class="seta" id="anterior" aria-label="Parte anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button type="button" class="tocar" id="tocar"></button>
+    <button type="button" class="seta" id="proxima" aria-label="Próxima parte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <div class="pausa" id="pausa" role="status" hidden><span>Que tal uma pausa? A câmera ligada por muito tempo esquenta o celular.</span><button type="button" id="pausa-ok">OK</button></div>
+  <div class="gaveta" id="gaveta" hidden>
+    <div class="folha" role="dialog" aria-label="Partes desta explicação">
+      <div class="cab"><span>Partes</span><button type="button" id="fecha-partes" aria-label="Fechar a lista"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button></div>
+      <button type="button" class="chave-extras" id="extras-gaveta" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z"/></svg><span>Mostrar extras</span></button>
+      <div id="partes"></div>
+    </div>
+  </div>
+</div>
+<div hidden>
+  <span id="passo"></span><input type="checkbox" id="so-base">
+  <div id="grupo-vista"><div id="vista"><button type="button" id="vista-fora" data-aberto="" aria-pressed="true">Por fora</button><button type="button" id="vista-dentro" data-aberto="1" aria-pressed="false">Por dentro</button></div></div>
+  <details id="ajustes"><summary>Ajustes</summary><select id="aj-orgao"></select><div id="aj-campos-orgao"></div><div id="aj-campos-geral"></div><div id="aj-campos-anima"></div>
+  <button type="button" id="aj-copiar">Copiar</button><button type="button" id="aj-padrao">Padrão</button><span id="aj-aviso"></span><textarea id="aj-texto" readonly></textarea></details>
+  <p id="info"></p><p id="aviso-voz"></p>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const caixa = document.getElementById('cena'), info = document.getElementById('info');
+const render = new THREE.WebGLRenderer({ antialias: true });
+render.setPixelRatio(Math.min(devicePixelRatio, 2));
+render.outputColorSpace = THREE.SRGBColorSpace;
+caixa.insertBefore(render.domElement, caixa.firstChild);
+const cena = new THREE.Scene();
+cena.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--mesa').trim() || '#b98758');
+const cam = new THREE.PerspectiveCamera(38, 16 / 11, 0.05, 50);
+cam.position.set(0, 1.25, 2.3);
+const ctl = new OrbitControls(cam, render.domElement);
+ctl.target.set(0, 0.45, 0); ctl.enableDamping = true; ctl.maxPolarAngle = Math.PI * 0.49; ctl.minDistance = 1; ctl.maxDistance = 5;
+/* luz de estúdio suave, como a do visualizador do Tripo, para a cor não escurecer */
+cena.environment = new THREE.PMREMGenerator(render).fromScene(new RoomEnvironment(), 0.04).texture;
+cena.add(new THREE.HemisphereLight(0xffffff, 0xd8c0a0, 0.9));
+const sol = new THREE.DirectionalLight(0xffffff, 0.9); sol.position.set(1.5, 3, 2); cena.add(sol);
+
+/* quebra-cabeça deitado: a arte enviada tem os dois, um em cima do outro; mostra o que combina com quem está em pé */
+const LARG = 1.15, ALT = LARG * 976 / 1125, TOPO = { criancas: 1004, corpo: 18 };
+let arte = null, chaoAtual = 'criancas';
+function trocaChao(qual) { chaoAtual = qual; if (arte) arte.offset.set(18 / 1161, 1 - (TOPO[qual] + 976) / 2000); }
+new THREE.TextureLoader().load('assets/quebra-cabecas.jpg', (t) => {
+  t.colorSpace = THREE.SRGBColorSpace; arte = t;
+  t.repeat.set(1125 / 1161, 976 / 2000); trocaChao(chaoAtual);
+  const qc = new THREE.Mesh(new THREE.PlaneGeometry(LARG, ALT), new THREE.MeshBasicMaterial({ map: t }));
+  qc.rotation.x = -Math.PI / 2; cena.add(qc);
+});
+const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.2, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28 }));
+sombra.rotation.x = -Math.PI / 2; sombra.position.set(0, 0.002, 0.08); sombra.scale.set(1.25, 0.8, 1); cena.add(sombra);
+
+/* ---------- quem fica em pé ---------- */
+const palco = new THREE.Group(); palco.position.set(0, 0, 0.08); cena.add(palco);
+const ALTURA = LARG * 0.85;                         /* altura do corpo perto da largura do quebra-cabeça */
+const par = (x, y, z, r) => [[-x, y, z, r], [x, y, z, r]];
+/* Cada corpo tem a sua caixa e os seus pontos, medidos no modelo, em frações da altura do corpo.
+   caixa do tronco: y0 = assoalho da bacia, y1 = base do pescoço, meia = meia largura, zc = meio entre costas e frente, prof = meia espessura;
+   cab (cabeça): y0 = altura dos olhos, y1 = topo do crânio.
+   marcos: onde vão os anéis de cada parte, [x, y, z, raio]. */
+const CORPOS = {
+  menina: { arquivo: 'menina-30k.glb', chao: 'criancas', olhoFundo: 0.026,
+    caixa: { y0: 0.335, y1: 0.655, meia: 0.085, zc: 0.036, prof: 0.07, cab: { y0: 0.786, y1: 0.955, meia: 0.12, zc: 0.0, prof: 0.12 } },
+    marcos: { cabeca: [[0, 0.83, 0.08, 0.2]], olhos: par(0.068, 0.786, 0.145, 0.05), orelhas: par(0.14, 0.775, 0, 0.035), nariz: [[0, 0.778, 0.155, 0.024]], boca: [[0, 0.735, 0.145, 0.032]],
+      cabelo: [[0, 0.955, 0.04, 0.06]], pescoco: [[0, 0.668, 0.07, 0.036]], tronco: [[0, 0.53, 0.11, 0.125]], ombros: par(0.108, 0.63, 0.03, 0.04), bracos: par(0.14, 0.5, 0.02, 0.085),
+      cotovelos: par(0.143, 0.47, 0.015, 0.032), maos: par(0.185, 0.36, 0.003, 0.048), pernas: par(0.062, 0.2, 0.03, 0.1), joelhos: par(0.068, 0.21, 0.04, 0.036), pes: par(0.085, 0.028, 0.06, 0.058) } },
+  menino: { arquivo: 'menino-30k.glb', chao: 'criancas', olhoFundo: 0.045,
+    caixa: { y0: 0.33, y1: 0.655, meia: 0.09, zc: 0.01, prof: 0.065, cab: { y0: 0.79, y1: 0.955, meia: 0.12, zc: -0.02, prof: 0.12 } },
+    marcos: { cabeca: [[0, 0.83, 0.06, 0.2]], olhos: par(0.062, 0.79, 0.13, 0.05), orelhas: par(0.128, 0.775, 0, 0.035), nariz: [[0, 0.77, 0.135, 0.024]], boca: [[0, 0.735, 0.12, 0.032]],
+      cabelo: par(0.13, 0.87, 0.06, 0.05), pescoco: [[0, 0.665, 0.05, 0.034]], tronco: [[0, 0.52, 0.08, 0.125]], ombros: par(0.105, 0.63, 0, 0.04), bracos: par(0.138, 0.5, 0, 0.085),
+      cotovelos: par(0.143, 0.46, 0, 0.032), maos: par(0.179, 0.325, -0.004, 0.048), pernas: par(0.05, 0.19, 0, 0.1), joelhos: par(0.052, 0.215, 0.02, 0.036), pes: par(0.08, 0.026, 0.035, 0.058) } },
+  esqueleto: { arquivo: 'esqueleto-30k.glb', chao: 'corpo',
+    marcos: { cranio: [[0, 0.86, 0.03, 0.15]], mandibula: [[0, 0.74, 0.08, 0.06]], coluna: [[0, 0.5, -0.02, 0.05]], costelas: [[0, 0.59, 0.03, 0.105]], clavicula: par(0.065, 0.655, 0.02, 0.04),
+      umero: par(0.142, 0.56, -0.027, 0.055), radio: par(0.185, 0.44, -0.025, 0.055), ossosmao: par(0.224, 0.34, -0.017, 0.05), bacia: [[0, 0.41, -0.01, 0.085]], femur: par(0.068, 0.31, -0.02, 0.06),
+      patela: par(0.074, 0.225, 0, 0.035), tibia: par(0.075, 0.13, -0.02, 0.06), ossospe: par(0.095, 0.02, 0.03, 0.058) } }
+};
+/* Lugar de cada órgão dentro da caixa do tronco (ou da cabeça):
+   u = para os lados (-1 a 1; positivo = lado esquerdo do corpo, à direita de quem olha)
+   v = altura (0 = bacia, 1 = base do pescoço)      w = para a frente (-1 = costas, 1 = frente)
+   a = altura do órgão, em frações da altura do tronco. Nos tubos, os pontos usam as mesmas medidas. */
+const ORGAOS = [
+  { id: 'cerebro', nome: 'o cérebro', arquivo: 'cerebro.glb', cabeca: true, u: 0, v: 0.57, w: 0.09, a: 1.1 },
+  { id: 'traqueia', nome: 'a traqueia', tubo: { pontos: [[0, 1.15, 0.15], [0, 1.04, 0.12], [0, 0.955, 0.1]], raio: 0.027, aneis: 9, cor: 0xf2d98a } },
+  { id: 'pulmoes', nome: 'os pulmões', arquivo: 'pulmoes.glb', u: 0, v: 0.88, w: 0, a: 0.5, respira: true },
+  { id: 'coracao', nome: 'o coração', arquivo: 'coracao.glb', u: 0.14, v: 0.75, w: 0.56, a: 0.24, bate: true },
+  { id: 'esofago', nome: 'o esôfago', tubo: { pontos: [[0, 1.15, -0.2], [0, 0.98, -0.32], [0.05, 0.8, -0.32], [0.2, 0.68, -0.1], [0.27, 0.63, 0.08]], raio: 0.019, aneis: 0, cor: 0xe8a0a0 } },
+  { id: 'estomago', nome: 'o estômago', arquivo: 'estomago.glb', u: 0.42, v: 0.51, w: 0.1, a: 0.22 },
+  { id: 'figado', nome: 'o fígado', arquivo: 'figado.glb', u: -0.28, v: 0.55, w: -0.3, a: 0.19 },
+  { id: 'delgado', nome: 'o intestino delgado', arquivo: 'delgado.glb', u: 0, v: 0.3, w: 0.08, a: 0.21 },
+  { id: 'grosso', nome: 'o intestino grosso', arquivo: 'grosso.glb', u: 0, v: 0.29, w: -0.07, a: 0.4 }
+];
+function lugar(cx, u, v, w) { return new THREE.Vector3(u * cx.meia * ALTURA, (cx.y0 + v * (cx.y1 - cx.y0)) * ALTURA, (cx.zc + w * cx.prof) * ALTURA); }
+
+/* ---------- o que a voz diz: nome, frase curta (a mesma do material impresso) e curiosidade ---------- */
+const TEXTOS = {
+  fora: { titulo: 'corpo por fora', abertura: 'Este é o nosso corpo por fora. Ele tem cabeça, tronco e membros. Vamos conhecer cada parte?', partes: [
+    { id: 'cabeca', nome: 'Cabeça', frase: 'Guarda o cérebro, que comanda o corpo inteiro.', curio: 'Na cabeça ficam os olhos, as orelhas, o nariz e a boca.' },
+    { id: 'olhos', nome: 'Olhos', frase: 'Servem para enxergar.', curio: 'A gente pisca milhares de vezes por dia para manter os olhos limpos.' },
+    { id: 'orelhas', nome: 'Orelhas', frase: 'Servem para ouvir.', curio: 'Por dentro, o ouvido também ajuda no equilíbrio.' },
+    { id: 'nariz', nome: 'Nariz', frase: 'Serve para respirar e sentir cheiros.', curio: 'Os pelinhos do nariz seguram a poeira do ar.' },
+    { id: 'boca', nome: 'Boca', frase: 'Serve para comer, falar e sentir os sabores.', curio: 'A língua sente o doce, o salgado, o azedo e o amargo.' },
+    { id: 'cabelo', nome: 'Cabelo', extra: true, frase: 'Protege a cabeça do sol e do frio.', curio: 'Ele cresce um pouquinho todos os dias.' },
+    { id: 'pescoco', nome: 'Pescoço', extra: true, frase: 'Liga a cabeça ao tronco e deixa a cabeça virar.', curio: 'É por ele que passam o ar e a comida.' },
+    { id: 'tronco', nome: 'Tronco', frase: 'É o meio do corpo: peito, barriga e costas.', curio: 'Dentro dele ficam o coração, os pulmões e o estômago.' },
+    { id: 'ombros', nome: 'Ombros', extra: true, frase: 'Ligam os braços ao tronco.', curio: 'O ombro deixa o braço girar para todos os lados.' },
+    { id: 'bracos', nome: 'Braços', frase: 'Servem para alcançar, carregar e abraçar.', curio: 'Cada braço dobra em três lugares: ombro, cotovelo e punho.' },
+    { id: 'cotovelos', nome: 'Cotovelos', extra: true, frase: 'Dobram os braços.', curio: 'Funcionam como uma dobradiça de porta.' },
+    { id: 'maos', nome: 'Mãos', frase: 'Servem para pegar, sentir e fazer coisas.', curio: 'As marcas das pontas dos dedos são só suas: ninguém tem iguais.' },
+    { id: 'pernas', nome: 'Pernas', frase: 'Sustentam o corpo e servem para andar, correr e pular.', curio: 'Nelas ficam os músculos mais fortes do corpo.' },
+    { id: 'joelhos', nome: 'Joelhos', extra: true, frase: 'Dobram as pernas.', curio: 'Sem eles não daria para sentar, agachar nem pular.' },
+    { id: 'pes', nome: 'Pés', frase: 'Apoiam o corpo no chão e dão equilíbrio.', curio: 'Cada pé tem cinco dedos, que ajudam a não cair.' },
+    { id: 'pele', nome: 'Pele', extra: true, tudo: true, frase: 'Cobre e protege o corpo todo e sente o toque, o calor e o frio.', curio: 'É o maior órgão do corpo.' } ] },
+  orgaos: { titulo: 'órgãos', abertura: 'Agora vamos olhar por dentro. Aqui ficam os órgãos, que trabalham o tempo todo para você viver.', partes: [
+    { id: 'cerebro', nome: 'Cérebro', frase: 'Comanda o corpo: pensar, sentir, lembrar e se mexer.', curio: 'Ele trabalha até quando você dorme.' },
+    { id: 'olhos', nome: 'Olhos', extra: true, frase: 'Mandam para o cérebro as imagens do que você vê.', curio: 'Funcionam como duas câmeras.' },
+    { id: 'traqueia', nome: 'Traqueia', extra: true, frase: 'Tubo que leva o ar até os pulmões.', curio: 'Ela tem anéis que a mantêm sempre aberta.' },
+    { id: 'pulmoes', nome: 'Pulmões', frase: 'Enchem de ar quando você respira e passam o oxigênio para o sangue.', curio: 'São dois, um de cada lado do peito.' },
+    { id: 'coracao', nome: 'Coração', frase: 'Bombeia o sangue para o corpo todo.', curio: 'Ele bate sem parar, de dia e de noite.' },
+    { id: 'arterias', nome: 'Artérias', extra: true, frase: 'Levam o sangue do coração para o corpo.', curio: 'São os caminhos vermelhos.' },
+    { id: 'veias', nome: 'Veias', extra: true, frase: 'Trazem o sangue de volta para o coração.', curio: 'São os caminhos azuis.' },
+    { id: 'esofago', nome: 'Esôfago', extra: true, frase: 'Tubo que leva a comida da boca até o estômago.', curio: 'Ele empurra a comida para baixo, mesmo se você estiver deitado.' },
+    { id: 'estomago', nome: 'Estômago', frase: 'Mistura e amassa a comida que você engole.', curio: 'Ele é uma bolsa que estica quando você come.' },
+    { id: 'figado', nome: 'Fígado', extra: true, frase: 'Ajuda a digerir a comida e limpa o sangue.', curio: 'É a maior glândula do corpo.' },
+    { id: 'delgado', nome: 'Intestino delgado', frase: 'Retira da comida os nutrientes que o corpo usa.', curio: 'Esticado, ele é bem mais comprido que você.' },
+    { id: 'grosso', nome: 'Intestino grosso', frase: 'Retira a água do que sobrou da comida e forma as fezes.', curio: 'Ele mede cerca de um metro e meio.' } ] },
+  esqueleto: { titulo: 'esqueleto', abertura: 'Este é o esqueleto. Ele sustenta o corpo, protege os órgãos e ajuda você a se mexer. O bebê nasce com cerca de trezentos ossos, e muitos se juntam enquanto ele cresce.', partes: [
+    { id: 'cranio', nome: 'Crânio', frase: 'Protege o cérebro, como um capacete.', curio: 'O menor osso do corpo, o estribo, fica dentro do ouvido.' },
+    { id: 'mandibula', nome: 'Mandíbula', extra: true, frase: 'Osso do queixo, que segura os dentes de baixo.', curio: 'É ela que se mexe quando você mastiga e fala.' },
+    { id: 'coluna', nome: 'Coluna', frase: 'Mantém o corpo em pé.', curio: 'É uma pilha de ossinhos chamados vértebras.' },
+    { id: 'costelas', nome: 'Costelas', frase: 'Protegem o coração e os pulmões.', curio: 'São doze de cada lado.' },
+    { id: 'clavicula', nome: 'Clavícula', extra: true, frase: 'Liga o ombro ao peito.', curio: 'Dá para sentir a sua logo abaixo do pescoço.' },
+    { id: 'umero', nome: 'Úmero', extra: true, frase: 'Osso do braço, do ombro ao cotovelo.', curio: 'É o maior osso do braço.' },
+    { id: 'radio', nome: 'Rádio e ulna', extra: true, frase: 'Os dois ossos do antebraço, do cotovelo ao punho.', curio: 'Eles se cruzam quando você vira a palma da mão.' },
+    { id: 'ossosmao', nome: 'Ossos da mão', frase: 'Dão forma à mão e deixam os dedos se mexerem.', curio: 'Cada mão tem vinte e sete ossos.' },
+    { id: 'bacia', nome: 'Bacia', frase: 'Sustenta o tronco e liga as pernas ao corpo.', curio: 'O nome que os médicos usam é pelve.' },
+    { id: 'femur', nome: 'Fêmur', frase: 'Osso da coxa.', curio: 'É o maior e mais forte osso do corpo.' },
+    { id: 'patela', nome: 'Patela', extra: true, frase: 'Ossinho redondo na frente do joelho.', curio: 'Ela protege o joelho quando você dobra a perna.' },
+    { id: 'tibia', nome: 'Tíbia e fíbula', extra: true, frase: 'Os dois ossos da perna, do joelho ao tornozelo.', curio: 'A tíbia é a canela, que dói quando a gente bate.' },
+    { id: 'ossospe', nome: 'Ossos do pé', frase: 'Apoiam o corpo e ajudam a andar.', curio: 'Cada pé tem vinte e seis ossos.' } ] }
+};
+const FECHO = 'Agora é a sua vez. Toque em uma parte para ouvir de novo.';
+
+const paradoPeloSistema = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const estado = { corpo: 'menina', aberto: false, soBase: false, passo: 0, tocando: false };
+/* números gerais que o painel de ajustes mexe */
+const AJ = { corpo: 0.3, outros: 0.22, brilho: 0.5, batida: 0.1, bpm: 60, respira: 0.07, pulso: 0.04 };
+for (const O of ORGAOS) if (O.tubo) O.tubo.des = [0, 0, 0];
+const guardados = {};
+let vivos = [], aneis = null, corpoAtual = null, brilhaCorpo = false, pontoRotulo = null, pedido = 0;
+let alvoVisto = false, alvoAtual = -1, ultimaCrianca = 'menina';
+const modo = () => (estado.corpo === 'esqueleto' ? 'esqueleto' : estado.aberto ? 'orgaos' : 'fora');
+
+function abre(arquivo) {
+  if (!guardados[arquivo]) guardados[arquivo] = new Promise((ok, falhou) => {
+    const embutido = window.EMBUTIDOS && window.EMBUTIDOS[arquivo];      /* na versão de arquivo único o modelo vem dentro da página */
+    const pronto = (g) => ok(g.scene);
+    if (embutido) {
+      const bin = atob(embutido), bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      new GLTFLoader().parse(bytes.buffer, '', pronto, falhou);
+    } else new GLTFLoader().load('modelos/' + arquivo, pronto, undefined, falhou);
+  });
+  return guardados[arquivo].then((cena0) => {           /* cada uso recebe uma cópia com materiais próprios */
+    const c = cena0.clone(true);
+    c.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
+    return c;
+  });
+}
+function fazTubo(t, cx) {                           /* tubo ao longo de uma curva; "aneis" engrossa em faixas, como a traqueia */
+  const pts = t.pontos.map((p) => lugar(cx, p[0] + t.des[0], p[1] + t.des[1], p[2] + t.des[2]));
+  const meio = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
+  pts.forEach((p) => p.sub(meio));
+  const SEG = 56, RAD = 16, raio = t.raio * (cx.y1 - cx.y0) * ALTURA, geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), SEG, raio, RAD, false);
+  if (t.aneis) {
+    const pos = geo.attributes.position, nor = geo.attributes.normal;
+    for (let i = 0; i < pos.count; i++) {
+      const s = Math.floor(i / (RAD + 1)) / SEG, onda = Math.pow(Math.max(0, Math.cos(s * t.aneis * 2 * Math.PI)), 2), d = raio * 0.24 * onda;
+      pos.setXYZ(i, pos.getX(i) + nor.getX(i) * d, pos.getY(i) + nor.getY(i) * d, pos.getZ(i) + nor.getZ(i) * d);
+    }
+  }
+  const mat = new THREE.MeshStandardMaterial({ color: t.cor, roughness: 0.85 }), g = new THREE.Group();
+  g.add(new THREE.Mesh(geo, mat));
+  for (const p of [pts[0], pts[pts.length - 1]]) { const tampa = new THREE.Mesh(new THREE.SphereGeometry(raio, 14, 10), mat); tampa.position.copy(p); g.add(tampa); }
+  g.position.copy(meio);
+  return g;
+}
+/* olhos: duas bolinhas atrás do rosto, cada uma com o seu nervo indo para o cérebro */
+function fazOlhos(C) {
+  const [x, y, z] = C.marcos.olhos[1], R = 0.023, g = new THREE.Group();
+  const branco = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }), iris = new THREE.MeshStandardMaterial({ color: 0x4a7fb5, roughness: 0.4 }),
+        pupila = new THREE.MeshStandardMaterial({ color: 0x1b1b1f, roughness: 0.3 }), nervo = new THREE.MeshStandardMaterial({ color: 0xf0d27a, roughness: 0.8 });
+  for (const s of [-1, 1]) {
+    const olho = new THREE.Group(); olho.position.x = s * x * ALTURA;
+    olho.add(new THREE.Mesh(new THREE.SphereGeometry(R * ALTURA, 24, 18), branco));
+    const i = new THREE.Mesh(new THREE.SphereGeometry(R * 0.6 * ALTURA, 20, 14), iris); i.position.z = R * 0.72 * ALTURA; i.scale.z = 0.55; olho.add(i);
+    const p = new THREE.Mesh(new THREE.SphereGeometry(R * 0.3 * ALTURA, 16, 12), pupila); p.position.z = R * 0.92 * ALTURA; p.scale.z = 0.6; olho.add(p);
+    g.add(olho);
+    const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(s * x * ALTURA, 0, -R * 0.8 * ALTURA), new THREE.Vector3(s * x * 0.55 * ALTURA, 0.012 * ALTURA, -0.05 * ALTURA), new THREE.Vector3(s * 0.012 * ALTURA, 0.035 * ALTURA, -0.095 * ALTURA)]);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curva, 20, 0.0045 * ALTURA, 8), nervo));
+  }
+  g.position.set(0, y * ALTURA, (z - R - C.olhoFundo) * ALTURA);   /* olhoFundo: quanto o anel dos olhos fica à frente do rosto */
+  g.userData = { id: 'olhos', escala: 1, forte: true, sozinho: false, meiaAltura: R * 1.6 * ALTURA };
+  return g;
+}
+/* artérias e veias: caminhos finos do coração até a cabeça, as mãos e os pés, pelos pontos medidos de cada corpo.
+   A artéria grande (aorta) desce pelo lado esquerdo do corpo e a veia grande (cava) pelo direito; nos braços e nas pernas a veia corre por fora da artéria. */
+function fazRede(tipo, C) {
+  const cx = C.caixa, M = C.marcos, veia = tipo === 'veias', H = ORGAOS.find((o) => o.id === 'coracao');
+  const T = (u, v, w) => [u * cx.meia, cx.y0 + v * (cx.y1 - cx.y0), cx.zc + w * cx.prof];
+  const lado = veia ? 0.006 : -0.006, fundo = veia ? -0.006 : 0.004;
+  const D = (x, y, z, s) => [s * (x + lado), y, z + fundo];
+  const GROSSO = 0.0095, FINO = 0.0055, caminhos = [];
+  const baixo = T(veia ? -0.1 : 0.1, 0.13, -0.3), topo = T(veia ? -0.1 : 0.06, 0.98, -0.1);
+  if (veia) {
+    caminhos.push([GROSSO, [baixo, T(-0.14, 0.45, -0.4), T(-0.13, 0.66, -0.15), T(H.u - 0.2, H.v - 0.02, H.w - 0.3)]]);                 /* cava de baixo, até o coração */
+    caminhos.push([GROSSO, [topo, T(-0.1, 0.9, -0.02), T(H.u - 0.2, H.v + 0.06, H.w - 0.25)]]);                                         /* cava de cima */
+  } else caminhos.push([GROSSO, [T(H.u - 0.03, H.v + 0.08, H.w - 0.2), T(0.1, 0.95, -0.02), topo, T(0.15, 0.9, -0.4), T(0.12, 0.5, -0.45), baixo]]);   /* aorta: sobe, faz o arco e desce */
+  const P = M.pernas[1], J = M.joelhos[1], F = M.pes[1], O = M.ombros[1], B = M.bracos[1], K = M.cotovelos[1], Q = M.maos[1], cab = cx.cab;
+  for (const s of [-1, 1]) {
+    caminhos.push([FINO, [baixo, D(P[0] * 0.85, cx.y0 - 0.01, cx.zc, s), D(J[0], J[1], P[2], s), D((J[0] + F[0]) / 2 + 0.004, 0.08, P[2], s), D(F[0], 0.032, F[2] * 0.6, s)]]);
+    caminhos.push([FINO, [topo, D(O[0] * 0.9, O[1] - 0.008, O[2], s), D(B[0], B[1], B[2], s), D(K[0], K[1], K[2], s), D(Q[0] * 0.98, Q[1] + 0.012, Q[2], s)]]);
+    caminhos.push([FINO, [topo, D(0.016, cx.y1 + 0.02, cx.zc * 0.5, s), D(0.034, cab.y0 - 0.04, cab.zc + 0.03, s), D(0.05, cab.y0 + 0.015, cab.zc + 0.02, s)]]);
+  }
+  const mat = new THREE.MeshStandardMaterial({ color: veia ? 0x3f6fd8 : 0xe23b3b, roughness: 0.6 }), g = new THREE.Group();
+  for (const [raio, pontos] of caminhos) {
+    const pts = pontos.map((p) => new THREE.Vector3(p[0] * ALTURA, p[1] * ALTURA, p[2] * ALTURA));
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 48, raio * ALTURA, 10), mat));
+    const ponta = new THREE.Mesh(new THREE.SphereGeometry(raio * ALTURA, 12, 8), mat); ponta.position.copy(pts[pts.length - 1]); g.add(ponta);
+  }
+  g.userData = { id: tipo, escala: 1, rede: true, mat, forte: true, sozinho: false, meiaAltura: (cx.cab.y1 + 0.035) * ALTURA };   /* o nome fica acima da cabeça, para não tampar os caminhos */
+  return g;
+}
+function pinta(obj, forte, sozinho) {               /* forte = cor cheia; fraco = acinzentado e meio transparente; sozinho = reforço de cor */
+  obj.traverse((o) => {
+    if (!o.isMesh) return;
+    const m = o.material;
+    if (!m.userData.cor) m.userData.cor = m.color.clone();
+    m.color.copy(m.userData.cor).multiplyScalar(forte ? 1 : AJ.brilho);
+    m.transparent = !forte; m.opacity = forte ? 1 : AJ.outros; m.depthWrite = forte;
+    if (m.emissive) { m.emissive.copy(m.map ? new THREE.Color(0xffffff) : m.userData.cor); m.emissiveMap = m.map || null; m.emissiveIntensity = sozinho ? 0.13 : 0; }
+    m.needsUpdate = true;
+    o.renderOrder = 0;
+  });
+}
+function realca(id) {                               /* id de um órgão, ou 'todos' */
+  for (const g of vivos) {
+    const u = g.userData; u.forte = id === 'todos' || u.id === id; u.sozinho = u.id === id;
+    pinta(g, u.forte, u.sozinho); g.scale.setScalar(u.escala);
+  }
+}
+/* anel amarelo sempre virado para a câmera e por cima de tudo, para marcar uma parte do corpo */
+const texAnel = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'); g.shadowColor = '#ffd23a'; g.shadowBlur = 22; g.strokeStyle = '#ffd23a'; g.lineWidth = 16;
+  g.beginPath(); g.arc(128, 128, 100, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0; g.strokeStyle = '#fff3b0'; g.lineWidth = 4; g.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+function poeAneis(lista) {
+  if (!aneis) return;
+  aneis.traverse((o) => { if (o.isSprite) o.material.dispose(); }); aneis.clear();
+  for (const a of lista || []) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texAnel, depthTest: false, depthWrite: false, transparent: true }));
+    s.position.set(a[0] * ALTURA, a[1] * ALTURA, a[2] * ALTURA); s.userData.lado = 2 * a[3] * ALTURA * 1.28; s.scale.setScalar(s.userData.lado); s.renderOrder = 20;
+    aneis.add(s);
+  }
+}
+
+async function mostra() {
+  const meu = ++pedido, C = CORPOS[estado.corpo], aberto = modo() === 'orgaos';
+  info.textContent = 'Carregando o modelo…';
+  trocaChao(aberto ? 'corpo' : C.chao);
+  try {
+    const corpo = await abre(C.arquivo), pecas = {};
+    if (aberto) for (const o of ORGAOS) if (o.arquivo) pecas[o.id] = await abre(o.arquivo);
+    if (meu !== pedido) return;
+    soltaRig(); palco.traverse((o) => { if (o.isMesh || o.isSprite) o.material.dispose(); }); palco.clear(); vivos = [];
+    const b = new THREE.Box3().setFromObject(corpo), escala = ALTURA / (b.max.y - b.min.y);
+    corpo.scale.setScalar(escala); corpo.position.y = -b.min.y * escala; palco.add(corpo); corpoAtual = corpo;
+    aneis = new THREE.Group(); palco.add(aneis);
+    if (aberto) {
+      /* primeiro o corpo marca só a profundidade, depois é desenhado transparente: assim aparece uma casca limpa,
+         sem o cabelo de trás riscando o rosto. Os dois passos entram depois dos órgãos, para não escondê-los. */
+      const malhas = []; corpo.traverse((o) => { if (o.isMesh) malhas.push(o); });
+      for (const o of malhas) {
+        const fundo = new THREE.Mesh(o.geometry, new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true })); fundo.renderOrder = 1; o.add(fundo);
+        o.material.transparent = true; o.material.opacity = AJ.corpo; o.material.depthWrite = false; o.renderOrder = 2;
+      }
+      for (const O of ORGAOS) {
+        let g;
+        const cx = O.cabeca ? C.caixa.cab : C.caixa;
+        if (O.tubo) g = fazTubo(O.tubo, cx);
+        else {
+          const peca = pecas[O.id], bo = new THREE.Box3().setFromObject(peca);
+          peca.position.sub(bo.getCenter(new THREE.Vector3()));
+          g = new THREE.Group(); g.add(peca);
+          g.scale.setScalar((O.a * (cx.y1 - cx.y0) * ALTURA) / (bo.max.y - bo.min.y));
+          g.position.copy(lugar(cx, O.u, O.v, O.w));
+        }
+        g.userData = { id: O.id, escala: g.scale.x, bate: !!O.bate, respira: !!O.respira, forte: true, sozinho: false, meiaAltura: O.tubo ? 0.03 * ALTURA : O.a * (cx.y1 - cx.y0) * ALTURA / 2 };
+        palco.add(g); vivos.push(g);
+      }
+      for (const g of [fazOlhos(C), fazRede('arterias', C), fazRede('veias', C)]) { palco.add(g); vivos.push(g); }   /* desenhados por código, sem modelo */
+    }
+    info.textContent = aberto ? 'Corpo transparente com os nove órgãos, os olhos e os caminhos do sangue. A parte falada fica com a cor forte e as outras ficam apagadas.'
+      : estado.corpo === 'esqueleto' ? 'Esqueleto do Tripo reduzido para celular. O anel amarelo marca o osso falado.'
+      : 'Modelo do Tripo reduzido para celular. O anel amarelo marca a parte falada.';
+    window.__pronto = true;
+    mostraPasso();
+  } catch (erro) { if (meu === pedido) info.textContent = 'Não consegui carregar o modelo.'; }
+}
+
+/* ---------- narração: a voz conduz, e cada passo acende a sua parte ---------- */
+const legendaEl = document.getElementById('legenda'), rotuloEl = document.getElementById('rotulo'), fioEl = document.getElementById('fio'), passoEl = document.getElementById('passo'),
+      tocarEl = document.getElementById('tocar'), partesEl = document.getElementById('partes'), selOrgao = document.getElementById('aj-orgao');
+let temVoz = false, fichaFala = 0, tempoFala = 0, falaAtual = null;
+try { temVoz = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function'; } catch (erro) { /* sem voz */ }
+/* voz gravada (Cleo, Google AI Studio): uma fala por parte, cortada e nivelada. O que ainda não tem gravação usa a voz do navegador. */
+let FALAS = window.FALAS || null;
+const tocador = new Audio(); tocador.preload = 'auto';
+function avisoVoz() {
+  const total = FALAS ? Object.keys(FALAS).length : 0;
+  document.getElementById('aviso-voz').textContent = total ? 'Voz gravada: Cleo (Google AI Studio), ' + total + ' falas. As partes ainda sem gravação usam a voz do navegador.'
+    : temVoz ? 'A voz é a do navegador, só para marcar o lugar da narração gravada.' : 'Este navegador não tem voz: a explicação avança pelo tempo de leitura.';
+}
+avisoVoz();
+if (!FALAS) fetch('voz/falas.json').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { FALAS = j; avisoVoz(); } }).catch(() => { /* sem gravação: fica a voz do navegador */ });
+function partesAtuais() { return TEXTOS[modo()].partes.filter((p) => !(estado.soBase && p.extra)); }
+function roteiro() { const M = modo(); return [{ tipo: 'abertura', chave: M + ':abertura', texto: TEXTOS[M].abertura }].concat(partesAtuais().map((p) => ({ tipo: 'parte', chave: M + ':' + p.id, parte: p, texto: p.nome + '. ' + p.frase + ' ' + p.curio })), [{ tipo: 'fecho', chave: 'fecho', texto: FECHO }]); }
+function calar() { fichaFala++; clearTimeout(tempoFala); tocador.onended = null; tocador.onerror = null; try { tocador.pause(); } catch (erro) { /* nada */ } if (temVoz) { try { window.speechSynthesis.cancel(); } catch (erro) { /* nada */ } } }
+function falar(passo, fim) {
+  paraDanca(true); calar();
+  const texto = passo.texto, ficha = fichaFala; let feito = false;
+  const acabou = () => { if (feito || ficha !== fichaFala) return; feito = true; clearTimeout(tempoFala); if (fim) fim(); };
+  const leitura = 1300 + texto.length * 62;
+  const gravada = FALAS && FALAS[passo.chave];
+  if (gravada) {
+    let caiu = false;
+    const semGravacao = () => { if (caiu || feito || ficha !== fichaFala) return; caiu = true; tocador.onended = null; tocador.onerror = null; vozDoNavegador(); };
+    tocador.onended = () => { if (ficha === fichaFala) tempoFala = setTimeout(acabou, 450); };
+    tocador.onerror = semGravacao;
+    tocador.src = gravada.src;
+    try { const pr = tocador.play(); if (pr && pr.catch) pr.catch(semGravacao); } catch (erro) { semGravacao(); }
+    return;
+  }
+  vozDoNavegador();
+  function vozDoNavegador() {
+  if (!temVoz) { tempoFala = setTimeout(acabou, leitura); return; }
+  try {
+    const u = new SpeechSynthesisUtterance(texto); u.lang = 'pt-BR'; u.rate = 0.95;
+    const vozes = window.speechSynthesis.getVoices() || [];
+    const v = vozes.filter((x) => /^pt[-_]BR/i.test(x.lang))[0] || vozes.filter((x) => /^pt/i.test(x.lang))[0];
+    if (v) u.voice = v;
+    u.onend = () => setTimeout(acabou, 350);
+    u.onerror = () => { tempoFala = setTimeout(acabou, leitura); };
+    falaAtual = u; window.speechSynthesis.speak(u);
+    tempoFala = setTimeout(() => {              /* sem voz de verdade (ou voz travada): segue pelo tempo de leitura */
+      let falando = false; try { falando = window.speechSynthesis.speaking; } catch (erro) { /* nada */ }
+      if (!falando) acabou(); else tempoFala = setTimeout(acabou, leitura * 1.6);
+    }, leitura);
+  } catch (erro) { tempoFala = setTimeout(acabou, leitura); }
+  }
+}
+function mostraPasso() {
+  const r = roteiro(), i = Math.max(0, Math.min(estado.passo, r.length - 1)), s = r[i], p = s.tipo === 'parte' ? s.parte : null, M = modo();
+  estado.passo = i; pontoRotulo = null; brilhaCorpo = false;
+  if (M === 'orgaos') {
+    realca(p ? p.id : 'todos'); poeAneis(null);
+    const g = p && vivos.find((v) => v.userData.id === p.id);
+    if (g) { const cxp = CORPOS[estado.corpo].caixa; pontoRotulo = g.userData.rede ? new THREE.Vector3(0.05 * ALTURA, (cxp.y0 + 0.9 * (cxp.y1 - cxp.y0)) * ALTURA, cxp.zc * ALTURA) : g.position.clone(); }
+  } else {
+    const lista = p && !p.tudo ? CORPOS[estado.corpo].marcos[p.id] : null;
+    poeAneis(lista); brilhaCorpo = !!(p && p.tudo);
+    if (lista) {                                     /* o fio vai até a beirada do anel mais à direita de quem olha */
+      let fora = lista[0]; for (const a of lista) if (a[0] > fora[0]) fora = a;
+      pontoRotulo = new THREE.Vector3((fora[0] + fora[3] * 0.95) * ALTURA, fora[1] * ALTURA, fora[2] * ALTURA);
+    } else if (p && p.tudo) pontoRotulo = new THREE.Vector3(0.09 * ALTURA, 0.52 * ALTURA, 0.06 * ALTURA);
+    if (corpoAtual) corpoAtual.traverse((o) => { if (o.isMesh && o.material.emissive) { o.material.emissive.set(0xffffff); o.material.emissiveMap = o.material.map; o.material.emissiveIntensity = 0; o.material.needsUpdate = true; } });
+  }
+  rotuloEl.hidden = !p; if (p) rotuloEl.textContent = p.nome;
+  legendaEl.textContent = '';
+  if (p) { const b = document.createElement('b'); b.textContent = p.nome + '. '; legendaEl.append(b, p.frase + ' ' + p.curio); } else legendaEl.textContent = s.texto;
+  passoEl.textContent = p ? i + ' de ' + (r.length - 2) : s.tipo === 'abertura' ? 'Abertura' : 'Fim';
+  pintaTocar(estado.tocando, i >= r.length - 1, p ? p.nome : s.tipo === 'abertura' ? { fora: 'Corpo', orgaos: 'Órgãos', esqueleto: 'Esqueleto' }[M] : 'De novo');
+  for (const b of partesEl.children) {
+    const ativa = !!p && b.dataset.id === p.id; b.setAttribute('aria-pressed', String(ativa));
+    if (ativa && partesEl.scrollWidth > partesEl.clientWidth + 4) partesEl.scrollTo({ left: b.offsetLeft - (partesEl.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
+  }
+  if (p && M === 'orgaos' && selOrgao.value !== p.id && ORGAOS.some((o) => o.id === p.id)) { selOrgao.value = p.id; camposDoOrgao(); }
+  return s;
+}
+function narra() {
+  const s = mostraPasso();
+  falar(s, () => {
+    if (!estado.tocando) return;
+    if (estado.passo >= roteiro().length - 1) { estado.tocando = false; mostraPasso(); return; }
+    estado.passo++; narra();
+  });
+}
+function parar() { estado.tocando = false; calar(); paraDanca(true); }
+function irPara(i, falando) { parar(); estado.passo = i; const s = mostraPasso(); if (falando) falar(s); }
+function montaPartes() {
+  partesEl.textContent = '';
+  partesAtuais().forEach((p, n) => {
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'parte-' + p.id; b.dataset.id = p.id; b.textContent = p.nome; if (p.extra) b.className = 'extra';
+    b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', () => irPara(n + 1, true)); partesEl.append(b);
+  });
+}
+tocarEl.addEventListener('click', () => {
+  if (estado.tocando) { parar(); mostraPasso(); return; }
+  if (estado.passo >= roteiro().length - 1) estado.passo = 0;
+  estado.tocando = true; narra();
+});
+document.getElementById('anterior').addEventListener('click', () => irPara(estado.passo - 1, true));
+document.getElementById('proxima').addEventListener('click', () => irPara(estado.passo + 1, true));
+
+/* ---------- escolhas: quem aparece e a vista ---------- */
+function marca(grupo, botao) { grupo.querySelectorAll('button').forEach((o) => o.setAttribute('aria-pressed', String(o === botao))); }
+function mudaVista() { parar(); estado.passo = 0; document.getElementById('grupo-vista').hidden = estado.corpo === 'esqueleto'; document.getElementById('dancar').hidden = estado.corpo !== 'esqueleto'; montaPartes(); mostra(); }
+const gCorpos = document.getElementById('corpos'), gVista = document.getElementById('vista');
+gCorpos.querySelectorAll('button').forEach((bt) => bt.addEventListener('click', () => { estado.corpo = bt.dataset.corpo; if (estado.corpo !== 'esqueleto') ultimaCrianca = estado.corpo; marca(gCorpos, bt); trocaOrgaosDe(estado.corpo); mudaVista(); }));
+gVista.querySelectorAll('button').forEach((bt) => bt.addEventListener('click', () => { estado.aberto = !!bt.dataset.aberto; marca(gVista, bt); mudaVista(); }));
+document.getElementById('so-base').addEventListener('change', (ev) => { estado.soBase = ev.target.checked; parar(); estado.passo = 0; montaPartes(); mostraPasso(); });
+
+/* ---------- painel de ajustes: deslizantes que mexem nos números dos órgãos e refazem a cena ---------- */
+const textoAj = document.getElementById('aj-texto'), avisoAj = document.getElementById('aj-aviso');
+const CAMPOS_PECA = [['u', 'Para os lados', -1, 1, 0.01], ['v', 'Altura (0 = bacia, 1 = pescoço)', -0.2, 1.3, 0.01], ['w', 'Para a frente', -1, 1, 0.01], ['a', 'Tamanho', 0.05, 1.3, 0.01]];
+const CAMPOS_TUBO = [[0, 'Para os lados', -0.5, 0.5, 0.01], [1, 'Para cima', -0.3, 0.3, 0.01], [2, 'Para a frente', -1, 1, 0.01], ['raio', 'Grossura', 0.008, 0.07, 0.001]];
+const CAMPOS_GERAL = [['corpo', 'Corpo: quanto aparece', 0.05, 0.7, 0.01], ['outros', 'Outros órgãos: quanto aparecem', 0.05, 1, 0.01], ['brilho', 'Outros órgãos: quanta cor', 0.2, 1, 0.01]];
+const CAMPOS_ANIMA = [['batida', 'Força da batida do coração', 0, 0.3, 0.005], ['bpm', 'Batidas por minuto', 30, 140, 1], ['respira', 'Respiração dos pulmões', 0, 0.25, 0.005], ['pulso', 'Pulsar do órgão escolhido', 0, 0.2, 0.005]];
+/* Cada criança tem os seus números de órgãos, porque os corpos têm proporções diferentes. A lista ORGAOS guarda sempre os números
+   de quem está em pé; ao trocar de criança, os números dela entram no lugar. O esqueleto não tem órgãos e não muda nada. */
+const copia = (x) => JSON.parse(JSON.stringify(x));
+function orgaosAgora() {
+  const orgaos = {};
+  for (const O of ORGAOS) orgaos[O.id] = O.tubo ? { desloca: O.tubo.des.slice(), raio: O.tubo.raio } : { u: O.u, v: O.v, w: O.w, a: O.a };
+  return orgaos;
+}
+function poeOrgaos(d) {
+  for (const O of ORGAOS) { const x = d[O.id]; if (!x) continue; if (O.tubo) { O.tubo.des = x.desloca.slice(); O.tubo.raio = x.raio; } else Object.assign(O, x); }
+}
+/* o que no menino é diferente da menina (ajustado pela Inovação no painel, em 15/11/2026) */
+const SO_DO_MENINO = { cerebro: { v: 0.21 }, pulmoes: { v: 0.78 }, esofago: { desloca: [0, -0.08, 0] }, estomago: { v: 0.47 }, figado: { v: 0.48 }, delgado: { v: 0.24 }, grosso: { v: 0.22 } };
+let POR_CORPO = { menina: orgaosAgora(), menino: orgaosAgora() }, donoDosOrgaos = 'menina';
+for (const id in SO_DO_MENINO) Object.assign(POR_CORPO.menino[id], SO_DO_MENINO[id]);
+const NOME_CORPO = { menina: 'a menina', menino: 'o menino' };
+function resumo() { return { corpo: donoDosOrgaos, geral: AJ, orgaos: orgaosAgora() }; }
+const PADRAO = copia({ geral: AJ, corpos: POR_CORPO });
+function aplica(dados) {                            /* dados = { geral, corpos: { menina, menino } } */
+  Object.assign(AJ, dados.geral);
+  for (const c of ['menina', 'menino']) for (const id in (dados.corpos && dados.corpos[c]) || {}) if (POR_CORPO[c][id]) Object.assign(POR_CORPO[c][id], dados.corpos[c][id]);
+  poeOrgaos(POR_CORPO[donoDosOrgaos]);
+}
+function trocaOrgaosDe(corpo) {
+  if (!POR_CORPO[corpo] || corpo === donoDosOrgaos) return;
+  POR_CORPO[donoDosOrgaos] = orgaosAgora(); donoDosOrgaos = corpo; poeOrgaos(POR_CORPO[corpo]);
+  todosOsCampos(); textoAj.value = JSON.stringify(resumo()); avisoAj.textContent = 'Estes ajustes de órgãos valem só para ' + NOME_CORPO[corpo] + '.';
+}
+let refazer = 0;
+function mudou(refaz) {
+  textoAj.value = JSON.stringify(resumo());
+  POR_CORPO[donoDosOrgaos] = orgaosAgora();
+  try { localStorage.setItem('corpo3d-ajustes-5', JSON.stringify({ geral: AJ, corpos: POR_CORPO })); } catch (erro) { /* sem armazenamento: os ajustes valem só até fechar a página */ }
+  if (refaz && !refazer) refazer = requestAnimationFrame(() => { refazer = 0; mostra(); });
+}
+function fazCampos(caixaId, lista, le, grava, refaz) {
+  const cx = document.getElementById(caixaId); cx.textContent = '';
+  lista.forEach((c, n) => {
+    const id = caixaId + '-' + n, rot = document.createElement('label'), val = document.createElement('output'), inp = document.createElement('input');
+    rot.className = 'campo'; rot.htmlFor = id; rot.append(c[1]);
+    inp.type = 'range'; inp.id = id; inp.min = c[2]; inp.max = c[3]; inp.step = c[4]; inp.value = le(c[0]);
+    const mostraValor = () => { val.textContent = Number(inp.value).toLocaleString('pt-BR', { maximumFractionDigits: 4 }); };
+    inp.addEventListener('input', () => { grava(c[0], Number(inp.value)); mostraValor(); mudou(refaz); });
+    mostraValor(); rot.append(val, inp); cx.append(rot);
+  });
+}
+function camposDoOrgao() {
+  const O = ORGAOS.find((o) => o.id === selOrgao.value);
+  if (O.tubo) fazCampos('aj-campos-orgao', CAMPOS_TUBO, (k) => (k === 'raio' ? O.tubo.raio : O.tubo.des[k]), (k, v) => { if (k === 'raio') O.tubo.raio = v; else O.tubo.des[k] = v; }, true);
+  else fazCampos('aj-campos-orgao', CAMPOS_PECA, (k) => O[k], (k, v) => { O[k] = v; }, true);
+}
+function todosOsCampos() {
+  camposDoOrgao();
+  fazCampos('aj-campos-geral', CAMPOS_GERAL, (k) => AJ[k], (k, v) => { AJ[k] = v; }, true);
+  fazCampos('aj-campos-anima', CAMPOS_ANIMA, (k) => AJ[k], (k, v) => { AJ[k] = v; }, false);
+}
+for (const O of ORGAOS) { const op = document.createElement('option'); op.value = O.id; op.textContent = O.nome.replace(/^(o|a|os|as) /, '').replace(/^./, (l) => l.toUpperCase()); selOrgao.append(op); }
+selOrgao.value = 'coracao';
+selOrgao.addEventListener('change', camposDoOrgao);
+document.getElementById('ajustes').addEventListener('toggle', (ev) => { document.body.classList.toggle('ajustando', ev.target.open); });
+try { const salvo = localStorage.getItem('corpo3d-ajustes-5'); if (salvo) aplica(JSON.parse(salvo)); } catch (erro) { /* ajustes guardados ilegíveis: fica o padrão */ }
+todosOsCampos(); textoAj.value = JSON.stringify(resumo());
+document.getElementById('aj-padrao').addEventListener('click', () => { aplica(copia(PADRAO)); todosOsCampos(); mudou(true); avisoAj.textContent = 'Voltou ao padrão, na menina e no menino.'; });
+document.getElementById('aj-copiar').addEventListener('click', () => {
+  const pronto = () => { avisoAj.textContent = 'Copiado. Agora é só colar na conversa.'; };
+  const naMao = () => { textoAj.focus(); textoAj.select(); avisoAj.textContent = 'Não consegui copiar sozinho: o texto abaixo está selecionado, copie com Ctrl+C.'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(textoAj.value).then(pronto, naMao); else naMao();
+});
+montaPartes();
+mostra();
+
+/* ---------- dança do esqueleto ----------
+   O modelo do esqueleto é uma peça só, sem articulações. Aqui ele ganha juntas por código: cada ponto da malha é preso a um
+   "osso de boneco" (bacia, peito, cabeça, braço, antebraço, mão, coxa, canela, pé) pela região em que está, com uma faixa de
+   mistura em cada junta. As medidas são frações da altura, tiradas do próprio modelo (lado esquerdo do corpo = x positivo).
+   A dança dura 32 s e segue a música voz/musica/danca.mp3 (tools/voz/musica-danca.mjs), a 120 batidas por minuto. */
+const JUNTA = { bacia: [0, 0.40, -0.02], peito: [0, 0.49, -0.04], cabeca: [0, 0.725, -0.03],
+  ombro: [0.122, 0.668, -0.024], cotovelo: [0.157, 0.515, -0.028], pulso: [0.195, 0.415, -0.025],
+  quadril: [0.072, 0.352, -0.014], joelho: [0.07, 0.21, -0.01], tornozelo: [0.068, 0.062, -0.035] };
+const BPM_DANCA = 120, FIM_DANCA = 32, TEXTO_DANCA = 'Hora de dançar! Dance junto com o esqueleto.';
+const rampa = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const danca = { ligada: false, rig: null, inicio: 0, pediu: 0, comMusica: false, fixo: null, musica: new Audio() };
+danca.musica.preload = 'auto';
+const btDanca = document.getElementById('dancar');
+
+function armaEsqueleto(corpo) {                      /* troca a malha parada por uma malha com ossos, na mesma posição */
+  let malha = null; corpo.traverse((o) => { if (o.isMesh && !malha) malha = o; });
+  if (!malha) return null;
+  const geo = malha.geometry; if (!geo.boundingBox) geo.computeBoundingBox();
+  const H = geo.boundingBox.max.y - geo.boundingBox.min.y, y0 = geo.boundingBox.min.y;
+  if (!geo.attributes.skinWeight) {                  /* a conta dos pesos é feita uma vez só: a geometria é a mesma em todas as cópias */
+    const pos = geo.attributes.position, n = pos.count, quais = new Uint16Array(n * 4), pesos = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) {
+      const u = pos.getX(i) / H, v = (pos.getY(i) - y0) / H, au = Math.abs(u), lado = u > 0 ? 0 : 3;
+      const beira = v >= 0.47 ? 0.113 : 0.135;       /* onde o braço se separa das costelas (em cima) e da bacia (embaixo) */
+      const braco = v > 0.295 && v < 0.705 ? rampa(beira - 0.01, beira + 0.01, au) : 0;
+      const cot = 1 - rampa(0.495, 0.535, v), pul = 1 - rampa(0.40, 0.43, v);
+      const perna = (1 - braco) * (1 - rampa(0.335, 0.375, v)) * (1 - rampa(0.30, 0.335, v) * (1 - rampa(0.012, 0.04, au)));
+      const joe = 1 - rampa(0.195, 0.225, v), tor = 1 - rampa(0.05, 0.075, v);
+      const tronco = Math.max(0, 1 - braco - perna), pei = rampa(0.475, 0.505, v), cab = rampa(0.708, 0.738, v);
+      const w = [[0, tronco * (1 - pei)], [1, tronco * pei * (1 - cab)], [2, tronco * pei * cab],
+        [3 + lado, braco * (1 - cot)], [4 + lado, braco * cot * (1 - pul)], [5 + lado, braco * cot * pul],
+        [9 + lado, perna * (1 - joe)], [10 + lado, perna * joe * (1 - tor)], [11 + lado, perna * joe * tor]].sort((a, b) => b[1] - a[1]);
+      const soma = w[0][1] + w[1][1] + w[2][1] + w[3][1] || 1;
+      for (let k = 0; k < 4; k++) { quais[i * 4 + k] = w[k][0]; pesos[i * 4 + k] = w[k][1] / soma; }
+    }
+    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(quais, 4)); geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(pesos, 4));
+  }
+  const P = (j, s) => new THREE.Vector3((s || 1) * j[0] * H, y0 + j[1] * H, j[2] * H);
+  const chao = new THREE.Group(), ossos = [];
+  const osso = (pai, onde) => { const b = new THREE.Bone(); b.userData.onde = onde; b.position.copy(onde); if (pai) { b.position.sub(pai.userData.onde); pai.add(b); } else chao.add(b); ossos.push(b); return b; };
+  const R = { H, lados: [] };
+  R.bacia = osso(null, P(JUNTA.bacia)); R.peito = osso(R.bacia, P(JUNTA.peito)); R.cabeca = osso(R.peito, P(JUNTA.cabeca));
+  for (const s of [1, -1]) { const L = { s }; L.braco = osso(R.peito, P(JUNTA.ombro, s)); L.ante = osso(L.braco, P(JUNTA.cotovelo, s)); L.mao = osso(L.ante, P(JUNTA.pulso, s)); R.lados.push(L); }
+  for (const L of R.lados) {                         /* as pernas não ficam penduradas na bacia: cada osso é posto no lugar a cada quadro, para os pés ficarem no chão */
+    L.coxa = osso(null, P(JUNTA.quadril, L.s)); L.canela = osso(null, P(JUNTA.joelho, L.s)); L.pe = osso(null, P(JUNTA.tornozelo, L.s));
+    L.dirCoxa = L.canela.userData.onde.clone().sub(L.coxa.userData.onde); L.compCoxa = L.dirCoxa.length(); L.dirCoxa.normalize();
+    L.dirCanela = L.pe.userData.onde.clone().sub(L.canela.userData.onde); L.compCanela = L.dirCanela.length(); L.dirCanela.normalize();
+  }
+  const nova = new THREE.SkinnedMesh(geo, malha.material);
+  nova.name = malha.name; nova.position.copy(malha.position); nova.quaternion.copy(malha.quaternion); nova.scale.copy(malha.scale); nova.renderOrder = malha.renderOrder; nova.frustumCulled = false;
+  const pai = malha.parent; pai.add(nova); pai.remove(malha); nova.add(chao);
+  corpo.updateWorldMatrix(true, true); nova.bind(new THREE.Skeleton(ossos));
+  R.malha = nova; R.ossos = ossos;
+  return R;
+}
+function soltaOssos() {                              /* volta à pose de pé */
+  const R = danca.rig; if (!R) return;
+  for (const b of R.ossos) { b.quaternion.identity(); b.position.copy(b.userData.onde); if (b.parent && b.parent.isBone) b.position.sub(b.parent.userData.onde); }
+}
+function soltaRig() { if (danca.rig) { danca.rig.malha.skeleton.dispose(); danca.rig = null; } }
+
+/* Cada movimento devolve só o que muda em relação à pose de pé. b = batidas desde o começo do movimento.
+   b? = bacia, p? = peito, c? = cabeça (x inclina para a frente, y vira, z tomba para o lado) · bx, by = bacia para o lado e para cima
+   oE, oD = ombro esquerdo e direito (x balança para a frente, z abre para o lado) · cE, cD = cotovelo (x dobra para a frente, z dobra para dentro)
+   mE, mD = mão · pE, pD = pé (x para fora, y para cima, z para a frente, r ponta para baixo) · abre = joelhos para fora */
+const POSE_DE_PE = { bx: 0, by: 0, brx: 0, bry: 0, brz: 0, prx: 0, pry: 0, prz: 0, crx: 0, cry: 0, crz: 0, oEx: 0, oEz: 0, oDx: 0, oDz: 0, cEx: 0, cEz: 0, cDx: 0, cDz: 0, mEz: 0, mDz: 0,
+  pEx: 0, pEy: 0, pEz: 0, pEr: 0, pDx: 0, pDy: 0, pDz: 0, pDr: 0, abre: 0 };
+const VOLTA = Math.PI * 2, sen = Math.sin, bate = (b) => 0.5 + 0.5 * Math.cos(VOLTA * b);      /* bate = 1 em cima da batida */
+const MOVIMENTOS = [
+  [0, function prepara(b) { const k = bate(b); return { by: -0.012 * k, crx: 0.16 * k, oEz: 0.12, oDz: 0.12, oEx: 0.1, oDx: 0.1, cEx: 0.5, cDx: 0.5 }; }],
+  [4, function balanco(b) { const k = bate(b), v = sen(Math.PI * b), abreBraco = b >= 8 ? 0.6 : 0;      /* quica e balança o quadril, braços de corrida */
+    return { by: -0.028 * k, bx: 0.03 * v, brz: 0.07 * v, prz: -0.12 * v, crz: 0.1 * v, cry: 0.15 * v, oEz: 0.3 + abreBraco * Math.max(0, v), oDz: 0.3 + abreBraco * Math.max(0, -v),
+      oEx: 0.55 * v, oDx: -0.55 * v, cEx: 1.25, cDx: 1.25, abre: 0.25 }; }],
+  [20, function maosProAlto(b) { const k = bate(b), v = sen(Math.PI * b), o = sen(VOLTA * b);            /* os dois braços no alto, indo de um lado para o outro */
+    return { by: -0.025 * k, bx: 0.035 * v, brz: 0.06 * v, prz: -0.1 * v, crz: -0.08 * v, oEz: 2.05 - 0.28 * v, oDz: 2.05 + 0.28 * v, cEz: 0.45 + 0.25 * o, cDz: 0.45 + 0.25 * o, mEz: 0.4 * o, mDz: 0.4 * o, abre: 0.2 }; }],
+  [28, function torce(b) { const k = bate(b), v = sen(Math.PI * b), fundo = sen(Math.PI * b / 8), o = sen(VOLTA * b);   /* torce o quadril descendo e subindo */
+    return { by: -0.02 - 0.065 * fundo - 0.012 * k, bry: 0.55 * v, pry: -0.95 * v, cry: 0.45 * v, oEz: 0.45, oDz: 0.45, cEx: 1.5, cDx: 1.5, oEx: 0.15 + 0.3 * o, oDx: 0.15 - 0.3 * o, abre: 0.45 }; }],
+  [36, function passinho(b) { const k = bate(b), c = Math.cos(Math.PI * b), e = Math.pow(Math.max(0, -c), 2), d = Math.pow(Math.max(0, c), 2);   /* um pé para o lado de cada vez */
+    return { by: -0.015 * k, bx: 0.04 * (d - e), brz: 0.08 * (e - d), prz: -0.1 * (e - d), crz: -0.12 * (e - d), pEx: 0.075 * e, pEy: 0.085 * e, pEr: 0.5 * e, pDx: 0.075 * d, pDy: 0.085 * d, pDr: 0.5 * d,
+      oEz: 0.35 + 0.95 * e, oDz: 0.35 + 0.95 * d, cEx: 0.5, cDx: 0.5, cEz: 0.3 * e, cDz: 0.3 * d, abre: 0.3 }; }],
+  [44, function tchau(b) { const k = bate(b), v = sen(Math.PI * b), e = 1 - rampa(3.6, 4.4, b), d = 1 - e, o = sen(VOLTA * 2 * b);   /* dá tchau com uma mão, depois com a outra */
+    return { by: -0.025 * k, bx: 0.025 * v, brz: 0.05 * v, prz: -0.08 * v, crz: -0.14 * (e - d), oEz: 0.3 + 1.95 * e, oDz: 0.3 + 1.95 * d, cEz: (0.55 + 0.45 * o) * e, cDz: (0.55 + 0.45 * o) * d,
+      mEz: 0.35 * o * e, mDz: 0.35 * o * d, cEx: 0.9 * d, cDx: 0.9 * e, oEx: 0.3 * d * v, oDx: -0.3 * e * v, abre: 0.25 }; }],
+  [52, function chacoalha(b) { const r = VOLTA * 3 * b, fundo = sen(Math.PI * b / 4);                      /* treme o corpo todo */
+    return { by: -0.03 - 0.035 * fundo + 0.008 * sen(r), bx: 0.012 * sen(r), bry: 0.14 * sen(r + 1), pry: -0.2 * sen(r + 1), prz: 0.05 * sen(r + 2), crz: 0.13 * sen(r + 0.5), cry: 0.12 * sen(r / 2),
+      oEz: 0.55 + 0.22 * sen(r), oDz: 0.55 - 0.22 * sen(r), cEx: 0.6 + 0.45 * sen(r + 2), cDx: 0.6 - 0.45 * sen(r + 2), mEz: 0.5 * sen(r + 1), mDz: 0.5 * sen(r + 4), abre: 0.5 + 0.3 * sen(r) }; }],
+  [56, function final(b) {                              /* agacha, pula e termina de braços abertos */
+    const agacha = rampa(0, 1.3, b) * (1 - rampa(1.45, 1.7, b)), noAr = b > 1.5 && b < 2.5 ? sen(Math.PI * (b - 1.5)) : 0, cai = b > 2.5 && b < 3 ? sen(Math.PI * (b - 2.5) / 0.5) : 0;
+    const alto = rampa(1.5, 1.9, b), pose = rampa(2.5, 3, b), treme = pose * (1 - rampa(3.6, 4.6, b)) * sen(VOLTA * 3 * b);
+    return { by: -0.1 * agacha + 0.15 * noAr - 0.045 * cai, pEy: 0.12 * noAr, pDy: 0.12 * noAr, prx: 0.25 * agacha, crx: -0.15 * agacha, oEx: -0.7 * agacha, oDx: -0.7 * agacha, cEx: 0.5 * agacha, cDx: 0.5 * agacha,
+      oEz: 0.25 + 1.95 * alto - 0.25 * pose, oDz: 0.25 + 1.95 * alto - 0.25 * pose, cEz: 0.1 * pose, cDz: 0.1 * pose, mEz: 0.3 * treme, mDz: 0.3 * treme, crz: -0.14 * pose, brz: 0.05 * pose, bx: 0.015 * pose,
+      pEx: 0.05 * pose, pEz: 0.03 * pose, pEr: -0.45 * pose, abre: 0.3 }; }]
+];
+const poseAgora = { ...POSE_DE_PE };
+function poseDaDanca(t) {                            /* t em segundos desde o começo da música */
+  const b = t * BPM_DANCA / 60; let i = 0;
+  while (i + 1 < MOVIMENTOS.length && b >= MOVIMENTOS[i + 1][0]) i++;
+  const a = MOVIMENTOS[i][1](b - MOVIMENTOS[i][0]), mistura = i > 0 ? rampa(0, 0.5, b - MOVIMENTOS[i][0]) : 1;   /* meia batida para passar de um movimento para o outro */
+  const antes = mistura < 1 ? MOVIMENTOS[i - 1][1](b - MOVIMENTOS[i - 1][0]) : null;
+  const forca = rampa(0, 0.4, t) * (1 - rampa(FIM_DANCA - 0.7, FIM_DANCA, t));
+  for (const c in POSE_DE_PE) { const va = a[c] || 0; poseAgora[c] = forca * (antes ? (antes[c] || 0) + (va - (antes[c] || 0)) * mistura : va); }
+  return poseAgora;
+}
+const vQuadril = new THREE.Vector3(), vAlvo = new THREE.Vector3(), vDir = new THREE.Vector3(), vDica = new THREE.Vector3(), vJoelho = new THREE.Vector3(), EIXO_Y = new THREE.Vector3(0, 1, 0);
+function poeOssos(R, p) {
+  const H = R.H, o = R.bacia.userData.onde;
+  R.bacia.position.set(o.x + p.bx * H, o.y + p.by * H, o.z); R.bacia.rotation.set(p.brx, p.bry, p.brz);
+  R.peito.rotation.set(p.prx, p.pry, p.prz); R.cabeca.rotation.set(p.crx, p.cry, p.crz);
+  for (const L of R.lados) {
+    const E = L.s > 0, s = L.s;
+    L.braco.rotation.set(-(E ? p.oEx : p.oDx), 0, s * (E ? p.oEz : p.oDz));
+    L.ante.rotation.set(-(E ? p.cEx : p.cDx), 0, s * (E ? p.cEz : p.cDz));
+    L.mao.rotation.set(0, 0, s * (E ? p.mEz : p.mDz));
+    /* perna: o quadril vai com a bacia, o pé fica onde a pose manda, e o joelho dobra para a frente (e um pouco para fora) */
+    vQuadril.copy(L.coxa.userData.onde).sub(o).applyQuaternion(R.bacia.quaternion).add(R.bacia.position);
+    vAlvo.copy(L.pe.userData.onde); vAlvo.x += s * (E ? p.pEx : p.pDx) * H; vAlvo.y += (E ? p.pEy : p.pDy) * H; vAlvo.z += (E ? p.pEz : p.pDz) * H;
+    vDir.copy(vAlvo).sub(vQuadril); let d = vDir.length(); const estica = (L.compCoxa + L.compCanela) * 0.999;
+    vDir.divideScalar(d || 1);
+    if (d > estica) { d = estica; vAlvo.copy(vQuadril).addScaledVector(vDir, d); }       /* perna esticada: o pé sobe junto (no pulo) */
+    const ao = (L.compCoxa * L.compCoxa - L.compCanela * L.compCanela + d * d) / (2 * d), fora = Math.sqrt(Math.max(0, L.compCoxa * L.compCoxa - ao * ao));
+    vDica.set(s * p.abre, 0, 1).applyAxisAngle(EIXO_Y, p.bry * 0.6); vDica.addScaledVector(vDir, -vDica.dot(vDir)).normalize();
+    vJoelho.copy(vQuadril).addScaledVector(vDir, ao).addScaledVector(vDica, fora);
+    L.coxa.position.copy(vQuadril); L.coxa.quaternion.setFromUnitVectors(L.dirCoxa, vDir.copy(vJoelho).sub(vQuadril).normalize());
+    L.canela.position.copy(vJoelho); L.canela.quaternion.setFromUnitVectors(L.dirCanela, vDir.copy(vAlvo).sub(vJoelho).normalize());
+    L.pe.position.copy(vAlvo); L.pe.rotation.set(E ? p.pEr : p.pDr, 0, 0);
+  }
+}
+function animaDanca() {
+  if (!danca.rig) return;
+  let t = danca.fixo;
+  if (t == null) {
+    const agora = performance.now() / 1000, m = danca.musica;
+    if (danca.comMusica) {                           /* o corpo segue o relógio da música; se ela não começar em 1,5 s, dança sem som */
+      if (!m.paused && m.currentTime > 0) { if (Math.abs(agora - danca.inicio - m.currentTime) > 0.12) danca.inicio = agora - m.currentTime; }
+      else if (agora - danca.pediu > 1.5) { danca.comMusica = false; danca.inicio = agora; }
+      else danca.inicio = agora;
+    }
+    t = agora - danca.inicio;
+    if (t >= FIM_DANCA) { paraDanca(); return; }
+  }
+  poeOssos(danca.rig, poseDaDanca(Math.max(0, t)));
+}
+function paraDanca(calado) {                         /* calado = quem chamou já vai acertar a tela (troca de corpo, voz) */
+  if (!danca.ligada) return;
+  danca.ligada = false; btDanca.setAttribute('aria-pressed', 'false');
+  try { danca.musica.pause(); } catch (erro) { /* nada */ }
+  soltaOssos();
+  if (!calado) mostraPasso();
+}
+function dancar() {
+  if (danca.ligada) { paraDanca(); return; }
+  if (estado.corpo !== 'esqueleto' || !corpoAtual) return;
+  parar(); mostraPasso();                            /* cala a explicação e acerta o botão de tocar antes de a dança tomar a tela */
+  if (!danca.rig) danca.rig = armaEsqueleto(corpoAtual);
+  if (!danca.rig) return;
+  danca.ligada = true; danca.fixo = null; btDanca.setAttribute('aria-pressed', 'true');
+  poeAneis(null); pontoRotulo = null; brilhaCorpo = false; rotuloEl.hidden = true; legendaEl.textContent = TEXTO_DANCA;
+  const agora = performance.now() / 1000, faixa = FALAS && FALAS['musica:danca'];
+  danca.inicio = danca.pediu = agora; danca.comMusica = false;
+  if (faixa) {                                       /* dentro do toque no botão, para o celular deixar tocar */
+    try {
+      if (danca.musica.src !== faixa.src) danca.musica.src = faixa.src;
+      danca.musica.currentTime = 0; danca.comMusica = true;
+      const pr = danca.musica.play(); if (pr && pr.catch) pr.catch(() => { danca.comMusica = false; danca.inicio = performance.now() / 1000; });
+    } catch (erro) { danca.comMusica = false; }
+  }
+}
+btDanca.addEventListener('click', dancar);
+danca.musica.addEventListener('ended', () => paraDanca());
+document.addEventListener('visibilitychange', () => { if (document.hidden) paraDanca(); });   /* saiu da página: a música não fica tocando sozinha */
+window.__dancando = () => ({ ligada: danca.ligada, comMusica: danca.comMusica, t: +danca.musica.currentTime.toFixed(2), pausada: danca.musica.paused, botao: btDanca.getAttribute('aria-pressed'), legenda: legendaEl.textContent.slice(0, 30) });
+window.__danca = (t) => {                            /* para os testes: põe o esqueleto parado no segundo t da dança */
+  if (t == null) { danca.fixo = null; soltaOssos(); return null; }
+  if (!danca.rig && corpoAtual && estado.corpo === 'esqueleto') danca.rig = armaEsqueleto(corpoAtual);
+  danca.fixo = t; animaDanca(); renderAtual.render(cenaAtual, camAtual); return danca.rig ? { ossos: danca.rig.ossos.length, pontos: danca.rig.malha.geometry.attributes.position.count } : null;
+};
+
+/* ---------- desenho da cena ---------- */
+window.__vista = (x, y, z, ax, ay, az) => { cam.position.set(x, y, z); ctl.target.set(ax, ay, az); ctl.update(); };   /* para os testes */
+window.__ir = (i) => irPara(i, false);
+window.__voz = () => ({ gravada: tocador.currentSrc.slice(0, 22), t: +tocador.currentTime.toFixed(2), dur: +(tocador.duration || 0).toFixed(2), pausado: tocador.paused, passo: estado.passo, legenda: legendaEl.textContent.slice(0, 40) });
+function ajusta() { const w = caixa.clientWidth, h = caixa.clientHeight; render.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+new ResizeObserver(ajusta).observe(caixa); ajusta();
+const relogio = new THREE.Clock(), tela = new THREE.Vector3();
+let renderAtual = render, cenaAtual = cena, camAtual = cam, rotuloVisivel = true;   /* a RA troca os três primeiros e esconde o nome quando o papel some da câmera */
+function quadro() {
+  if (mind) firma();
+  const agora = relogio.getElapsedTime(), vai = paradoPeloSistema ? 0 : 1;
+  const t = (agora * AJ.bpm / 60) % 1, tumTum = Math.exp(-Math.pow((t - 0.08) / 0.05, 2)) + 0.6 * Math.exp(-Math.pow((t - 0.3) / 0.06, 2));     /* batida dupla */
+  for (const g of vivos) {
+    const u = g.userData;
+    if (u.rede) {                                    /* os caminhos do sangue não crescem: a artéria escolhida acende junto com a batida, a veia num vaivém calmo */
+      if (u.sozinho) u.mat.emissiveIntensity = 0.12 + vai * (u.id === 'arterias' ? 0.5 * tumTum : 0.22 * (0.5 + 0.5 * Math.sin(agora * 3)));
+      continue;
+    }
+    const k = u.bate && u.forte ? AJ.batida * tumTum : u.respira && u.forte ? AJ.respira * (0.5 + 0.5 * Math.sin(agora * 2.1)) : u.sozinho ? AJ.pulso * (0.5 + 0.5 * Math.sin(agora * 4)) : 0;       /* o coração bate, os pulmões enchem; o órgão escolhido pulsa de leve */
+    g.scale.setScalar(u.escala * (1 + vai * k));
+  }
+  if (danca.ligada || danca.fixo != null) animaDanca();
+  if (aneis) for (const s of aneis.children) s.scale.setScalar(s.userData.lado * (1 + vai * 0.07 * Math.sin(agora * 5)));
+  if (corpoAtual && brilhaCorpo) { const f = 0.22 + vai * 0.12 * Math.sin(agora * 4); corpoAtual.traverse((o) => { if (o.isMesh && o.material.emissive) o.material.emissiveIntensity = f; }); }
+  if (camAtual === cam) ctl.update(); renderAtual.render(cenaAtual, camAtual);
+  /* o nome flutua ao lado do corpo, na altura da parte, e um fio liga os dois */
+  const comNome = !!pontoRotulo && !rotuloEl.hidden && rotuloVisivel;
+  fioEl.hidden = rotuloEl.hidden; rotuloEl.style.visibility = fioEl.style.visibility = comNome ? '' : 'hidden';
+  if (comNome) {
+    const W = caixa.clientWidth, H = caixa.clientHeight, lado = pontoRotulo.x < -0.02 * ALTURA ? -1 : 1;
+    palco.localToWorld(tela.copy(pontoRotulo)).project(camAtual);
+    const px = (tela.x * 0.5 + 0.5) * W, py = (-tela.y * 0.5 + 0.5) * H;
+    palco.localToWorld(tela.set(lado * 0.34 * ALTURA, pontoRotulo.y + 0.03 * ALTURA, pontoRotulo.z)).project(camAtual);
+    const meia = rotuloEl.offsetWidth / 2, alt = rotuloEl.offsetHeight / 2, noAlto = legendaEl.offsetTop < H / 2;
+    const teto = (noAlto ? legendaEl.offsetTop + legendaEl.offsetHeight : 0) + alt + 6, piso = (noAlto ? H : legendaEl.offsetTop) - alt - 6;
+    const qx = Math.max(meia + 6, Math.min(W - meia - 6, (tela.x * 0.5 + 0.5) * W + lado * meia)), qy = Math.max(teto, Math.min(piso, (-tela.y * 0.5 + 0.5) * H));
+    rotuloEl.style.left = qx + 'px'; rotuloEl.style.top = qy + 'px';
+    const fx = qx - lado * meia, dx = px - fx, dy = py - qy;      /* o fio sai da beirada de dentro do nome */
+    fioEl.style.left = fx + 'px'; fioEl.style.top = qy + 'px'; fioEl.style.width = Math.hypot(dx, dy) + 'px'; fioEl.style.transform = 'translateY(-50%) rotate(' + Math.atan2(dy, dx) + 'rad)';
+  }
+}
+render.setAnimationLoop(quadro);
+
+/* ---------- comandos do app ---------- */
+let mind = null, pedirCamera = null, enquadrou = false;   /* mind = a RA ligada; fica aqui em cima porque os comandos abaixo já consultam */
+function pintaTocar(tocando, fim, nome) {            /* ícone + nome da parte + em que passo está */
+  const icone = tocando ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.500h4.500v15H6zm7.500 0H18v15h-4.500z"/></svg>' : fim ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7.500 6 12 10V7a5.500 5.500 0 11-5.500 5.500h-2A7.500 7.500 0 1012 5z"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.500v15l13-7.500z"/></svg>';
+  tocarEl.innerHTML = icone + '<span class="nome-parte"></span><small></small>';
+  tocarEl.querySelector('.nome-parte').textContent = nome;
+  tocarEl.querySelector('small').textContent = /^\d/.test(passoEl.textContent) ? passoEl.textContent : '';
+  tocarEl.setAttribute('aria-label', (tocando ? 'Pausar: ' : 'Ouvir: ') + nome);
+}
+const soBasico = document.getElementById('so-base'), btExtras = document.getElementById('extras'), btExtrasGaveta = document.getElementById('extras-gaveta'), btVista = document.getElementById('alterna-vista'), gaveta = document.getElementById('gaveta');
+function sincroniza() {                              /* acerta os botões que dependem do estado: extras ligado, por dentro ligado, e quando "por dentro" some */
+  btExtras.setAttribute('aria-pressed', String(!soBasico.checked)); btExtrasGaveta.setAttribute('aria-pressed', String(!soBasico.checked));
+  btExtrasGaveta.querySelector('span').textContent = soBasico.checked ? 'Mostrar extras' : 'Extras ligados';
+  btVista.setAttribute('aria-pressed', String(estado.aberto)); btVista.hidden = estado.corpo === 'esqueleto' || !!mind;
+}
+const alternaExtras = () => { soBasico.checked = !soBasico.checked; soBasico.dispatchEvent(new Event('change')); sincroniza(); };
+btExtras.addEventListener('click', alternaExtras); btExtrasGaveta.addEventListener('click', alternaExtras);
+btVista.addEventListener('click', () => { document.getElementById(estado.aberto ? 'vista-fora' : 'vista-dentro').click(); sincroniza(); });
+gCorpos.addEventListener('click', () => setTimeout(sincroniza, 0));
+function abreGaveta(aberta) {
+  gaveta.hidden = !aberta;
+  if (aberta) { const ativa = partesEl.querySelector('[aria-pressed="true"]'); if (ativa) partesEl.scrollTop = ativa.offsetTop - partesEl.offsetTop - (partesEl.clientHeight - ativa.offsetHeight) / 2; }
+}
+document.getElementById('abre-partes').addEventListener('click', () => abreGaveta(true));
+document.getElementById('fecha-partes').addEventListener('click', () => abreGaveta(false));
+gaveta.addEventListener('click', (ev) => { if (ev.target === gaveta || ev.target.closest('#partes button')) abreGaveta(false); });   /* fecha ao tocar fora ou ao escolher uma parte */
+soBasico.checked = true; soBasico.dispatchEvent(new Event('change')); sincroniza();     /* por padrão vem só o básico; o botão Extras liga o resto */
+
+/* ---------- menu de entrada: nada de câmera antes do toque em "Abrir a câmera" ---------- */
+const ALVOS = ['corpo', 'criancas'];                 /* ordem dos alvos dentro de alvos.mind */
+const LARG_PECA = LARG * 1079 / 1125;                /* largura do quebra-cabeça montado (a moldura de corte), na medida da cena */
+const TAMANHO_RA = Number(new URLSearchParams(location.search).get('tamanho')) || 1.26;   /* tamanho do corpo na RA (era 0,72; a Inovação pediu 1,75 vez maior). Para experimentar: ?tamanho=1 */
+const PARAMS = new URLSearchParams(location.search), TESTE = PARAMS.get('teste'), DEBUG = PARAMS.get('debug') === '1', CAMERA_LEVE = PARAMS.get('camera') === 'leve';
+const NOME_NIVEL = ['baixa', 'media', 'alta'], ROTULO_NIVEL = ['baixa', 'média', 'alta'];
+const CAMERA_DO_NIVEL = [[640, 480], [960, 540], [1280, 720]], NITIDEZ_DO_NIVEL = [1, 1.5, 2];
+function nivelDoAparelho() {                         /* 2 = alto, 1 = médio, 0 = baixo, com o motivo */
+  const memoria = navigator.deviceMemory || 0, nucleos = navigator.hardwareConcurrency || 0, ua = navigator.userAgent;
+  let placa = '';
+  try {
+    const gl = document.createElement('canvas').getContext('webgl'), ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    if (ext) placa = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '');
+    const solta = gl && gl.getExtension('WEBGL_lose_context'); if (solta) solta.loseContext();
+  } catch (erro) { /* sem essa informação */ }
+  const motivo = (nucleos ? nucleos + ' núcleos' : 'núcleos ?') + ', ' + (memoria ? memoria + ' GB' : 'memória ?') + (placa ? ', ' + placa.replace(/ANGLE \(|\)$/g, '').slice(0, 40) : '');
+  if (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return { nivel: 2, motivo: 'iPhone ou iPad' };
+  let nivel = 2;
+  if (memoria && memoria <= 2) nivel = 0; else if (memoria && memoria <= 4) nivel = 1;
+  if (nucleos && nucleos <= 4) nivel = 0; else if (nucleos && nucleos <= 6) nivel = Math.min(nivel, 1);
+  if (/Mali-4|Mali-T|Mali-G5[0-2]|Adreno \(TM\) [34]\d\d|Adreno \(TM\) 5(0\d|1[0-2])|PowerVR (SGX|Rogue GE)/i.test(placa)) nivel = Math.max(0, nivel - 1);   /* placas de vídeo de entrada */
+  return { nivel, motivo };
+}
+const APARELHO = nivelDoAparelho(), seletorQualidade = document.getElementById('qualidade');
+let NIVEL = 2, nitidez = 2, nitidezReduzida = false;
+function aplicaQualidade() {
+  const escolha = seletorQualidade.value, i = NOME_NIVEL.indexOf(escolha);
+  NIVEL = i >= 0 ? i : APARELHO.nivel;
+  nitidez = Math.min(devicePixelRatio || 1, NITIDEZ_DO_NIVEL[NIVEL]); nitidezReduzida = false;
+  render.setPixelRatio(nitidez); ajusta();
+  document.getElementById('qualidade-achada').textContent = i >= 0 ? '' : '(neste aparelho: ' + ROTULO_NIVEL[NIVEL] + ')';
+}
+try { const guardada = PARAMS.get('qualidade') || localStorage.getItem('corpo-ra-qualidade'); if (guardada && [...seletorQualidade.options].some((o) => o.value === guardada)) seletorQualidade.value = guardada; } catch (erro) { /* sem armazenamento: fica automática */ }
+seletorQualidade.addEventListener('change', () => { try { localStorage.setItem('corpo-ra-qualidade', seletorQualidade.value); } catch (erro) { /* vale só até fechar */ } aplicaQualidade(); });
+aplicaQualidade();
+if (window.POLITICA) document.getElementById('link-privacidade').href = window.POLITICA;
+const pausaEl = document.getElementById('pausa'); let relogioPausa = 0;
+document.getElementById('pausa-ok').addEventListener('click', () => { pausaEl.hidden = true; });
+const inicioEl = document.getElementById('inicio'), appEl = document.getElementById('app'), dicaEl = document.getElementById('dica'), erroCamera = document.getElementById('erro-camera');
+const botaoCamera = document.getElementById('abrir-camera'), textoCamera = botaoCamera.innerHTML;
+const medir = (nome, p) => { try { if (window.medir) window.medir(nome, p); } catch (erro) { /* sem contagem */ } };   /* contagem anônima: só existe se o adulto permitiu no aviso do site */
+if (/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Line\//i.test(navigator.userAgent)) document.getElementById('aviso-nav').hidden = false;   /* navegador de dentro de rede social: a câmera costuma falhar */
+document.getElementById('link-contagem').addEventListener('click', (ev) => { ev.preventDefault(); if (window.XalingoAceite) window.XalingoAceite.reabrir(); else location.href = document.getElementById('link-privacidade').href; });
+document.getElementById('voltar').addEventListener('click', () => {   /* volta ao menu: cala a voz, solta a câmera e deixa tudo pronto para entrar de novo */
+  parar(); fechaRA(); abreGaveta(false); mostraPasso(); sincroniza();
+  appEl.hidden = true; inicioEl.hidden = false; erroCamera.hidden = true; botaoCamera.disabled = false; botaoCamera.innerHTML = textoCamera;
+});
+function enquadra() {                                  /* sem câmera: sobe a imagem o bastante para o corpo e o quebra-cabeça não ficarem atrás dos botões */
+  ajusta(); const w = caixa.clientWidth, a = caixa.clientHeight; if (!w || !a || mind) return;
+  cam.setViewOffset(w, a, 0, Math.round(a * 0.06), w, a);
+}
+document.getElementById('sem-camera').addEventListener('click', () => {
+  appEl.hidden = false; inicioEl.hidden = true; sincroniza(); medir('ver_3d_sem_camera');
+  requestAnimationFrame(() => {
+    if (caixa.clientWidth < caixa.clientHeight) { cam.position.set(0, 1.5, 3.6); ctl.target.set(0, 0.5, 0); } else { cam.position.set(0, 1.1, 2.3); ctl.target.set(0, 0.5, 0); }
+    enquadra(); if (!enquadrou) { enquadrou = true; new ResizeObserver(enquadra).observe(caixa); }
+  });
+});
+botaoCamera.addEventListener('click', async () => {
+  pedeSensor(); destravaVozGuia();
+  botaoCamera.disabled = true; botaoCamera.firstChild.textContent = 'Abrindo a câmera…'; erroCamera.hidden = true; medir('abrir_camera');
+  appEl.hidden = false;                                /* a cena precisa ter tamanho para a câmera se ajustar; o menu continua por cima até dar certo */
+  try { await abreRA(); inicioEl.hidden = true; sincroniza(); }
+  catch (erro) {
+    appEl.hidden = true;
+    erroCamera.textContent = erro && erro.message === 'sem-camera' ? 'Este navegador não deixa usar a câmera neste endereço. Use o botão "Ver em 3D sem câmera".' : 'Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão "Ver em 3D sem câmera".';
+    erroCamera.hidden = false; botaoCamera.disabled = false; botaoCamera.innerHTML = textoCamera;
+  }
+});
+
+/* ---------- realidade aumentada: a câmera acha o quebra-cabeça e o corpo fica em pé em cima dele ---------- */
+function cameraDeTeste() {                           /* câmera de mentira: a arte do quebra-cabeça numa mesa, vista inclinada e balançando */
+  const c = document.createElement('canvas'); c.width = 1280; c.height = 720;
+  const r = new THREE.WebGLRenderer({ canvas: c, antialias: true }), s = new THREE.Scene(), k = new THREE.PerspectiveCamera(50, 1280 / 720, 0.1, 20);
+  s.background = new THREE.Color(0x8a6a4a);
+  const mapa = (nome) => { const t = new THREE.TextureLoader().load('alvos/' + nome + '.jpg'); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const plano = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.0), new THREE.MeshBasicMaterial({ map: mapa(TESTE) })); s.add(plano);
+  window.__trocaTeste = (nome) => { plano.material.map = mapa(nome); plano.material.needsUpdate = true; };
+  const t0 = performance.now();
+  (function gira() {
+    const t = (performance.now() - t0) / 1000;
+    plano.rotation.x = -0.8 + 0.07 * Math.sin(t * 0.7); plano.rotation.z = 0.12 * Math.sin(t * 0.4);
+    k.position.set(0.12 * Math.sin(t * 0.5), 0.1, 1.75); k.lookAt(0, 0, 0); r.render(s, k); requestAnimationFrame(gira);
+  })();
+  return c.captureStream(30);
+}
+const guiaEl = document.getElementById('guia'), vozGuia = new Audio();
+let relogioGuia = 0, disseMire = 0, perdeuEm = 0;
+function destravaVozGuia() {                          /* dentro do toque: o iPhone só toca som depois que o elemento foi tocado num toque */
+  const f = FALAS && (FALAS['guia:mire'] || FALAS['guia:perdeu']); if (!f) return;
+  try { vozGuia.muted = true; vozGuia.src = f.src; const p = vozGuia.play(); if (p && p.then) p.then(() => { vozGuia.pause(); vozGuia.muted = false; }).catch(() => { vozGuia.muted = false; }); } catch (erro) { vozGuia.muted = false; }
+}
+function falaGuia(chave) {                            /* não fala por cima da explicação nem da dança */
+  const f = FALAS && FALAS[chave]; if (!f || estado.tocando || danca.ligada || !mind) return;
+  try { vozGuia.muted = false; vozGuia.src = f.src; const p = vozGuia.play(); if (p && p.catch) p.catch(() => { /* som bloqueado: fica só o texto */ }); } catch (erro) { /* idem */ }
+}
+function vigiaGuia() {
+  if (!mind || alvoVisto) return;
+  const agora = performance.now();
+  if (alvoAtual < 0) { if (agora - disseMire > 15000) { disseMire = agora; falaGuia('guia:mire'); } }              /* ainda não achou: pede para mirar e repete a cada 15 s */
+  else if (perdeuEm && agora - perdeuEm > 2500) { perdeuEm = 0; falaGuia('guia:perdeu'); }                         /* tinha achado e perdeu por mais de 2,5 s */
+}
+function achou(i, ancora) {
+  guiaEl.hidden = true; perdeuEm = 0; try { vozGuia.pause(); } catch (erro) { /* nada */ }
+  ancoraAtual = ancora; temPose = false; alvoVisto = true; rotuloVisivel = true; dicaEl.hidden = true;
+  if (i !== alvoAtual) { alvoAtual = i; aplicaAlvo(); medir('quebra_cabeca_reconhecido', { qual: ALVOS[i] }); }
+}
+function perdeu(i) { if (i !== alvoAtual) return; alvoVisto = false; rotuloVisivel = false; dicaEl.hidden = false; guiaEl.hidden = false; perdeuEm = performance.now(); }   /* ao trocar de quebra-cabeça, o antigo some depois do novo aparecer */
+function aplicaAlvo() {                              /* cada quebra-cabeça mostra o seu conteúdo: crianças = corpo por fora; corpo = órgãos e esqueleto */
+  const criancas = ALVOS[alvoAtual] === 'criancas';
+  if (criancas) { if (estado.corpo === 'esqueleto') estado.corpo = ultimaCrianca; estado.aberto = false; } else estado.aberto = true;
+  document.getElementById('quem-esqueleto').hidden = criancas;
+  marca(gCorpos, document.getElementById('quem-' + estado.corpo)); marca(gVista, document.getElementById(estado.aberto ? 'vista-dentro' : 'vista-fora'));
+  trocaOrgaosDe(estado.corpo); mudaVista(); sincroniza();
+}
+const LENTE = PARAMS.has('lente') ? Number(PARAMS.get('lente')) : 63;   /* graus de visão no lado maior da imagem; ?lente=0 volta à conta da biblioteca */
+const PRUMO = PARAMS.get('prumo') !== '0';             /* ?prumo=0 desliga o endireitamento pelo sensor */
+function acertaLente(c) {
+  const f = (Math.max(c.inputWidth, c.inputHeight) / 2) / Math.tan(LENTE * Math.PI / 360);
+  c.projectionTransform = [[f, 0, c.inputWidth / 2], [0, f, c.inputHeight / 2], [0, 0, 1]];
+  c.projectionMatrix = c._glProjectionMatrix({ projectionTransform: c.projectionTransform, width: c.inputWidth, height: c.inputHeight, near: 10, far: 100000 });
+}
+let cimaSensor = null, erroPrumo = 0;                  /* "para cima" visto pela câmera, e de quanto a câmera errou a inclinação */
+function ouveSensor(ev) {
+  if (ev.beta == null || ev.gamma == null) return;
+  const b = ev.beta * Math.PI / 180, g = ev.gamma * Math.PI / 180;
+  (cimaSensor || (cimaSensor = new THREE.Vector3())).set(-Math.cos(b) * Math.sin(g), Math.sin(b), Math.cos(b) * Math.cos(g));
+}
+function pedeSensor() {                                /* tem de ser chamado dentro do toque: o iPhone só deixa pedir o sensor assim */
+  if (!PRUMO || typeof DeviceOrientationEvent === 'undefined') return;
+  const liga = () => window.addEventListener('deviceorientation', ouveSensor);
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().then((r) => { if (r === 'granted') liga(); }).catch(() => { /* sem sensor: fica só a câmera */ });
+    else liga();
+  } catch (erro) { /* sem sensor: fica só a câmera */ }
+}
+const normalPapel = new THREE.Vector3(), qPrumo = new THREE.Quaternion(), qParte = new THREE.Quaternion();
+const FIRME = PARAMS.get('firme') !== '0';             /* ?firme=0 volta ao jeito antigo, para comparar no mesmo celular */
+const estavel = new THREE.Group(); estavel.matrixAutoUpdate = false; estavel.visible = false;
+const pAlvo = new THREE.Vector3(), qAlvo = new THREE.Quaternion(), sAlvo = new THREE.Vector3(), pFirme = new THREE.Vector3(), qFirme = new THREE.Quaternion(), sFirme = new THREE.Vector3();
+let ancoraAtual = null, temPose = false, tempoPose = 0;
+const degrau = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+let quadrosRA = 0, janelasLentas = 0, inicioRA = 0, contaDesde = 0;
+function vigiaDesempenho() {
+  quadrosRA++; const agora = performance.now();
+  if (agora - contaDesde < 2000) return;
+  const qps = quadrosRA * 1000 / (agora - contaDesde); quadrosRA = 0; contaDesde = agora;
+  if (agora - inicioRA < 6000 || document.hidden) { janelasLentas = 0; return; }        /* os primeiros segundos são de carga */
+  janelasLentas = qps < 20 ? janelasLentas + 1 : 0;
+  if (janelasLentas >= 3 && !nitidezReduzida && nitidez > 1) { nitidez = Math.max(1, nitidez * 0.7); nitidezReduzida = true; mind.renderer.setPixelRatio(nitidez); mind.resize(); }
+}
+function firma() {
+  vigiaDesempenho();
+  if (!ancoraAtual || !ancoraAtual.group.visible) { estavel.visible = false; temPose = false; return; }
+  const agora = performance.now(), dt = Math.min(0.1, Math.max(0.001, (agora - tempoPose) / 1000)); tempoPose = agora;
+  ancoraAtual.group.matrix.decompose(pAlvo, qAlvo, sAlvo);
+  const emPe = !(screen.orientation ? screen.orientation.angle : window.orientation || 0);
+  if (cimaSensor && emPe) {                            /* endireita pelo prumo; se o papel não está deitado (mais de uns 45° de diferença), não mexe */
+    normalPapel.set(0, 0, 1).applyQuaternion(qAlvo); erroPrumo = normalPapel.angleTo(cimaSensor);
+    const peso = 1 - degrau(0.75, 1.0, erroPrumo);
+    if (peso > 0) { qPrumo.setFromUnitVectors(normalPapel, cimaSensor); qAlvo.premultiply(qParte.identity().slerp(qPrumo, peso)); }
+  }
+  if (!temPose || !FIRME) { pFirme.copy(pAlvo); qFirme.copy(qAlvo); sFirme.copy(sAlvo); temPose = true; }
+  else {
+    const erroP = pFirme.distanceTo(pAlvo) / Math.max(1, pAlvo.length()), erroR = qFirme.angleTo(qAlvo);
+    const tauP = 0.12 + (0.02 - 0.12) * degrau(0.0015, 0.01, erroP);      /* segundos para alcançar: parado 0,12; em movimento 0,02 */
+    const tauR = 0.35 + (0.05 - 0.35) * degrau(0.012, 0.06, erroR);       /* inclinação: parado 0,35; em movimento 0,05 */
+    const aP = 1 - Math.exp(-dt / tauP), aR = 1 - Math.exp(-dt / tauR);
+    pFirme.lerp(pAlvo, aP); sFirme.lerp(sAlvo, aP); qFirme.slerp(qAlvo, aR);
+  }
+  estavel.matrix.compose(pFirme, qFirme, sFirme); estavel.visible = true;
+}
+const suporte = new THREE.Group();                   /* o chão da cena deitado sobre o papel: 1 unidade do alvo = largura do quebra-cabeça */
+async function abreRA() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('sem-camera');
+  const pedir = pedirCamera || (pedirCamera = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices));
+  navigator.mediaDevices.getUserMedia = TESTE ? async () => cameraDeTeste()
+    : (r) => { if (r && r.video && typeof r.video === 'object') { const [larg, alt] = CAMERA_LEVE ? CAMERA_DO_NIVEL[0] : CAMERA_DO_NIVEL[NIVEL]; r.video = { ...r.video, width: { ideal: larg }, height: { ideal: alt } }; } return pedir(r); };
+  const { MindARThree } = await import('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js');
+  if (LENTE > 0) {                                     /* a lente é acertada logo antes de a biblioteca carregar os alvos */
+    const { Controller } = await import('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js');
+    if (!Controller.prototype.lenteCerta) {
+      const carregaAlvos = Controller.prototype.addImageTargets;
+      Controller.prototype.addImageTargets = function (...a) { acertaLente(this); return carregaAlvos.apply(this, a); };
+      Controller.prototype.lenteCerta = true;
+    }
+  }
+  document.body.classList.add('ra');
+  mind = new MindARThree({ container: caixa, imageTargetSrc: 'alvos.mind', maxTrack: 1, uiLoading: 'no', uiScanning: 'no', uiError: 'no', filterMinCF: FIRME ? 0.004 : 0.0003, filterBeta: FIRME ? 1000 : 0.02, warmupTolerance: 3, missTolerance: 15 });
+  try { await mind.start(); } catch (erro) {
+    for (const el of [mind.renderer.domElement, mind.cssRenderer.domElement, mind.video]) if (el) el.remove();
+    document.body.classList.remove('ra'); mind = null; navigator.mediaDevices.getUserMedia = pedir; throw erro || new Error('camera-negada');
+  }
+  render.setAnimationLoop(null); render.domElement.remove();
+  mind.renderer.setPixelRatio(nitidez); mind.resize();
+  if (NIVEL > 0) mind.scene.environment = new THREE.PMREMGenerator(mind.renderer).fromScene(new RoomEnvironment(), 0.04).texture;   /* no nível baixo, sem reflexo de ambiente: luz mais simples e mais leve */
+  mind.scene.add(new THREE.HemisphereLight(0xffffff, 0xd8c0a0, NIVEL > 0 ? 0.9 : 1.9));
+  const sol2 = new THREE.DirectionalLight(0xffffff, 0.9); sol2.position.set(1.5, 2, 3); mind.scene.add(sol2);
+  suporte.rotation.x = Math.PI / 2; suporte.scale.setScalar(TAMANHO_RA / LARG_PECA); suporte.add(palco, sombra); estavel.add(suporte); mind.scene.add(estavel);
+  ALVOS.forEach((nome, i) => { const a = mind.addAnchor(i); a.onTargetFound = () => achou(i, a); a.onTargetLost = () => perdeu(i); });
+  renderAtual = mind.renderer; cenaAtual = mind.scene; camAtual = mind.camera; rotuloVisivel = false;
+  dicaEl.hidden = false; guiaEl.hidden = false;
+  quadrosRA = 0; janelasLentas = 0; inicioRA = contaDesde = performance.now();
+  relogioPausa = setInterval(() => { pausaEl.hidden = false; }, 10 * 60 * 1000);      /* a cada 10 minutos de câmera, lembra de fazer uma pausa */
+  disseMire = performance.now() - 15000 + 800; perdeuEm = 0; relogioGuia = setInterval(vigiaGuia, 500);
+  mind.renderer.setAnimationLoop(quadro);
+  if (DEBUG) {                                       /* ?debug=1: versão, câmera, quadros por segundo e alvo, para mandar print de cada celular */
+    const painel = document.createElement('pre'); painel.className = 'diagnostico'; caixa.append(painel);
+    let quadros = 0, antes = performance.now();
+    const conta = () => { quadros++; if (painel.isConnected) requestAnimationFrame(conta); }; conta();
+    const relogioTeste = setInterval(() => {
+      if (!mind || !painel.isConnected) { clearInterval(relogioTeste); return; }
+      const agora = performance.now(), fps = quadros * 1000 / (agora - antes); quadros = 0; antes = agora;
+      painel.textContent = ['v1.0  ' + mind.video.videoWidth + 'x' + mind.video.videoHeight + (CAMERA_LEVE ? ' (leve)' : ''), fps.toFixed(0) + ' qps  tela ' + caixa.clientWidth + 'x' + caixa.clientHeight + ' @' + Math.min(devicePixelRatio, 2).toFixed(1),
+        'alvo: ' + (ALVOS[alvoAtual] || 'nenhum') + (alvoVisto ? ' (à vista)' : ' (perdido)'), 'quem: ' + estado.corpo + ' · ' + modo(), 'firme: ' + (FIRME ? 'sim' : 'não') + '  tamanho: ' + TAMANHO_RA, 'qualidade: ' + ROTULO_NIVEL[NIVEL] + (seletorQualidade.value === 'auto' ? ' (automática)' : ' (escolhida)') + '  nitidez: ' + nitidez.toFixed(1) + (nitidezReduzida ? ' (reduzida)' : ''), APARELHO.motivo, 'lente: ' + (LENTE || 'da biblioteca') + '  prumo: ' + (cimaSensor ? 'sim, câmera errou ' + (erroPrumo * 57.3).toFixed(0) + '°' : 'sem sensor')].join(String.fromCharCode(10));
+    }, 1000);
+  }
+  window.__ra = () => ({ alvo: ALVOS[alvoAtual] || null, visto: alvoVisto, corpo: estado.corpo, modo: modo(), video: mind ? mind.video.videoWidth + 'x' + mind.video.videoHeight : null, vozGuia: { tem: !!vozGuia.currentSrc, t: +vozGuia.currentTime.toFixed(2), pausada: vozGuia.paused } });
+}
+function fechaRA() {                                   /* desfaz a RA: para a câmera e devolve o corpo à cena sem câmera */
+  if (!mind) return;
+  try { mind.renderer.setAnimationLoop(null); mind.stop(); } catch (erro) { /* a câmera já tinha parado */ }
+  for (const el of [mind.renderer.domElement, mind.cssRenderer.domElement, mind.video]) if (el) el.remove();
+  mind.renderer.dispose(); mind.video = null; mind = null;
+  if (pedirCamera) navigator.mediaDevices.getUserMedia = pedirCamera;
+  suporte.removeFromParent(); estavel.removeFromParent(); ancoraAtual = null; temPose = false; cena.add(palco, sombra);
+  renderAtual = render; cenaAtual = cena; camAtual = cam; rotuloVisivel = true; alvoVisto = false; alvoAtual = -1;
+  caixa.insertBefore(render.domElement, caixa.firstChild); render.setAnimationLoop(quadro);
+  document.body.classList.remove('ra'); dicaEl.hidden = true; guiaEl.hidden = true; clearInterval(relogioGuia); clearInterval(relogioPausa); pausaEl.hidden = true;
+  render.setPixelRatio(nitidez); ajusta(); try { vozGuia.pause(); } catch (erro) { /* nada */ }
+  document.getElementById('quem-esqueleto').hidden = false;
+  const painelTeste = caixa.querySelector('.diagnostico'); if (painelTeste) painelTeste.remove();
+}
+</script>
+</body>
+</html>
