@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quebra-cabeça Missão Espacial em RA · Xalingo</title>
+<meta name="description" content="Monte o Quebra-cabeça Missão Espacial (ref. 2089.8), da Xalingo, aponte a câmera e veja o Sol acender e os planetas saírem das peças em 3D, com curiosidades do espaço narradas.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Quebra-cabeça Missão Espacial em RA · Xalingo">
+<meta property="og:description" content="Monte o quebra-cabeça, aponte a câmera e veja o Sol acender e os planetas saírem das peças em 3D.">
+<meta property="og:image" content="https://inovacaoxalingo.github.io/interactive-play/missao-espacial-20898/assets/capa.jpg">
+<meta property="og:url" content="https://inovacaoxalingo.github.io/interactive-play/missao-espacial-20898/">
+<meta name="theme-color" content="#164194">
+<link rel="icon" href="assets/icone-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch.png">
+<script>
+/* Aviso para o adulto na 1ª visita (idade, câmera, sem cadastro) e escolha da contagem anônima.
+   No site Interactive Play vale o arquivo comum (../assets/aceite.js) e a política comum (../privacidade.html).
+   Fora do site (endereço de teste) entram as cópias que acompanham o app: assets/aceite.js e privacidade.html. */
+(function () {
+  var ID = 'G-HB9RN5N1J2';
+  window.medir = function (nome, p) { try { if (window.gtag) window.gtag('event', nome, p || {}); } catch (e) {} };
+  function ligaContagem() {                          /* Google Analytics (GA4), a mesma propriedade dos outros jogos: só no endereço publicado e só se o adulto permitir */
+    if (!/\.github\.io$/.test(location.hostname) && !/[?&]ga=1\b/.test(location.search)) return;
+    window.XalingoAceite.aoPermitir(function () {
+      if (window.gtag) return;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      window.gtag('config', ID, { content_group: 'Xalingo - Quebra-cabeça Missão Espacial (ref. 2089.8)', allow_google_signals: false, allow_ad_personalization_signals: false });
+      var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+      document.head.appendChild(s);
+    });
+  }
+  function carrega(endereco, politica, seFalhar) {
+    var s = document.createElement('script'), feito = false;
+    var falhou = function () { if (feito) return; feito = true; s.remove(); seFalhar(); };
+    s.src = endereco;
+    s.dataset.idade = '4'; s.dataset.politica = politica;
+    s.dataset.sub = 'Este app da Xalingo foi feito para brincar junto com o Quebra-cabeça Missão Espacial.';
+    s.dataset.camera = 'A câmera só reconhece o quebra-cabeça. Nenhuma foto ou vídeo sai do aparelho. Use por pouco tempo de cada vez, para o celular não esquentar.';
+    s.dataset.guarda = 'A escolha de idioma fica só neste aparelho.';
+    s.dataset.para = 'para melhorar o app';
+    s.onerror = falhou;
+    s.onload = function () {
+      if (!window.XalingoAceite) return falhou();       /* veio outra coisa no lugar do arquivo */
+      feito = true; window.POLITICA = politica;
+      var a = document.getElementById('link-privacidade'); if (a) a.href = politica;
+      ligaContagem();
+    };
+    document.head.appendChild(s);
+  }
+  carrega('../assets/aceite.js?v=2', '../privacidade.html', function () { carrega('assets/aceite.js?v=2', 'privacidade.html', function () {}); });
+})();
+</script>
+<script type="importmap">{"imports": {"three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/", "mindar-image-three": "./lib/mindar-image-three.prod.js"}}</script>
+<style>
+@font-face{font-family:'Open Sans';src:url('assets/open-sans.woff2') format('woff2');font-weight:300 800;font-display:swap}
+:root{--bg:#0b1030;--am:#ffd200;--ci:#5ee0ff;--txt:#eef1ff;--sub:#b7bfe6;--f-texto:'Open Sans',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg);color:var(--txt);font-family:var(--f-texto)}
+button{font:inherit;cursor:pointer;border:0}
+:focus-visible{outline:3px solid var(--ci);outline-offset:2px}
+.hidden{display:none!important}
+
+/* ===== menu de entrada (o mesmo do Quebra-cabeça Corpo Humano, ref. 2093.2) ===== */
+.menu{position:fixed;inset:0;z-index:30;overflow:auto;color-scheme:light;--azul:#164194;--azul2:#0e2c6b;color:#1b1a1f;font-family:var(--f-texto);background:linear-gradient(#eaf5ff 0,#eaf5ff 55%,#d4ebfb 100%)}
+.menu .miolo{max-width:560px;margin:0 auto;padding:max(22px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.menu .voltar-site{display:inline-flex;align-items:center;min-height:40px;margin:0;padding:6px 14px;border-radius:999px;background:#ffffff;color:var(--azul);font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 2px 0 rgba(13,45,87,.12)}
+.menu .linha-topo{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;justify-content:space-between;margin:0 0 12px}
+.idiomas{display:inline-flex;padding:3px;border-radius:999px;background:#ffffff;box-shadow:0 2px 0 rgba(13,45,87,.12);--azul:#164194}
+.idiomas button{border:0;border-radius:999px;min-height:36px;padding:5px 13px;background:transparent;color:var(--azul);font:800 13px var(--f-texto);cursor:pointer}
+.idiomas button[aria-pressed="true"]{background:var(--azul);color:#fff}
+.idiomas .curto{display:none}
+@media (max-width:520px){.idiomas .longo{display:none} .idiomas .curto{display:inline} .idiomas button{min-width:36px;padding:5px 6px}}   /* no celular em pé cabem só as siglas, ao lado do link de voltar */
+.menu .marca{font-weight:800;font-size:13px;color:var(--azul);letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.menu .marca span{background:var(--azul);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;flex:none}
+.menu h1{font-size:30px;line-height:1.08;margin:0 0 10px;color:var(--azul2);font-weight:800}
+.menu .sub{margin:0 0 18px;font-size:16px;line-height:1.5;color:#2d3445}
+.menu .quadro{background:#fffdf8;border-radius:14px;padding:10px;box-shadow:0 2px 0 rgba(13,45,87,.12),0 10px 28px rgba(13,45,87,.12)}
+.menu .quadro img{display:block;width:100%;height:auto;border-radius:8px}
+.menu ol.passos{list-style:none;counter-reset:p;margin:20px 0 22px;padding:0;display:grid;gap:10px}
+.menu ol.passos li{counter-increment:p;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:15.5px;line-height:1.45}
+.menu ol.passos li::before{content:counter(p);width:34px;height:34px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;display:grid;place-items:center;font-size:16px}
+.menu .bt{display:block;width:100%;border:0;border-radius:16px;padding:16px;font:800 18px var(--f-texto);cursor:pointer}
+.menu .bt.prim{background:var(--azul);color:#fff;box-shadow:0 5px 0 var(--azul2)}
+.menu .bt.prim:active{transform:translateY(3px);box-shadow:0 2px 0 var(--azul2)}
+.menu .bt.prim:disabled{opacity:.7}
+.menu .bt.sec{background:transparent;color:var(--azul);border:2px solid var(--azul);margin-top:12px;font-size:16px;padding:13px}
+.menu .nota{font-size:13px;color:#5d6475;line-height:1.5;margin:18px 0 0}
+.menu .nota + .nota{margin-top:10px}
+.menu .nota a{color:var(--azul);font-weight:700}
+.menu .escolha label{font-weight:700}
+.menu .escolha select{font:inherit;font-weight:700;color:var(--azul);background:#ffffff;border:2px solid var(--azul);border-radius:10px;padding:5px 8px;max-width:100%}
+.menu .aviso-nav{background:#fff7dc;border:1px solid #ecd28a;color:#5a4300;border-radius:12px;padding:12px;font-size:14.5px;line-height:1.45;margin:0 0 14px}
+.menu .erro{background:#fff1ef;border:1px solid #f3b6ad;color:#7a2418;border-radius:12px;padding:12px;font-size:14.5px;line-height:1.45;margin:14px 0 0}
+
+/* ===== app ===== */
+#stage{position:fixed;inset:0;background:#000;overflow:hidden;z-index:0;touch-action:none}
+#stage canvas{display:block}
+#stage.v3d::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#0000 45%,#05071add 100%)}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+#hud .topo{position:absolute;left:0;right:0;top:0;padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 14px max(10px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px;background:linear-gradient(#000a,#0000)}
+#hud .lado{display:flex;gap:8px;position:relative;flex:none}
+#hud .tit{flex:1;min-width:0;font-size:13px;font-weight:700;color:#fffc;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+/* botões redondos de cima, com ícone (iguais aos do Corpo Humano) */
+.ic{pointer-events:auto;flex:none;width:52px;height:52px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:16px;background:rgba(255,255,255,.94);color:#17245c;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ic svg{width:28px;height:28px;fill:currentColor}
+.ic:active{transform:translateY(1px)}
+#idioma-app{flex-direction:column;gap:1px;color:#164194}
+#idioma-app svg{width:24px;height:24px}
+#idioma-app .cod{font:800 11px/1 var(--f-texto);letter-spacing:.05em}
+#idiomas-app{pointer-events:auto;position:absolute;z-index:14;top:60px;left:60px;display:flex;flex-direction:column;gap:2px;padding:5px;border-radius:18px;background:#ffffff;box-shadow:0 6px 24px rgba(0,0,0,.45)}
+#idiomas-app button{min-height:44px;min-width:128px;padding:8px 16px;text-align:left;font-size:15px;border-radius:13px}
+#hud .base{position:absolute;left:0;right:0;bottom:0;padding:12px 14px calc(env(safe-area-inset-bottom) + 14px);display:flex;gap:10px;justify-content:center}
+.hb{pointer-events:auto;white-space:nowrap;flex:none;background:#141b45dd;color:#fff;border:1px solid #ffffff33;border-radius:14px;padding:10px 16px;font-weight:700;font-size:14px;backdrop-filter:blur(6px)}
+.hb:active{background:#26306a}
+#scan{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#fff;padding:20px}
+#scan .alvo{width:min(68vw,320px);aspect-ratio:1;border-radius:50%;border:3px dashed #ffffffbb;box-shadow:0 0 0 2000px #0005;animation:gira 14s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+#scan p{position:absolute;left:20px;right:20px;top:calc(50% + min(34vw,160px) + 14px);margin:0;font-weight:700;text-shadow:0 1px 3px #000}
+#scan small{display:block;font-weight:400;color:#ddd;margin-top:6px}
+#rotulo{position:absolute;transform:translate(-50%,-100%);width:max-content;max-width:min(300px,84vw);background:#fff;color:#1d2540;border-radius:14px;padding:9px 12px;box-shadow:0 8px 24px #0008;text-align:center;transition:opacity .25s;pointer-events:none}
+#rotulo::after{content:"";position:absolute;left:calc(50% + var(--sx, 0px));bottom:-8px;width:16px;height:16px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:3px}
+#rotulo b{display:block;font-size:17px}
+#rotulo span{display:block;font-size:13.5px;line-height:1.38;margin-top:3px;color:#444c6e}
+#rotulo.abaixo{transform:translate(-50%,22px)}
+#rotulo.abaixo::after{bottom:auto;top:-8px}
+/* cartão do elemento tocado: embaixo da tela, com X para fechar (no meio ele tapava a cena) */
+#cartao{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 74px);transform:translateX(-50%);width:min(520px,calc(100vw - 24px));background:#fff;color:#1d2540;border-radius:18px;padding:13px 50px 14px 16px;box-shadow:0 10px 30px #0009;pointer-events:auto;animation:cartaoSobe .25s ease-out}
+#cartao b{display:block;font-size:18px}
+#cartao span{display:block;font-size:15px;line-height:1.42;margin-top:4px;color:#444c6e}
+#bFechar{position:absolute;top:9px;right:9px;width:36px;height:36px;border-radius:50%;border:0;background:#eceff8;color:#1d2540;font-size:17px;font-weight:700;line-height:36px;padding:0;cursor:pointer}
+#bFechar:active{background:#d9deef}
+@keyframes cartaoSobe{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translateX(-50%)}}
+#toast{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top,0px)) + 66px);transform:translateX(-50%);background:#000b;color:#fff;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:600;opacity:0;transition:opacity .3s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#play{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 70px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+#bPlay{pointer-events:auto;width:104px;height:104px;border-radius:50%;background:var(--am);display:grid;place-items:center;box-shadow:0 6px 0 #b89400;animation:pulsa 1.7s ease-out infinite}
+#bPlay:active{transform:translateY(3px)}
+#bPlay svg{width:46px;height:46px;margin-left:7px}
+#play span{font-weight:800;font-size:17px;color:#fff;text-shadow:0 1px 4px #000,0 0 12px #000a;text-align:center}
+@keyframes pulsa{0%{box-shadow:0 6px 0 #b89400,0 0 0 0 #ffd200bb}70%{box-shadow:0 6px 0 #b89400,0 0 0 30px #ffd20000}100%{box-shadow:0 6px 0 #b89400,0 0 0 0 #ffd20000}}
+#loading{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#0b1030cc;color:#fff;font-weight:700}
+.spin{width:38px;height:38px;border-radius:50%;border:4px solid #fff3;border-top-color:var(--am);animation:gira 1s linear infinite;margin:0 auto 12px}
+#loading>div{text-align:center}
+@media (orientation:landscape) and (max-height:520px){ .ic{width:46px;height:46px;border-radius:14px} .ic svg{width:24px;height:24px} #toast{top:calc(max(8px,env(safe-area-inset-top,0px)) + 56px)} #idiomas-app{top:52px;left:54px} }
+</style>
+</head>
+<body>
+<div class="menu" id="inicio">
+  <div class="miolo">
+    <div class="linha-topo">
+      <a class="voltar-site" href="https://inovacaoxalingo.github.io/ra/" aria-label="Voltar para a central de realidade aumentada da Xalingo">‹ Todas as experiências</a>
+      <div class="idiomas" id="idiomas" role="group" aria-label="Idioma"><button type="button" data-idioma="pt" lang="pt-BR" aria-pressed="true" aria-label="Português" title="Português"><span class="longo">Português</span><span class="curto">PT</span></button><button type="button" data-idioma="en" lang="en" aria-pressed="false" aria-label="English" title="English"><span class="longo">English</span><span class="curto">EN</span></button><button type="button" data-idioma="es" lang="es" aria-pressed="false" aria-label="Español" title="Español"><span class="longo">Español</span><span class="curto">ES</span></button></div>
+    </div>
+    <p class="marca"><span>Ref. 2089.8</span> Xalingo · Quebra-cabeça Missão Espacial</p>
+    <h1>Monte o quebra-cabeça e veja o espaço ganhar vida</h1>
+    <p class="sub">A câmera reconhece o quebra-cabeça: o Sol acende, os planetas saem das peças em 3D e a turma da missão conta curiosidades do espaço.</p>
+    <div class="quadro"><img src="assets/capa.jpg" alt="O quebra-cabeça Missão Espacial montado, com o Sol e os planetas em 3D saindo das peças" width="1200" height="630"></div>
+    <ol class="passos">
+      <li>Monte o quebra-cabeça e deixe num lugar bem iluminado. Também funciona só com o disco do Sol ou com um dos arcos.</li>
+      <li>Toque em “Abrir a câmera” e aponte o celular de cima, a uns 50 cm do quebra-cabeça.</li>
+      <li>Toque no Play para começar a missão. Depois, toque nos planetas e nos personagens.</li>
+    </ol>
+    <p class="aviso-nav" id="aviso-nav" hidden>Para a câmera funcionar, abra este endereço no <b>Chrome</b> (Android) ou no <b>Safari</b> (iPhone), e não dentro do Instagram, do Facebook ou do TikTok.</p>
+    <button type="button" class="bt prim" id="bCamera">Abrir a câmera</button>
+    <button type="button" class="bt sec" id="bSemCamera">Ver em 3D sem câmera</button>
+    <p class="erro" id="aviso" role="alert" hidden></p>
+    <p class="nota" id="nota-legal"><span class="txt">Indicado para crianças a partir de 4 anos. Brinque com um adulto por perto e em um lugar seguro. Use a câmera por pouco tempo de cada vez: ligada por muito tempo, ela esquenta o celular e gasta bateria. A imagem da câmera é usada só neste aparelho para reconhecer o quebra-cabeça: nenhuma foto é enviada ou guardada.</span> <a href="../privacidade.html" id="link-privacidade">Privacidade</a> · <a href="#" id="link-contagem">Contagem de acessos</a></p>
+    <p class="nota escolha"><label for="peca">No 3D sem câmera, mostrar:</label> <select id="peca"><option value="todas">o círculo inteiro</option><option value="disco">só o disco do Sol</option><option value="SO">o arco do foguete</option><option value="NO">o arco do Zuzu</option><option value="NE">o arco do Léo</option><option value="SE">o arco da Lua</option></select></p>
+    <p class="nota" id="rodape-musica">Música: “Ambient Space Background”, de Universfield (Pixabay).</p>
+    <p class="nota" id="rodape-versao">© Xalingo Brinquedos · versão 1.0 · 17/11/2026</p>
+  </div>
+</div>
+<div id="stage"></div>
+<div id="hud" class="hidden">
+  <div class="topo">
+    <div class="lado"><button type="button" class="ic" id="bVoltar" aria-label="Voltar ao menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg></button><button type="button" class="ic" id="idioma-app" aria-label="Mudar o idioma" title="Idioma" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3.3 9h17.4M3.3 15h17.4M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></g></svg><span class="cod">PT</span></button><div class="idiomas" id="idiomas-app" role="group" aria-label="Idioma" hidden><button type="button" data-idioma="pt" lang="pt-BR" aria-pressed="true" aria-label="Português" title="Português">Português</button><button type="button" data-idioma="en" lang="en" aria-pressed="false" aria-label="English" title="English">English</button><button type="button" data-idioma="es" lang="es" aria-pressed="false" aria-label="Español" title="Español">Español</button></div></div>
+    <span class="tit" id="tit">Missão Espacial</span>
+    <button type="button" class="ic" id="bSom" aria-label="Desligar o som" title="Som"></button>
+  </div>
+  <div id="scan" class="hidden"><div class="alvo"></div><p><span id="scanTit">Procurando o quebra-cabeça…</span><small>Enquadre o círculo inteiro, o disco do Sol ou um arco.</small></p></div>
+  <div id="rotulo" class="hidden"><b></b><span></span></div>
+  <div id="cartao" class="hidden" role="dialog" aria-live="polite"><button id="bFechar" aria-label="Fechar">✕</button><b></b><span></span></div>
+  <div id="play" class="hidden"><button id="bPlay" aria-label="Começar a missão"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8 21 12 6 20.2z" fill="#1d1600" stroke="#1d1600" stroke-width="1.6" stroke-linejoin="round"/></svg></button><span id="playTxt">Começar a missão</span></div>
+  <div class="base"><button id="bRepetir" class="hb hidden">↻ Repetir</button><button id="bPular" class="hb hidden">Pular ›</button></div>
+  <div id="toast"></div>
+</div>
+<div id="loading" class="hidden"><div><div class="spin"></div><span id="loadMsg">Carregando…</span></div></div>
+<script>
+/* idioma: português no próprio HTML; inglês e espanhol trocam os textos da tela (TELA), as frases do app (FRASES), os cartões (FATOS) e o aviso do adulto (ACEITE).
+   O mesmo esquema do Quebra-cabeça Corpo Humano (ref. 2093.2). A escolha fica só neste aparelho. */
+(function idiomaNoNavegador(L) {
+  var CHAVE = 'missao-ra-idioma', ouvintes = [], originais = null, atual = 'pt', tituloPt = document.title, chaves = [], visto = {};
+  var tem = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var sigla = function (v) { v = String(v || '').slice(0, 2).toLowerCase(); return v === 'pt' || tem(L, v) ? v : ''; };
+  Object.keys(L).forEach(function (id) {               /* junta, de todos os idiomas, a lista do que muda na página */
+    L[id].mapa = {};
+    L[id].TELA.forEach(function (l) { var k = l[0] + '|' + l[1]; L[id].mapa[k] = l[2]; if (!visto[k]) { visto[k] = 1; chaves.push([l[0], l[1], k]); } });
+  });
+  function inicial() {
+    var v = '';
+    try { var q = new URLSearchParams(location.search); v = sigla(q.get('lang') || q.get('idioma')); } catch (e) { v = ''; }
+    if (!v) { try { v = sigla(localStorage.getItem(CHAVE)); } catch (e) { v = ''; } }
+    return v || sigla(navigator.language) || 'pt';
+  }
+  function t(pt) { var F = L[atual] && L[atual].FRASES; return F && tem(F, pt) ? F[pt] : pt; }
+  function le(el, o) { return o === 'html' ? el.innerHTML : el.getAttribute(o); }
+  function poe(el, o, v) { if (o === 'html') el.innerHTML = v; else el.setAttribute(o, v); }
+  function poeAceite() {                               /* o aviso do adulto vem do arquivo comum do site, em português: aqui ele ganha o mesmo conteúdo no idioma escolhido */
+    var cx = document.querySelector('.xa-fundo .xa-caixa'); if (!cx) return;
+    var h = cx.querySelector('h2'), sub = cx.querySelector('.xa-sub'), itens = cx.querySelectorAll('li span:last-child'), sim = cx.querySelector('.xa-sim'), nao = cx.querySelector('.xa-nao'), rod = cx.querySelector('.xa-rod'), link = rod && rod.querySelector('a');
+    if (!h || !sub || itens.length !== 4 || !sim || !nao || !link || !rod.firstChild || rod.firstChild.nodeType !== 3) return;   /* veio noutro formato: fica como está */
+    var nos = [h, sub, itens[0], itens[1], itens[2], itens[3], sim, nao, rod.firstChild, link];
+    if (!cx.__pt) cx.__pt = nos.map(function (x) { return x.textContent; });
+    var A = L[atual] && L[atual].ACEITE, tr = A ? [A.titulo, A.sub].concat(A.itens, [A.sim, A.nao, A.rodape + ' ', A.politica]) : cx.__pt;
+    nos.forEach(function (x, i) { x.textContent = tr[i]; });
+    cx.lang = L[atual] ? L[atual].HTML_LANG : 'pt-BR';
+  }
+  function poeTela() {
+    if (!originais) { originais = {}; chaves.forEach(function (c) { var el = document.querySelector(c[0]); if (el) originais[c[2]] = le(el, c[1]); }); }
+    var m = L[atual] ? L[atual].mapa : null;
+    chaves.forEach(function (c) {
+      var el = document.querySelector(c[0]); if (!el || originais[c[2]] == null) return;
+      poe(el, c[1], m && m[c[2]] != null ? m[c[2]] : originais[c[2]]);
+    });
+    document.documentElement.lang = L[atual] ? L[atual].HTML_LANG : 'pt-BR';
+    document.title = L[atual] ? L[atual].TITULO : tituloPt;
+    Array.prototype.forEach.call(document.querySelectorAll('button[data-idioma]'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.idioma === atual)); });
+    var cod = document.querySelector('#idioma-app .cod'); if (cod) cod.textContent = atual.toUpperCase();
+    poeAceite();
+  }
+  function muda(id) {
+    id = sigla(id) || 'pt'; if (id === atual) return;
+    atual = id; try { localStorage.setItem(CHAVE, id); } catch (e) { /* vale só até fechar */ }
+    poeTela();
+    ouvintes.forEach(function (f) { try { f(id); } catch (e) { console.error(e); } });
+    try { if (window.medir) window.medir('trocar_idioma', { idioma: id }); } catch (e) { /* sem contagem */ }
+  }
+  /* na entrada: os idiomas lado a lado. Dentro do app: o botão do globo abre a lista */
+  var botao = document.getElementById('idioma-app'), lista = document.getElementById('idiomas-app');
+  function abreLista(aberta) { lista.hidden = !aberta; botao.setAttribute('aria-expanded', String(aberta)); }
+  document.getElementById('idiomas').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-idioma]'); if (b) muda(b.dataset.idioma); });
+  botao.addEventListener('click', function (ev) { ev.stopPropagation(); abreLista(lista.hidden); });
+  lista.addEventListener('click', function (ev) { var b = ev.target.closest('button[data-idioma]'); if (b) { abreLista(false); muda(b.dataset.idioma); } });
+  document.addEventListener('pointerdown', function (ev) { if (!lista.hidden && !lista.contains(ev.target) && !botao.contains(ev.target)) abreLista(false); });
+  try { new MutationObserver(poeAceite).observe(document.body, { childList: true }); } catch (e) { /* sem isso o aviso fica em português */ }
+  atual = inicial(); poeTela();
+  window.Idioma = { L: L, t: t, muda: muda, aoMudar: function (f) { ouvintes.push(f); }, get atual() { return atual; } };
+})({"en":{"TELA":[["#inicio .voltar-site","html","‹ All experiences"],["#inicio .voltar-site","aria-label","Back to Xalingo’s augmented reality hub"],["#idiomas","aria-label","Language"],["#inicio .marca","html","<span>Ref. 2089.8</span> Xalingo · Space Mission Puzzle"],["#inicio h1","html","Build the puzzle and watch space come to life"],["#inicio .sub","html","The camera recognizes the puzzle: the Sun lights up, the planets pop out of the pieces in 3D, and the mission crew shares fun facts about space."],["#inicio .quadro img","alt","The finished Space Mission puzzle, with the Sun and the planets popping out of the pieces in 3D"],["#inicio .passos li:nth-child(1)","html","Put the puzzle together and leave it in a well-lit place. It also works with just the Sun disc or with one of the arcs."],["#inicio .passos li:nth-child(2)","html","Tap “Open the camera” and point the phone down at the puzzle from about 50 cm (20 inches) above."],["#inicio .passos li:nth-child(3)","html","Tap Play to start the mission. Then tap the planets and the characters."],["#aviso-nav","html","For the camera to work, open this address in <b>Chrome</b> (Android) or <b>Safari</b> (iPhone), and not inside Instagram, Facebook, or TikTok."],["#bCamera","html","Open the camera"],["#bSemCamera","html","See it in 3D without the camera"],["#nota-legal .txt","html","Recommended for children aged 4 and up. Play with an adult nearby and in a safe place. Use the camera for a short time at once: left on for a long time, it heats up the phone and drains the battery. The camera image is used only on this device to recognize the puzzle: no photo is sent or stored."],["#link-privacidade","html","Privacy (in Portuguese)"],["#link-contagem","html","Visit counting"],["label[for=\"peca\"]","html","In 3D without the camera, show:"],["#peca option[value=\"todas\"]","html","the whole circle"],["#peca option[value=\"disco\"]","html","only the Sun disc"],["#peca option[value=\"SO\"]","html","the rocket arc"],["#peca option[value=\"NO\"]","html","Zuzu’s arc"],["#peca option[value=\"NE\"]","html","Leo’s arc"],["#peca option[value=\"SE\"]","html","the Moon arc"],["#rodape-musica","html","Music: “Ambient Space Background”, by Universfield (Pixabay)."],["#rodape-versao","html","© Xalingo Brinquedos · version 1.0 · November 17, 2026"],["#bVoltar","aria-label","Back to the menu"],["#bVoltar","title","Menu"],["#idioma-app","aria-label","Change language"],["#idioma-app","title","Language"],["#idiomas-app","aria-label","Language"],["#bSom","title","Sound"],["#scanTit","html","Looking for the puzzle…"],["#scan small","html","Frame the whole circle, the Sun disc, or one arc."],["#bFechar","aria-label","Close"],["#bPlay","aria-label","Start the mission"],["#playTxt","html","Start the mission"],["#bRepetir","html","↻ Replay"],["#bPular","html","Skip ›"]],"FRASES":{"Missão Espacial":"Space Mission","círculo inteiro":"whole circle","disco do Sol":"Sun disc","arco do foguete":"rocket arc","arco do Zuzu":"Zuzu’s arc","arco do Léo":"Leo’s arc","arco da Lua":"Moon arc","Toque nos astros e nos personagens para descobrir!":"Tap the planets and the characters to find out more!","Encontrei: {p}! Toque no ▶":"Found it: {p}! Tap ▶","Gire com o dedo e aproxime com dois dedos.":"Turn it with one finger and zoom in with two.","Abrindo a câmera…":"Opening the camera…","Montando o quebra-cabeça…":"Putting the puzzle together…","Este navegador não deixa usar a câmera neste endereço. Use o botão “Ver em 3D sem câmera”.":"This browser does not allow the camera at this address. Use the “See it in 3D without the camera” button.","Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão “Ver em 3D sem câmera”.":"The camera could not be opened. Allow the camera in the browser settings and tap again, or use the “See it in 3D without the camera” button.","Não foi possível montar o 3D neste navegador.":"The 3D could not be shown in this browser.","Desligar o som":"Turn the sound off","Ligar o som":"Turn the sound on"},"ACEITE":{"titulo":"Hello! Before you start, a note for the adult","sub":"This Xalingo app was made to play together with the Space Mission Puzzle.","itens":["Recommended for ages 4 and up, with an adult nearby. With the camera on, play standing still and in a safe place.","The camera only recognizes the puzzle. No photo or video leaves the device. Use it for a short time at once, so the phone does not heat up.","No sign-up, no payment, and no advertising. The language choice stays only on this device.","If you allow it, we count visits anonymously (Google Analytics, with no advertising) to improve the app."],"sim":"Allow anonymous counting and start","nao":"Start without counting","rodape":"You can change this choice whenever you want.","politica":"Privacy policy (in Portuguese)"},"TITULO":"Space Mission Puzzle in AR · Xalingo","HTML_LANG":"en","FATOS":{"sol":["Sun","This is the Sun, a star! It is so big that more than a million Earths could fit inside it. But never look straight at the Sun, okay?"],"mercurio":["Mercury","This is Mercury, the planet closest to the Sun and the smallest of all. It's speedy: it goes around the Sun in less than three months!"],"venus":["Venus","This is Venus. It is covered in thick clouds that trap the heat. That's why it is the hottest planet of all, even hotter than Mercury!"],"faisca":["Sparky","This is Sparky, our astronaut cat. He's make-believe... but a real cat, Félicette, went to space and came back!"],"asteroides_sol":["Asteroids","These rocks are asteroids. They go around the Sun, just like the planets. Some are the size of a house, and others are the size of a city!"],"terra":["Earth","This is the Earth, our home! It looks blue because most of it is covered in water. And it is the only planet where we know there is life."],"satelite":["Satellite","This is a satellite. It goes around the Earth nonstop and helps us know if it's going to rain, watch TV, and find our way on the phone's map."],"onibus":["Space shuttle","This is the space shuttle. It carried astronauts into space and came back landing on a runway, just like an airplane. Today the space shuttles rest in museums."],"foguete":["Rocket","This is the rocket! To climb up to space, it has to beat gravity, the force that pulls everything down to the ground. That's why it makes so much fire and smoke!"],"saturno":["Saturn","This is Saturn, the planet with rings. The rings are made of pieces of ice and rock. And Saturn is so light for its size that it would float in a giant bathtub!"],"cometa":["Comet","This is a comet, a ball of ice and dust. When it gets close to the Sun, the ice turns into gas and makes the tail, which always points away from the Sun."],"zuzu":["Zuzu","This is Zuzu, a make-believe alien! So far, nobody has ever found a real alien. But scientists keep looking for signs of life in space."],"telescopio":["Telescope","This golden telescope looks like the James Webb, which is far out in space. Its mirrors are covered in gold, and it can see stars very, very far away!"],"leo":["Leo","This is Leo! In space, you float and can't walk. That's why astronauts use a backpack with little jets to move around outside."],"jupiter":["Jupiter","This is Jupiter, the biggest planet of all! That red spot is a storm bigger than the whole Earth, and it hasn't stopped for more than 150 years."],"asteroides_grandes":["Asteroids","Between Mars and Jupiter, there's a belt with millions of asteroids going around the Sun. But they are very far apart from each other!"],"marte":["Mars","This is Mars, the red planet. It's red because the dust on the ground has rust in it! And it has the biggest volcano in the whole Solar System."],"bip":["Bip","This is Bip, an explorer robot. Robots like him have already rolled across the Moon and Mars, taking pictures and studying rocks, guided by scientists here on Earth."],"bia":["Bia","This is Bia, jumping on the Moon! There, everything weighs much less than here on Earth. So you can jump really high and come down slowly."]}},"es":{"TELA":[["#inicio .voltar-site","html","‹ Todas las experiencias"],["#inicio .voltar-site","aria-label","Volver a la central de realidad aumentada de Xalingo"],["#idiomas","aria-label","Idioma"],["#inicio .marca","html","<span>Ref. 2089.8</span> Xalingo · Rompecabezas Misión Espacial"],["#inicio h1","html","Arma el rompecabezas y mira cómo el espacio cobra vida"],["#inicio .sub","html","La cámara reconoce el rompecabezas: el Sol se enciende, los planetas salen de las piezas en 3D y el equipo de la misión cuenta curiosidades del espacio."],["#inicio .quadro img","alt","El rompecabezas Misión Espacial armado, con el Sol y los planetas en 3D saliendo de las piezas"],["#inicio .passos li:nth-child(1)","html","Arma el rompecabezas y déjalo en un lugar bien iluminado. También funciona solo con el disco del Sol o con uno de los arcos."],["#inicio .passos li:nth-child(2)","html","Toca “Abrir la cámara” y apunta el celular desde arriba, a unos 50 cm del rompecabezas."],["#inicio .passos li:nth-child(3)","html","Toca Play para empezar la misión. Después, toca los planetas y los personajes."],["#aviso-nav","html","Para que la cámara funcione, abre esta dirección en <b>Chrome</b> (Android) o en <b>Safari</b> (iPhone), y no dentro de Instagram, Facebook o TikTok."],["#bCamera","html","Abrir la cámara"],["#bSemCamera","html","Ver en 3D sin cámara"],["#nota-legal .txt","html","Indicado para niños a partir de 4 años. Juega con un adulto cerca y en un lugar seguro. Usa la cámara por poco tiempo cada vez: encendida por mucho tiempo, calienta el celular y gasta batería. La imagen de la cámara se usa solo en este dispositivo para reconocer el rompecabezas: ninguna foto se envía ni se guarda."],["#link-privacidade","html","Privacidad (en portugués)"],["#link-contagem","html","Conteo de visitas"],["label[for=\"peca\"]","html","En 3D sin cámara, mostrar:"],["#peca option[value=\"todas\"]","html","el círculo completo"],["#peca option[value=\"disco\"]","html","solo el disco del Sol"],["#peca option[value=\"SO\"]","html","el arco del cohete"],["#peca option[value=\"NO\"]","html","el arco de Zuzu"],["#peca option[value=\"NE\"]","html","el arco de Leo"],["#peca option[value=\"SE\"]","html","el arco de la Luna"],["#rodape-musica","html","Música: “Ambient Space Background”, de Universfield (Pixabay)."],["#rodape-versao","html","© Xalingo Brinquedos · versión 1.0 · 17 de noviembre de 2026"],["#bVoltar","aria-label","Volver al menú"],["#bVoltar","title","Menú"],["#idioma-app","aria-label","Cambiar el idioma"],["#idioma-app","title","Idioma"],["#idiomas-app","aria-label","Idioma"],["#bSom","title","Sonido"],["#scanTit","html","Buscando el rompecabezas…"],["#scan small","html","Encuadra el círculo completo, el disco del Sol o un arco."],["#bFechar","aria-label","Cerrar"],["#bPlay","aria-label","Empezar la misión"],["#playTxt","html","Empezar la misión"],["#bRepetir","html","↻ Repetir"],["#bPular","html","Saltar ›"]],"FRASES":{"Missão Espacial":"Misión Espacial","círculo inteiro":"círculo completo","disco do Sol":"disco del Sol","arco do foguete":"arco del cohete","arco do Zuzu":"arco de Zuzu","arco do Léo":"arco de Leo","arco da Lua":"arco de la Luna","Toque nos astros e nos personagens para descobrir!":"¡Toca los astros y los personajes para descubrir más!","Encontrei: {p}! Toque no ▶":"¡Lo encontré: {p}! Toca ▶","Gire com o dedo e aproxime com dois dedos.":"Gira con un dedo y acerca con dos dedos.","Abrindo a câmera…":"Abriendo la cámara…","Montando o quebra-cabeça…":"Armando el rompecabezas…","Este navegador não deixa usar a câmera neste endereço. Use o botão “Ver em 3D sem câmera”.":"Este navegador no permite usar la cámara en esta dirección. Usa el botón “Ver en 3D sin cámara”.","Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão “Ver em 3D sem câmera”.":"No fue posible abrir la cámara. Permite el uso de la cámara en la configuración del navegador y toca de nuevo, o usa el botón “Ver en 3D sin cámara”.","Não foi possível montar o 3D neste navegador.":"No fue posible mostrar el 3D en este navegador.","Desligar o som":"Apagar el sonido","Ligar o som":"Encender el sonido"},"ACEITE":{"titulo":"¡Hola! Antes de empezar, un aviso para el adulto","sub":"Esta app de Xalingo fue hecha para jugar junto con el Rompecabezas Misión Espacial.","itens":["Indicado a partir de 4 años, con un adulto cerca. Con la cámara, juega sin moverte y en un lugar seguro.","La cámara solo reconoce el rompecabezas. Ninguna foto ni video sale del dispositivo. Úsala por poco tiempo cada vez, para que el celular no se caliente.","Sin registro, sin pago y sin publicidad. La elección de idioma queda solo en este dispositivo.","Si lo permites, contamos las visitas de forma anónima (Google Analytics, sin publicidad) para mejorar la app."],"sim":"Permitir el conteo anónimo y empezar","nao":"Empezar sin el conteo","rodape":"Puedes cambiar esta elección cuando quieras.","politica":"Política de privacidad (en portugués)"},"TITULO":"Rompecabezas Misión Espacial en RA · Xalingo","HTML_LANG":"es","FATOS":{"sol":["Sol","¡Este es el Sol, una estrella! Es tan grande que cabrían más de un millón de Tierras dentro de él. Pero nunca mires directo al Sol, ¿sí?"],"mercurio":["Mercurio","Este es Mercurio, el planeta más cercano al Sol y el más pequeño de todos. ¡Es rapidito: da la vuelta al Sol en menos de tres meses!"],"venus":["Venus","Este es Venus. Está cubierto de nubes gruesas que atrapan el calor. ¡Por eso es el planeta más caliente de todos, más caliente incluso que Mercurio!"],"faisca":["Chispa","Este es Chispa, nuestro gato astronauta. Es de mentiritas... ¡pero una gata de verdad, Félicette, fue al espacio y volvió!"],"asteroides_sol":["Asteroides","Estas rocas son asteroides. Giran alrededor del Sol, igual que los planetas. ¡Algunos son del tamaño de una casa y otros del tamaño de una ciudad!"],"terra":["Tierra","¡Esta es la Tierra, nuestro hogar! Se ve azul porque la mayor parte está cubierta de agua. Y es el único planeta donde sabemos que hay vida."],"satelite":["Satélite","Este es un satélite. Da vueltas alrededor de la Tierra sin parar y nos ayuda a saber si va a llover, a ver la tele y a encontrar el camino en el mapa del celular."],"onibus":["Transbordador espacial","Este es el transbordador espacial. Llevaba astronautas al espacio y volvía aterrizando en una pista, igualito que un avión. Hoy los transbordadores descansan en museos."],"foguete":["Cohete","¡Este es el cohete! Para subir al espacio, tiene que vencer la gravedad, la fuerza que atrae todo hacia el suelo. ¡Por eso hace tanto fuego y humo!"],"saturno":["Saturno","Este es Saturno, el planeta de los anillos. Los anillos están hechos de pedazos de hielo y roca. ¡Y Saturno es tan livianito para su tamaño que flotaría en una bañera gigante!"],"cometa":["Cometa","Este es un cometa, una bola de hielo y polvo. Cuando se acerca al Sol, el hielo se convierte en gas y forma la cola, que siempre apunta lejos del Sol."],"zuzu":["Zuzu","¡Este es Zuzu, un extraterrestre de mentiritas! Hasta hoy, nadie ha encontrado un extraterrestre de verdad. Pero los científicos siguen buscando señales de vida en el espacio."],"telescopio":["Telescopio","Este telescopio dorado se parece al James Webb, que está allá en el espacio. ¡Sus espejos están cubiertos de oro y puede ver estrellas muy, muy lejanas!"],"leo":["Leo","¡Este es Leo! En el espacio flotamos y no se puede caminar. Por eso los astronautas usan una mochila con propulsores para moverse afuera."],"jupiter":["Júpiter","¡Este es Júpiter, el planeta más grande de todos! Esa mancha roja es una tormenta más grande que toda la Tierra, y no se detiene desde hace más de 150 años."],"asteroides_grandes":["Asteroides","Entre Marte y Júpiter hay un cinturón con millones de asteroides girando alrededor del Sol. ¡Pero están muy lejos unos de otros!"],"marte":["Marte","Este es Marte, el planeta rojo. ¡Es rojo porque el polvo del suelo tiene óxido! Y allí está el volcán más grande de todo el Sistema Solar."],"bip":["Bip","Este es Bip, un robot explorador. Robots como él ya recorrieron la Luna y Marte, tomando fotos y estudiando las rocas, guiados por científicos aquí en la Tierra."],"bia":["Bia","¡Esta es Bia, saltando en la Luna! Allá todo pesa mucho menos que aquí en la Tierra. Así que puedes saltar muy alto y caer despacito."]}}});
+</script>
+<script type="module">
+import * as THREE from 'three';
+const CFG = {"unidade_cm":49.02,"disco_w":0.4711,"lua":{"x":0.4607,"y":-0.8367,"r":0.7135},"pecas":{"disco":{"cx":0,"cy":0,"w":0.4711},"NO":{"cx":-0.25,"cy":0.25,"w":0.5},"NE":{"cx":0.25,"cy":0.25,"w":0.5},"SE":{"cx":0.25,"cy":-0.25,"w":0.5},"SO":{"cx":-0.25,"cy":-0.25,"w":0.5}},"elementos":{"sol":{"nome":"Sol","peca":"disco","x":0.0024,"y":-0.0015,"w":0.2078,"h":0.2078,"remendo":{"x":0.0024,"y":-0.0015,"w":0.3324,"h":0.3321}},"mercurio":{"nome":"Mercúrio","peca":"disco","x":-0.1266,"y":0.1061,"w":0.0786,"h":0.0786,"remendo":{"x":-0.1266,"y":0.1062,"w":0.0909,"h":0.0912}},"venus":{"nome":"Vênus","peca":"disco","x":-0.0841,"y":-0.0991,"w":0.118,"h":0.118,"remendo":{"x":-0.0841,"y":-0.0991,"w":0.1365,"h":0.1368}},"faisca":{"nome":"Faísca (gato)","peca":"disco","x":0.1105,"y":-0.0922,"w":0.1513,"h":0.0983,"remendo":{"x":0.1106,"y":-0.0922,"w":0.1755,"h":0.1223},"art":[{"nome":"rabo","u":0.335,"v":0.4},{"nome":"pata_acenando","u":0.782,"v":0.463},{"nome":"cabeca","u":0.645,"v":0.525}]},"asteroides_sol":{"nome":"Asteroides perto do Sol","peca":"disco","x":0.1372,"y":0.08,"w":0.1263,"h":0.0839,"remendo":{"x":0.1372,"y":0.0801,"w":0.1465,"h":0.104}},"saturno":{"nome":"Saturno","peca":"NO","x":-0.1343,"y":0.3895,"w":0.1603,"h":0.0905,"remendo":{"x":-0.1344,"y":0.3895,"w":0.1859,"h":0.1161}},"cometa":{"nome":"Cometa","peca":"NO","x":-0.1061,"y":0.3274,"w":0.1121,"h":0.089,"remendo":{"x":-0.1061,"y":0.3275,"w":0.1292,"h":0.1061}},"zuzu":{"nome":"Zuzu (ET) e disco voador","peca":"NO","x":-0.3163,"y":0.1962,"w":0.2209,"h":0.2657,"remendo":{"x":-0.3163,"y":0.1962,"w":0.2629,"h":0.3079},"art":[{"nome":"mao_acenando","u":0.66,"v":0.678},{"nome":"antena","u":0.518,"v":0.274},{"nome":"olho","u":0.605,"v":0.438,"tipo":"piscar"}]},"telescopio":{"nome":"Telescópio espacial James Webb","peca":"NO","x":-0.4289,"y":0.0647,"w":0.071,"h":0.0852,"remendo":{"x":-0.429,"y":0.0647,"w":0.084,"h":0.0981}},"leo":{"nome":"Léo (astronauta)","peca":"NE","x":0.2174,"y":0.3259,"w":0.1586,"h":0.2216,"remendo":{"x":0.2341,"y":0.3038,"w":0.236,"h":0.3103},"art":[{"nome":"cabeca","u":0.443,"v":0.495},{"nome":"perna_dir","u":0.686,"v":0.717},{"nome":"perna_esq","u":0.429,"v":0.751}]},"jupiter":{"nome":"Júpiter","peca":"NE","x":0.3646,"y":0.2402,"w":0.213,"h":0.2123,"remendo":{"x":0.3647,"y":0.2402,"w":0.2471,"h":0.246}},"asteroides_grandes":{"nome":"Asteroides grandes","peca":"NE","x":0.327,"y":0.1217,"w":0.2237,"h":0.1722,"remendo":{"x":0.327,"y":0.1217,"w":0.2588,"h":0.2073}},"bip":{"nome":"Bip (robô)","peca":"SE","x":0.142,"y":-0.2779,"w":0.2019,"h":0.1416,"remendo":{"x":0.142,"y":-0.2831,"w":0.2419,"h":0.1918},"art":[{"nome":"garra","u":0.673,"v":0.578},{"nome":"antena_parabolica","u":0.342,"v":0.719},{"nome":"cabeca","u":0.506,"v":0.54},{"nome":"olhos","u":0.441,"v":0.29,"tipo":"piscar"}]},"bia":{"nome":"Bia (astronauta)","peca":"SE","x":0.3237,"y":-0.1931,"w":0.204,"h":0.2719,"remendo":{"x":0.3238,"y":-0.1932,"w":0.2467,"h":0.3148},"art":[{"nome":"braco_esq","u":0.368,"v":0.48},{"nome":"braco_dir","u":0.594,"v":0.491},{"nome":"perna_esq","u":0.368,"v":0.706},{"nome":"cabeca","u":0.53,"v":0.443}]},"marte":{"nome":"Marte","peca":"SE","x":0.4466,"y":-0.0856,"w":0.0446,"h":0.07,"remendo":{"x":0.4179,"y":-0.1005,"w":0.1158,"h":0.1161}},"satelite":{"nome":"Satélite artificial","peca":"SO","x":-0.2766,"y":-0.06,"w":0.0839,"h":0.0396,"remendo":{"x":-0.2766,"y":-0.06,"w":0.0971,"h":0.0525}},"terra":{"nome":"Terra","peca":"SO","x":-0.376,"y":-0.1863,"w":0.2223,"h":0.2261,"remendo":{"x":-0.3761,"y":-0.1863,"w":0.2581,"h":0.2623}},"onibus":{"nome":"Ônibus espacial","peca":"SO","x":-0.3683,"y":-0.2207,"w":0.0879,"h":0.052,"remendo":{"x":-0.3683,"y":-0.2207,"w":0.1016,"h":0.0657}},"foguete":{"nome":"Foguete","peca":"SO","x":-0.1637,"y":-0.3013,"w":0.2688,"h":0.2988,"remendo":{"x":-0.1638,"y":-0.3164,"w":0.358,"h":0.3884}}},"emissores":{"jato_leo":{"x":0.1908,"y":0.2179,"dir":[-0.3,0.95]},"chama_foguete":{"x":-0.0834,"y":-0.3965,"dir":[0.666,0.746]},"poeira_bip":{"x":0.0471,"y":-0.3005,"dir":[-1,-0.1]},"cauda_cometa":{"x":-0.1526,"y":0.2909,"dir":null}},"voz":{"pt":{"VO_A01_ACORDA":4.71,"VO_A02_SOL":4.44,"VO_A03_VIZINHOS":4.05,"VO_A04_FAISCA":3.25,"VO_A05_ASTEROIDES":3.1,"VO_A06_TERRA":2.53,"VO_A07_ORBITA":4.26,"VO_A08_FOGUETE":3.33,"VO_A09_SATURNO":3.0,"VO_A10_ZUZU":3.08,"VO_A11_COMETA":3.0,"VO_A12_JUPITER":3.1,"VO_A13_LEO":3.4,"VO_A14_MARTE":2.96,"VO_A15_LUA":4.44,"VO_A16_CONVITE":5.87,"VO_ASTEROIDES_GRANDES":8.84,"VO_ASTEROIDES_SOL":9.28,"VO_BIA":10.78,"VO_BIP":12.26,"VO_COMETA":10.67,"VO_FAISCA":9.12,"VO_FOGUETE":9.23,"VO_JUPITER":12.66,"VO_LEO":9.2,"VO_LUA":8.31,"VO_MARTE":13.1,"VO_MERCURIO":9.31,"VO_MIRE":2.79,"VO_ONIBUS":10.45,"VO_PERDEU":3.68,"VO_SATELITE":8.85,"VO_SATURNO":14.15,"VO_SOL":10.71,"VO_TELESCOPIO":12.32,"VO_TERRA":9.32,"VO_VENUS":9.26,"VO_ZUZU":10.97},"en":{"VO_A01_ACORDA":3.8,"VO_A02_SOL":4.81,"VO_A03_VIZINHOS":4.86,"VO_A04_FAISCA":3.21,"VO_A05_ASTEROIDES":4.02,"VO_A06_TERRA":2.45,"VO_A07_ORBITA":4.8,"VO_A08_FOGUETE":2.97,"VO_A09_SATURNO":2.09,"VO_A10_ZUZU":3.01,"VO_A11_COMETA":2.87,"VO_A12_JUPITER":2.82,"VO_A13_LEO":2.95,"VO_A14_MARTE":2.83,"VO_A15_LUA":4.15,"VO_A16_CONVITE":4.93,"VO_ASTEROIDES_GRANDES":8.58,"VO_ASTEROIDES_SOL":9.42,"VO_BIA":10.44,"VO_BIP":13.01,"VO_COMETA":11.66,"VO_FAISCA":8.21,"VO_FOGUETE":10.84,"VO_JUPITER":11.65,"VO_LEO":8.78,"VO_LUA":8.62,"VO_MARTE":13.13,"VO_MERCURIO":11.58,"VO_MIRE":2.31,"VO_ONIBUS":10.03,"VO_PERDEU":2.7,"VO_SATELITE":9.25,"VO_SATURNO":13.6,"VO_SOL":11.51,"VO_TELESCOPIO":11.93,"VO_TERRA":9.55,"VO_VENUS":10.8,"VO_ZUZU":11.95},"es":{"VO_A01_ACORDA":5.14,"VO_A02_SOL":4.35,"VO_A03_VIZINHOS":4.6,"VO_A04_FAISCA":3.79,"VO_A05_ASTEROIDES":3.48,"VO_A06_TERRA":2.69,"VO_A07_ORBITA":4.38,"VO_A08_FOGUETE":2.92,"VO_A09_SATURNO":2.68,"VO_A10_ZUZU":2.61,"VO_A11_COMETA":3.25,"VO_A12_JUPITER":3.28,"VO_A13_LEO":4.18,"VO_A14_MARTE":3.34,"VO_A15_LUA":4.29,"VO_A16_CONVITE":6.73,"VO_ASTEROIDES_GRANDES":8.23,"VO_ASTEROIDES_SOL":10.3,"VO_BIA":10.56,"VO_BIP":13.25,"VO_COMETA":10.74,"VO_FAISCA":9.3,"VO_FOGUETE":10.59,"VO_JUPITER":12.21,"VO_LEO":9.68,"VO_LUA":8.81,"VO_MARTE":12.08,"VO_MERCURIO":11.67,"VO_MIRE":2.43,"VO_ONIBUS":11.46,"VO_PERDEU":3.24,"VO_SATELITE":10.72,"VO_SATURNO":13.05,"VO_SOL":10.92,"VO_TELESCOPIO":10.71,"VO_TERRA":10.32,"VO_VENUS":10.83,"VO_ZUZU":12.92}}};
+const SRC = {"alvos.mind":"assets/alvos.mind","asteroides_grandes.webp":"assets/asteroides_grandes.webp","asteroides_sol.webp":"assets/asteroides_sol.webp","bia.webp":"assets/bia.webp","bip.webp":"assets/bip.webp","circulo.webp":"assets/circulo.webp","cometa.webp":"assets/cometa.webp","faisca.webp":"assets/faisca.webp","foguete.webp":"assets/foguete.webp","jupiter.webp":"assets/jupiter.webp","leo.webp":"assets/leo.webp","marte.webp":"assets/marte.webp","mercurio.webp":"assets/mercurio.webp","onibus.webp":"assets/onibus.webp","remendo_asteroides_grandes.webp":"assets/remendo_asteroides_grandes.webp","remendo_asteroides_sol.webp":"assets/remendo_asteroides_sol.webp","remendo_bia.webp":"assets/remendo_bia.webp","remendo_bip.webp":"assets/remendo_bip.webp","remendo_cometa.webp":"assets/remendo_cometa.webp","remendo_faisca.webp":"assets/remendo_faisca.webp","remendo_foguete.webp":"assets/remendo_foguete.webp","remendo_jupiter.webp":"assets/remendo_jupiter.webp","remendo_leo.webp":"assets/remendo_leo.webp","remendo_marte.webp":"assets/remendo_marte.webp","remendo_mercurio.webp":"assets/remendo_mercurio.webp","remendo_onibus.webp":"assets/remendo_onibus.webp","remendo_satelite.webp":"assets/remendo_satelite.webp","remendo_saturno.webp":"assets/remendo_saturno.webp","remendo_sol.webp":"assets/remendo_sol.webp","remendo_telescopio.webp":"assets/remendo_telescopio.webp","remendo_terra.webp":"assets/remendo_terra.webp","remendo_venus.webp":"assets/remendo_venus.webp","remendo_zuzu.webp":"assets/remendo_zuzu.webp","satelite.webp":"assets/satelite.webp","saturno.webp":"assets/saturno.webp","sol.webp":"assets/sol.webp","telescopio.webp":"assets/telescopio.webp","terra.webp":"assets/terra.webp","tex_jupiter.webp":"assets/tex_jupiter.webp","tex_lua.webp":"assets/tex_lua.webp","tex_marte.webp":"assets/tex_marte.webp","tex_mercurio.webp":"assets/tex_mercurio.webp","tex_saturno.webp":"assets/tex_saturno.webp","tex_saturno_anel.webp":"assets/tex_saturno_anel.webp","tex_sol.webp":"assets/tex_sol.webp","tex_terra.webp":"assets/tex_terra.webp","tex_terra_nuvens.webp":"assets/tex_terra_nuvens.webp","tex_venus.webp":"assets/tex_venus.webp","venus.webp":"assets/venus.webp","zuzu.webp":"assets/zuzu.webp","musica.mp3":"assets/voz/musica.mp3","pt/VO_A01_ACORDA.mp3":"assets/voz/pt/VO_A01_ACORDA.mp3","pt/VO_A02_SOL.mp3":"assets/voz/pt/VO_A02_SOL.mp3","pt/VO_A03_VIZINHOS.mp3":"assets/voz/pt/VO_A03_VIZINHOS.mp3","pt/VO_A04_FAISCA.mp3":"assets/voz/pt/VO_A04_FAISCA.mp3","pt/VO_A05_ASTEROIDES.mp3":"assets/voz/pt/VO_A05_ASTEROIDES.mp3","pt/VO_A06_TERRA.mp3":"assets/voz/pt/VO_A06_TERRA.mp3","pt/VO_A07_ORBITA.mp3":"assets/voz/pt/VO_A07_ORBITA.mp3","pt/VO_A08_FOGUETE.mp3":"assets/voz/pt/VO_A08_FOGUETE.mp3","pt/VO_A09_SATURNO.mp3":"assets/voz/pt/VO_A09_SATURNO.mp3","pt/VO_A10_ZUZU.mp3":"assets/voz/pt/VO_A10_ZUZU.mp3","pt/VO_A11_COMETA.mp3":"assets/voz/pt/VO_A11_COMETA.mp3","pt/VO_A12_JUPITER.mp3":"assets/voz/pt/VO_A12_JUPITER.mp3","pt/VO_A13_LEO.mp3":"assets/voz/pt/VO_A13_LEO.mp3","pt/VO_A14_MARTE.mp3":"assets/voz/pt/VO_A14_MARTE.mp3","pt/VO_A15_LUA.mp3":"assets/voz/pt/VO_A15_LUA.mp3","pt/VO_A16_CONVITE.mp3":"assets/voz/pt/VO_A16_CONVITE.mp3","pt/VO_ASTEROIDES_GRANDES.mp3":"assets/voz/pt/VO_ASTEROIDES_GRANDES.mp3","pt/VO_ASTEROIDES_SOL.mp3":"assets/voz/pt/VO_ASTEROIDES_SOL.mp3","pt/VO_BIA.mp3":"assets/voz/pt/VO_BIA.mp3","pt/VO_BIP.mp3":"assets/voz/pt/VO_BIP.mp3","pt/VO_COMETA.mp3":"assets/voz/pt/VO_COMETA.mp3","pt/VO_FAISCA.mp3":"assets/voz/pt/VO_FAISCA.mp3","pt/VO_FOGUETE.mp3":"assets/voz/pt/VO_FOGUETE.mp3","pt/VO_JUPITER.mp3":"assets/voz/pt/VO_JUPITER.mp3","pt/VO_LEO.mp3":"assets/voz/pt/VO_LEO.mp3","pt/VO_MARTE.mp3":"assets/voz/pt/VO_MARTE.mp3","pt/VO_MERCURIO.mp3":"assets/voz/pt/VO_MERCURIO.mp3","pt/VO_MIRE.mp3":"assets/voz/pt/VO_MIRE.mp3","pt/VO_ONIBUS.mp3":"assets/voz/pt/VO_ONIBUS.mp3","pt/VO_PERDEU.mp3":"assets/voz/pt/VO_PERDEU.mp3","pt/VO_SATELITE.mp3":"assets/voz/pt/VO_SATELITE.mp3","pt/VO_SATURNO.mp3":"assets/voz/pt/VO_SATURNO.mp3","pt/VO_SOL.mp3":"assets/voz/pt/VO_SOL.mp3","pt/VO_TELESCOPIO.mp3":"assets/voz/pt/VO_TELESCOPIO.mp3","pt/VO_TERRA.mp3":"assets/voz/pt/VO_TERRA.mp3","pt/VO_VENUS.mp3":"assets/voz/pt/VO_VENUS.mp3","pt/VO_ZUZU.mp3":"assets/voz/pt/VO_ZUZU.mp3","en/VO_A01_ACORDA.mp3":"assets/voz/en/VO_A01_ACORDA.mp3","en/VO_A02_SOL.mp3":"assets/voz/en/VO_A02_SOL.mp3","en/VO_A03_VIZINHOS.mp3":"assets/voz/en/VO_A03_VIZINHOS.mp3","en/VO_A04_FAISCA.mp3":"assets/voz/en/VO_A04_FAISCA.mp3","en/VO_A05_ASTEROIDES.mp3":"assets/voz/en/VO_A05_ASTEROIDES.mp3","en/VO_A06_TERRA.mp3":"assets/voz/en/VO_A06_TERRA.mp3","en/VO_A07_ORBITA.mp3":"assets/voz/en/VO_A07_ORBITA.mp3","en/VO_A08_FOGUETE.mp3":"assets/voz/en/VO_A08_FOGUETE.mp3","en/VO_A09_SATURNO.mp3":"assets/voz/en/VO_A09_SATURNO.mp3","en/VO_A10_ZUZU.mp3":"assets/voz/en/VO_A10_ZUZU.mp3","en/VO_A11_COMETA.mp3":"assets/voz/en/VO_A11_COMETA.mp3","en/VO_A12_JUPITER.mp3":"assets/voz/en/VO_A12_JUPITER.mp3","en/VO_A13_LEO.mp3":"assets/voz/en/VO_A13_LEO.mp3","en/VO_A14_MARTE.mp3":"assets/voz/en/VO_A14_MARTE.mp3","en/VO_A15_LUA.mp3":"assets/voz/en/VO_A15_LUA.mp3","en/VO_A16_CONVITE.mp3":"assets/voz/en/VO_A16_CONVITE.mp3","en/VO_ASTEROIDES_GRANDES.mp3":"assets/voz/en/VO_ASTEROIDES_GRANDES.mp3","en/VO_ASTEROIDES_SOL.mp3":"assets/voz/en/VO_ASTEROIDES_SOL.mp3","en/VO_BIA.mp3":"assets/voz/en/VO_BIA.mp3","en/VO_BIP.mp3":"assets/voz/en/VO_BIP.mp3","en/VO_COMETA.mp3":"assets/voz/en/VO_COMETA.mp3","en/VO_FAISCA.mp3":"assets/voz/en/VO_FAISCA.mp3","en/VO_FOGUETE.mp3":"assets/voz/en/VO_FOGUETE.mp3","en/VO_JUPITER.mp3":"assets/voz/en/VO_JUPITER.mp3","en/VO_LEO.mp3":"assets/voz/en/VO_LEO.mp3","en/VO_MARTE.mp3":"assets/voz/en/VO_MARTE.mp3","en/VO_MERCURIO.mp3":"assets/voz/en/VO_MERCURIO.mp3","en/VO_MIRE.mp3":"assets/voz/en/VO_MIRE.mp3","en/VO_ONIBUS.mp3":"assets/voz/en/VO_ONIBUS.mp3","en/VO_PERDEU.mp3":"assets/voz/en/VO_PERDEU.mp3","en/VO_SATELITE.mp3":"assets/voz/en/VO_SATELITE.mp3","en/VO_SATURNO.mp3":"assets/voz/en/VO_SATURNO.mp3","en/VO_SOL.mp3":"assets/voz/en/VO_SOL.mp3","en/VO_TELESCOPIO.mp3":"assets/voz/en/VO_TELESCOPIO.mp3","en/VO_TERRA.mp3":"assets/voz/en/VO_TERRA.mp3","en/VO_VENUS.mp3":"assets/voz/en/VO_VENUS.mp3","en/VO_ZUZU.mp3":"assets/voz/en/VO_ZUZU.mp3","es/VO_A01_ACORDA.mp3":"assets/voz/es/VO_A01_ACORDA.mp3","es/VO_A02_SOL.mp3":"assets/voz/es/VO_A02_SOL.mp3","es/VO_A03_VIZINHOS.mp3":"assets/voz/es/VO_A03_VIZINHOS.mp3","es/VO_A04_FAISCA.mp3":"assets/voz/es/VO_A04_FAISCA.mp3","es/VO_A05_ASTEROIDES.mp3":"assets/voz/es/VO_A05_ASTEROIDES.mp3","es/VO_A06_TERRA.mp3":"assets/voz/es/VO_A06_TERRA.mp3","es/VO_A07_ORBITA.mp3":"assets/voz/es/VO_A07_ORBITA.mp3","es/VO_A08_FOGUETE.mp3":"assets/voz/es/VO_A08_FOGUETE.mp3","es/VO_A09_SATURNO.mp3":"assets/voz/es/VO_A09_SATURNO.mp3","es/VO_A10_ZUZU.mp3":"assets/voz/es/VO_A10_ZUZU.mp3","es/VO_A11_COMETA.mp3":"assets/voz/es/VO_A11_COMETA.mp3","es/VO_A12_JUPITER.mp3":"assets/voz/es/VO_A12_JUPITER.mp3","es/VO_A13_LEO.mp3":"assets/voz/es/VO_A13_LEO.mp3","es/VO_A14_MARTE.mp3":"assets/voz/es/VO_A14_MARTE.mp3","es/VO_A15_LUA.mp3":"assets/voz/es/VO_A15_LUA.mp3","es/VO_A16_CONVITE.mp3":"assets/voz/es/VO_A16_CONVITE.mp3","es/VO_ASTEROIDES_GRANDES.mp3":"assets/voz/es/VO_ASTEROIDES_GRANDES.mp3","es/VO_ASTEROIDES_SOL.mp3":"assets/voz/es/VO_ASTEROIDES_SOL.mp3","es/VO_BIA.mp3":"assets/voz/es/VO_BIA.mp3","es/VO_BIP.mp3":"assets/voz/es/VO_BIP.mp3","es/VO_COMETA.mp3":"assets/voz/es/VO_COMETA.mp3","es/VO_FAISCA.mp3":"assets/voz/es/VO_FAISCA.mp3","es/VO_FOGUETE.mp3":"assets/voz/es/VO_FOGUETE.mp3","es/VO_JUPITER.mp3":"assets/voz/es/VO_JUPITER.mp3","es/VO_LEO.mp3":"assets/voz/es/VO_LEO.mp3","es/VO_MARTE.mp3":"assets/voz/es/VO_MARTE.mp3","es/VO_MERCURIO.mp3":"assets/voz/es/VO_MERCURIO.mp3","es/VO_MIRE.mp3":"assets/voz/es/VO_MIRE.mp3","es/VO_ONIBUS.mp3":"assets/voz/es/VO_ONIBUS.mp3","es/VO_PERDEU.mp3":"assets/voz/es/VO_PERDEU.mp3","es/VO_SATELITE.mp3":"assets/voz/es/VO_SATELITE.mp3","es/VO_SATURNO.mp3":"assets/voz/es/VO_SATURNO.mp3","es/VO_SOL.mp3":"assets/voz/es/VO_SOL.mp3","es/VO_TELESCOPIO.mp3":"assets/voz/es/VO_TELESCOPIO.mp3","es/VO_TERRA.mp3":"assets/voz/es/VO_TERRA.mp3","es/VO_VENUS.mp3":"assets/voz/es/VO_VENUS.mp3","es/VO_ZUZU.mp3":"assets/voz/es/VO_ZUZU.mp3"};
+const EMBUTIDO = false;
+const $ = s => document.querySelector(s);
+const ui = { inicio: $('#inicio'), hud: $('#hud'), scan: $('#scan'), rotulo: $('#rotulo'), cartao: $('#cartao'), toast: $('#toast'), loading: $('#loading'), aviso: $('#aviso'), play: $('#play'), repetir: $('#bRepetir'), pular: $('#bPular') };
+const E = CFG.elementos, PECAS = CFG.pecas, EM = CFG.emissores;
+const Idioma = window.Idioma, trad = Idioma.t;   // trad('frase em português') devolve a frase no idioma escolhido
+const medir = (nome, p) => { try { if (window.medir) window.medir(nome, p); } catch (e) { /* sem contagem */ } };   // contagem anônima: só existe se o adulto permitiu no aviso
+
+/* ---------- utilidades ---------- */
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const seg = (t, a, b) => clamp01((t - a) / (b - a));
+const smooth = t => t * t * (3 - 2 * t);
+const outBack = t => { const c = 1.6; t -= 1; return t * t * ((c + 1) * t + c) + 1; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+let toastTimer;
+function toast(msg, ms = 3200) { ui.toast.textContent = msg; ui.toast.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => ui.toast.style.opacity = 0, ms); }
+function loading(msg) { if (msg) { $('#loadMsg').textContent = msg; ui.loading.classList.remove('hidden'); } else ui.loading.classList.add('hidden'); }
+function aviso(msg) { ui.aviso.textContent = msg; ui.aviso.hidden = !msg; }
+
+/* ---------- voz (narração da Cleo; um arquivo por fala e por idioma: assets/voz/pt, en, es) ---------- */
+const VOZ = { ctx: null, buf: {}, bruto: {}, atual: null, pedido: null, ligado: true, carregando: {}, musica: null, geral: null };
+// já decodifica a abertura, as falas da câmera e a música; as falas de toque ficam compactadas e só decodificam no primeiro toque (economiza memória no celular)
+const DECODIFICAR_JA = n => /^(VO_A\d|VO_MIRE|VO_PERDEU)/.test(n);
+// música de fundo: "Ambient Space Background" (Universfield, Pixabay). A introdução toca uma vez; depois repete o trecho A–B (64 s = 16 compassos)
+const MUS = { A: 32.2, B: 96.2, base: .28, abaixada: .14, eq: null, vol: null, fontes: [], timer: null, tocando: false };
+// idioma da voz: o escolhido, se já houver gravação nele; senão, português. A animação da abertura espera cada fala pela duração gravada no idioma.
+const lingua = () => (CFG.voz && CFG.voz[Idioma.atual]) ? Idioma.atual : 'pt';
+const vozDur = id => ((CFG.voz || {})[lingua()] || {})[id] || 0;
+window.__voz = VOZ;   // gancho de teste
+function vozIniciar() {   // chamar dentro do toque/clique (o celular só libera o som assim)
+  try {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   // iPhone no modo silencioso: sem isto a voz não sai
+    if (!VOZ.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) {
+      let ctx; try { ctx = new AC({ sampleRate: 24000 }); } catch (e) { ctx = new AC(); }   // 24 kHz: a voz já é 24 kHz e o áudio ocupa metade da memória
+      VOZ.ctx = ctx;
+      VOZ.geral = ctx.createGain(); VOZ.geral.connect(ctx.destination);
+      MUS.vol = ctx.createGain(); MUS.vol.gain.value = MUS.base; MUS.vol.connect(VOZ.geral);
+      MUS.eq = ctx.createBiquadFilter(); MUS.eq.type = 'peaking'; MUS.eq.frequency.value = 2200; MUS.eq.Q.value = .9; MUS.eq.gain.value = -5; MUS.eq.connect(MUS.vol);   // abre espaço para a voz
+    } }
+    if (VOZ.ctx && VOZ.ctx.state === 'suspended') VOZ.ctx.resume().catch(() => {});
+  } catch (e) { console.warn('voz', e); }
+  if (!VOZ.ctx) return Promise.resolve();
+  if (!VOZ.musica) VOZ.musica = carregarAudio('musica.mp3', 'musica', true);
+  return Promise.all([VOZ.musica, carregarLingua(lingua())]);
+}
+function carregarLingua(l) {   // as falas de um idioma, só quando ele é usado
+  if (!VOZ.ctx) return Promise.resolve();
+  return VOZ.carregando[l] || (VOZ.carregando[l] = Promise.all(Object.keys(SRC).filter(n => n.startsWith(l + '/') && n.endsWith('.mp3'))
+    .map(n => carregarAudio(n, n.slice(0, -4), DECODIFICAR_JA(n.slice(l.length + 1))))));
+}
+async function carregarAudio(n, id, ja) {
+  try { const ab = await (await fetch(SRC[n])).arrayBuffer(); if (ja) VOZ.buf[id] = await decodificar(ab); else VOZ.bruto[id] = ab; }
+  catch (e) { console.warn('voz', n, e); }
+}
+function soltarOutrasLinguas() {   // ao trocar o idioma, libera a memória das falas do idioma anterior
+  const l = lingua();
+  for (const k of Object.keys(VOZ.buf)) if (k !== 'musica' && !k.startsWith(l + '/')) delete VOZ.buf[k];
+  for (const k of Object.keys(VOZ.bruto)) if (!k.startsWith(l + '/')) delete VOZ.bruto[k];
+  for (const k of Object.keys(VOZ.carregando)) if (k !== l) delete VOZ.carregando[k];
+}
+const decodificar = ab => new Promise((ok, err) => VOZ.ctx.decodeAudioData(ab, ok, err));
+async function obterFala(k) {
+  if (VOZ.buf[k]) return VOZ.buf[k];
+  const ab = VOZ.bruto[k]; if (!ab) return null; delete VOZ.bruto[k];
+  try { VOZ.buf[k] = await decodificar(ab); } catch (e) { console.warn('voz', k, e); }
+  return VOZ.buf[k] || null;
+}
+function vozParar() { if (VOZ.atual) { try { VOZ.atual.stop(); } catch (e) {} VOZ.atual = null; abaixarMusica(false); } }
+function abaixarMusica(sim) {   // a música desce enquanto a Cleo fala e volta devagar depois
+  if (!MUS.vol) return; const t = VOZ.ctx.currentTime; MUS.vol.gain.cancelScheduledValues(t); MUS.vol.gain.setTargetAtTime(sim ? MUS.abaixada : MUS.base, t, sim ? .08 : .5);
+}
+function musicaTocar() {
+  if (MUS.tocando || !VOZ.ctx || !VOZ.buf.musica) return; MUS.tocando = true;
+  MUS.vol.gain.cancelScheduledValues(VOZ.ctx.currentTime); MUS.vol.gain.setValueAtTime(VOZ.atual ? MUS.abaixada : MUS.base, VOZ.ctx.currentTime);
+  musicaTrecho(VOZ.ctx.currentTime + .05, 0);
+}
+function musicaTrecho(quando, ini) {   // toca de "ini" até B; antes de chegar em B já agenda a próxima volta, começando em A (emenda no compasso)
+  const ctx = VOZ.ctx, s = ctx.createBufferSource(), g = ctx.createGain(), fim = quando + (MUS.B - ini);
+  s.buffer = VOZ.buf.musica; s.connect(g); g.connect(MUS.eq);
+  g.gain.setValueAtTime(0, quando); g.gain.linearRampToValueAtTime(1, quando + (ini === 0 ? 1.2 : .25));   // na volta, entra suave (o começo do trecho é ~4 dB mais forte que o fim)
+  g.gain.setValueAtTime(1, fim); g.gain.linearRampToValueAtTime(0, fim + .35);
+  s.start(quando, ini); s.stop(fim + .4); MUS.fontes.push(s); s.onended = () => { MUS.fontes = MUS.fontes.filter(x => x !== s); };
+  MUS.timer = setTimeout(() => { if (MUS.tocando) musicaTrecho(fim, MUS.A); }, Math.max(0, (fim - ctx.currentTime - 2.5) * 1000));
+}
+function musicaParar() {
+  if (!MUS.tocando) return; MUS.tocando = false; clearTimeout(MUS.timer);
+  const t = VOZ.ctx.currentTime; MUS.vol.gain.cancelScheduledValues(t); MUS.vol.gain.setTargetAtTime(0, t, .15);
+  for (const s of MUS.fontes) { try { s.stop(t + .6); } catch (e) {} }
+}
+document.addEventListener('visibilitychange', () => {   // celular bloqueado ou outro app na frente: o som pausa
+  if (!VOZ.ctx) return; if (document.hidden) VOZ.ctx.suspend().catch(() => {}); else if (!ui.hud.classList.contains('hidden')) VOZ.ctx.resume().catch(() => {});
+});
+function falar(id) {
+  vozParar(); const l = lingua(), k = l + '/' + id, desde = performance.now(); VOZ.pedido = k; (window.__falas = window.__falas || []).push([id, cena ? +cena.t.toFixed(2) : -1, l]);
+  if (!VOZ.ligado || !VOZ.ctx) return;
+  if (VOZ.ctx.state === 'suspended') VOZ.ctx.resume().catch(() => {});
+  const tocar = b => { if (!b || VOZ.pedido !== k || !VOZ.ligado || performance.now() - desde > 2500) return;   // chegou tarde demais (idioma ainda carregando): deixa passar
+    const s = VOZ.ctx.createBufferSource(); s.buffer = b; s.connect(VOZ.geral); s.start(); VOZ.atual = s; abaixarMusica(true);
+    s.onended = () => { if (VOZ.atual === s) { VOZ.atual = null; abaixarMusica(false); } }; };
+  if (VOZ.buf[k]) tocar(VOZ.buf[k]); else carregarLingua(l).then(() => obterFala(k)).then(tocar);
+}
+function vozCalar() { VOZ.pedido = null; vozParar(); }
+
+/* ---------- efeitos sonoros (feitos no próprio código: sem arquivo e sem licença) ---------- */
+const SFX = { vol: null, ruido: null, motor: null, nivel: 0 };
+function sfxPreparar() {
+  const ctx = VOZ.ctx; if (!ctx || SFX.vol) return;
+  SFX.vol = ctx.createGain(); SFX.vol.gain.value = .6; SFX.vol.connect(VOZ.geral);
+  const n = ctx.sampleRate * 2, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; SFX.ruido = b;
+}
+function envelope(g, t, pico, ataque, queda) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pico, t + ataque); g.gain.exponentialRampToValueAtTime(.0001, t + ataque + queda); }
+function tom(tipo, f0, f1, t, dur, pico, ataque = .01) {
+  const ctx = VOZ.ctx, o = ctx.createOscillator(), g = ctx.createGain(); o.type = tipo; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + ataque + dur);
+  o.connect(g); g.connect(SFX.vol); envelope(g, t, pico, ataque, dur); o.start(t); o.stop(t + ataque + dur + .05); return o;
+}
+function sopro(t, dur, pico, tipo, f0, f1, q = 1, ataque = .05) {
+  const ctx = VOZ.ctx, s = ctx.createBufferSource(), bq = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = SFX.ruido; s.loop = true;
+  bq.type = tipo; bq.Q.value = q; bq.frequency.setValueAtTime(f0, t); bq.frequency.exponentialRampToValueAtTime(f1, t + ataque + dur);
+  s.connect(bq); bq.connect(g); g.connect(SFX.vol); envelope(g, t, pico, ataque, dur); s.start(t, Math.random()); s.stop(t + ataque + dur + .05);
+}
+function som(nome, tentou) {
+  if (!VOZ.ctx || !VOZ.ligado) return;
+  if (VOZ.ctx.state !== 'running') { if (!tentou && !document.hidden) VOZ.ctx.resume().then(() => som(nome, true)).catch(() => {}); return; }   // 1º toque no celular: o som libera um instante depois
+  sfxPreparar(); const t = VOZ.ctx.currentTime + .01;
+  (window.__sons = window.__sons || []).push(nome);
+  switch (nome) {
+    case 'pop': tom('sine', 520, 1100, t, .09, .2); break;                                                   // toque num elemento
+    case 'brilho': [1319, 1976, 2637, 3136].forEach((f, i) => tom('sine', f, f, t + i * .07, .7, .06)); break; // quebra-cabeça reconhecido, telescópio
+    case 'subir': sopro(t, .55, .07, 'bandpass', 300, 2200, 1.3, .2); break;                                  // algo sai da peça
+    case 'sol': tom('sine', 62, 118, t, 1.3, .2, .45); sopro(t, 1.1, .035, 'highpass', 3200, 6500, .7, .4); break;
+    case 'bip': tom('square', 1250, 1250, t, .055, .035); tom('square', 1650, 1650, t + .12, .055, .035); break;
+    case 'disco': { const o = tom('sine', 430, 620, t, .85, .06, .08), l = VOZ.ctx.createOscillator(), lg = VOZ.ctx.createGain(); l.frequency.value = 9; lg.gain.value = 45; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + 1); break; }
+    case 'jato': sopro(t, .55, .06, 'highpass', 1900, 1200, .7, .08); break;
+    case 'cometa': tom('sine', 1800, 3300, t, .45, .04, .04); [2637, 3520, 3136].forEach((f, i) => tom('sine', f, f, t + .15 + i * .09, .4, .03)); break;
+    case 'pulo': tom('sine', 280, 660, t, .26, .09); break;
+    case 'fanfarra': [523, 659, 784, 1047].forEach((f, i) => tom('triangle', f, f, t + i * .13, .55, .08)); break;
+    case 'play': tom('triangle', 392, 784, t, .22, .1); [1047, 1568].forEach((f, i) => tom('sine', f, f, t + .12 + i * .08, .5, .05)); break;
+  }
+}
+function motor(nivel) {   // ronco grave dos motores do foguete enquanto eles estão ligados
+  if (!VOZ.ctx) return;
+  if (nivel === 0 && SFX.motor) { const m = SFX.motor; SFX.motor = null; SFX.nivel = 0; try { m.g.gain.setTargetAtTime(0, VOZ.ctx.currentTime, .15); m.s.stop(VOZ.ctx.currentTime + .8); } catch (e) {} return; }
+  if (VOZ.ctx.state !== 'running') return; nivel = VOZ.ligado ? nivel : 0;
+  if (Math.abs(nivel - SFX.nivel) < .03 && !(nivel === 0 && SFX.nivel !== 0)) return; SFX.nivel = nivel; sfxPreparar(); const ctx = VOZ.ctx;
+  if (!SFX.motor && nivel > 0) { const s = ctx.createBufferSource(), bq = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = SFX.ruido; s.loop = true; bq.type = 'lowpass'; bq.frequency.value = 210; bq.Q.value = .9; g.gain.value = 0; s.connect(bq); bq.connect(g); g.connect(SFX.vol); s.start(); SFX.motor = { s, g }; }
+  if (SFX.motor) { SFX.motor.g.gain.setTargetAtTime(nivel * .32, ctx.currentTime, .2); if (nivel === 0) { const m = SFX.motor; SFX.motor = null; try { m.s.stop(ctx.currentTime + 1); } catch (e) {} } }
+}
+
+/* ---------- texturas ---------- */
+const loader = new THREE.TextureLoader();
+const TEX = {};
+async function carregarTexturas() {
+  const nomes = Object.keys(SRC).filter(n => n.endsWith('.webp'));
+  await Promise.all(nomes.map(async n => { const t = await loader.loadAsync(SRC[n]); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; TEX[n] = t; }));
+}
+const carregando = carregarTexturas();
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return new THREE.CanvasTexture(c); }
+const radial = (stops) => canvasTex(128, 128, (g, w) => { const gr = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); stops.forEach(([p, c]) => gr.addColorStop(p, c)); g.fillStyle = gr; g.fillRect(0, 0, w, w); });
+let _sombra, _estrela, _bola, _risco;
+const sombraTex = () => _sombra || (_sombra = radial([[0, 'rgba(0,0,20,.55)'], [.6, 'rgba(0,0,20,.25)'], [1, 'rgba(0,0,20,0)']]));
+const estrelaTex = () => _estrela || (_estrela = radial([[0, '#fff'], [.25, '#fff'], [.5, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']]));
+let _cruz;
+const cruzTex = () => _cruz || (_cruz = canvasTex(128, 128, (g, w) => {   // estrela com raios em cruz (as que "brilham")
+  const c = w / 2, gr = g.createRadialGradient(c, c, 0, c, c, c * .5); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, w);
+  for (const [dx, dy, L] of [[1, 0, 1], [0, 1, 1], [.7, .7, .45], [.7, -.7, .45]]) { const lg = g.createLinearGradient(c - dx * c * L, c - dy * c * L, c + dx * c * L, c + dy * c * L); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.5, 'rgba(255,255,255,.95)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.strokeStyle = lg; g.lineWidth = dx && dy ? 2 : 3; g.beginPath(); g.moveTo(c - dx * c * L, c - dy * c * L); g.lineTo(c + dx * c * L, c + dy * c * L); g.stroke(); } }));
+const bolaTex = () => _bola || (_bola = radial([[0, 'rgba(255,255,255,1)'], [.4, 'rgba(255,255,255,.6)'], [1, 'rgba(255,255,255,0)']]));
+let _brilhoAr;
+const brilhoArTex = () => _brilhoAr || (_brilhoAr = canvasTex(128, 128, (g, w) => {   // estrela de 4 pontas dourada: na câmera aparece também sobre a mesa clara
+  const c = w / 2, est = (L, k) => { g.beginPath(); g.moveTo(c, c - L); g.quadraticCurveTo(c + k, c - k, c + L, c); g.quadraticCurveTo(c + k, c + k, c, c + L); g.quadraticCurveTo(c - k, c + k, c - L, c); g.quadraticCurveTo(c - k, c - k, c, c - L); g.closePath(); };
+  const halo = g.createRadialGradient(c, c, 0, c, c, c * .6); halo.addColorStop(0, 'rgba(255,205,80,.5)'); halo.addColorStop(1, 'rgba(255,170,40,0)'); g.fillStyle = halo; g.fillRect(0, 0, w, w);
+  est(c * .94, c * .11); g.fillStyle = '#ffb21a'; g.fill(); g.lineWidth = 2; g.strokeStyle = 'rgba(205,120,0,.75)'; g.stroke();
+  est(c * .62, c * .07); g.fillStyle = '#ffe58c'; g.fill();
+  const nu = g.createRadialGradient(c, c, 0, c, c, c * .2); nu.addColorStop(0, 'rgba(255,255,255,1)'); nu.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = nu; g.fillRect(0, 0, w, w); }));
+const riscoTex = () => _risco || (_risco = canvasTex(256, 16, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.85, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); const gv = g.createLinearGradient(0, 0, 0, h); gv.addColorStop(0, 'rgba(0,0,0,1)'); gv.addColorStop(.5, 'rgba(0,0,0,0)'); gv.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = gv; g.fillRect(0, 0, w, h); }));
+
+/* ---------- textos dos cartões (iguais às falas gravadas; claude/missao-espacial-2089-8-narracoes.md). Inglês e espanhol vêm em Idioma.L[..].FATOS ---------- */
+const FATOS_PT = {
+  sol: ['Sol', 'Esse é o Sol, uma estrela! Ele é tão grande que caberia mais de um milhão de Terras dentro dele. Mas nunca olhe direto para o Sol, tá?'],
+  mercurio: ['Mercúrio', 'Esse é Mercúrio, o planeta mais pertinho do Sol e o menor de todos. Ele é rapidinho: dá a volta no Sol em menos de três meses!'],
+  venus: ['Vênus', 'Esse é Vênus. Ele é coberto de nuvens grossas que prendem o calor. Por isso é o planeta mais quente de todos, mais quente até que Mercúrio!'],
+  faisca: ['Faísca', 'Esse é o Faísca, o nosso gato astronauta. Ele é de faz de conta... mas uma gata de verdade, a Félicette, já foi ao espaço e voltou!'],
+  asteroides_sol: ['Asteroides', 'Essas pedras são asteroides. Eles giram em volta do Sol, igual aos planetas. Uns são do tamanho de uma casa, outros do tamanho de uma cidade!'],
+  terra: ['Terra', 'Essa é a Terra, a nossa casa! Ela parece azul porque a maior parte dela é coberta de água. E é o único planeta onde sabemos que existe vida.'],
+  satelite: ['Satélite', 'Esse é um satélite. Ele dá voltas na Terra sem parar e ajuda a saber se vai chover, a ver TV e a achar o caminho no mapa do celular.'],
+  onibus: ['Ônibus espacial', 'Esse é o ônibus espacial. Ele levava astronautas para o espaço e voltava pousando numa pista, igualzinho a um avião. Hoje os ônibus espaciais descansam em museus.'],
+  foguete: ['Foguete', 'Esse é o foguete! Para subir até o espaço, ele precisa vencer a gravidade, a força que puxa tudo para o chão. Por isso faz tanto fogo e fumaça!'],
+  saturno: ['Saturno', 'Esse é Saturno, o planeta dos anéis. Os anéis são feitos de pedaços de gelo e pedra. E Saturno é tão levinho para o tamanho dele que boiaria numa banheira gigante!'],
+  cometa: ['Cometa', 'Esse é um cometa, uma bola de gelo e poeira. Quando chega perto do Sol, o gelo vira gás e forma a cauda, que sempre aponta para longe do Sol.'],
+  zuzu: ['Zuzu', 'Esse é o Zuzu, um ET de faz de conta! Até hoje, ninguém encontrou um ET de verdade. Mas os cientistas continuam procurando sinais de vida no espaço.'],
+  telescopio: ['Telescópio', 'Esse telescópio dourado parece o James Webb, que fica lá no espaço. Os espelhos dele são cobertos de ouro, e ele enxerga estrelas muito, muito longe!'],
+  leo: ['Léo', 'Esse é o Léo! No espaço, a gente flutua e não dá para andar. Por isso os astronautas usam uma mochila com jatinhos para se mexer lá fora.'],
+  jupiter: ['Júpiter', 'Esse é Júpiter, o maior planeta de todos! Aquela mancha vermelha é uma tempestade maior que a Terra inteira, e ela não para há mais de 150 anos.'],
+  asteroides_grandes: ['Asteroides', 'Entre Marte e Júpiter tem um cinturão com milhões de asteroides girando em volta do Sol. Mas eles ficam bem longe uns dos outros!'],
+  marte: ['Marte', 'Esse é Marte, o planeta vermelho. Ele é vermelho porque a poeira do chão tem ferrugem! E lá fica o maior vulcão de todo o Sistema Solar.'],
+  bip: ['Bip', 'Esse é o Bip, um robô explorador. Robôs como ele já andaram pela Lua e por Marte, tirando fotos e estudando as pedras, guiados por cientistas aqui da Terra.'],
+  bia: ['Bia', 'Essa é a Bia, pulando na Lua! Lá, tudo pesa bem menos que aqui na Terra. Então dá para pular bem alto e cair devagarinho.'],
+};
+
+const fatos = k => { const L = Idioma.L[Idioma.atual]; return (L && L.FATOS && L.FATOS[k]) || FATOS_PT[k]; };
+
+/* ---------- linha do tempo ----------
+   cada peça tem a sua cena, com tempos a partir do início da peça; no círculo inteiro elas entram em sequência */
+const DUR = { disco: 16.2, SO: 8.5, NO: 7.5, NE: 6.5, SE: 6.5 };   // tempo de animação de cada peça
+const ORDEM = ['disco', 'SO', 'NO', 'NE', 'SE'];
+const CEU = 5.5;   // céu vivo + convite, no fim
+// falas da abertura: [código, momento da animação da peça em que a fala começa = quando o elemento começa a sair da peça]
+const FALAS = { disco: [['VO_A02_SOL', 1.2], ['VO_A03_VIZINHOS', 4.2], ['VO_A04_FAISCA', 11.4], ['VO_A05_ASTEROIDES', 13.8]],
+  SO: [['VO_A06_TERRA', 0], ['VO_A07_ORBITA', 1.6], ['VO_A08_FOGUETE', 3.2]], NO: [['VO_A09_SATURNO', 0], ['VO_A10_ZUZU', 1.6], ['VO_A11_COMETA', 3.6]],
+  NE: [['VO_A12_JUPITER', 0], ['VO_A13_LEO', 1.6]], SE: [['VO_A14_MARTE', 0], ['VO_A15_LUA', 1.2]] };
+const FOLGA = .35;   // respiro depois de cada fala
+// a animação espera a voz: cada peça ganha uma "régua" de pontos [tempo da animação, tempo real]. Entre os pontos tudo anda no ritmo normal;
+// num ponto, o que começa ali só começa quando a fala anterior terminou. Cada movimento, depois de começar, anda sempre na velocidade original.
+function inicio(pecas) {
+  const o = {}, w = {}, falas = [['VO_A01_ACORDA', 0]]; let t = 0, livre = vozDur('VO_A01_ACORDA') + FOLGA;
+  for (const p of ORDEM) if (pecas.includes(p)) {
+    o[p] = t; const r = [[0, 0]];
+    for (const [id, a] of FALAS[p]) {
+      const [a0, r0] = r[r.length - 1], tr = Math.max(r0 + (a - a0), livre - t);
+      if (a === a0) r[r.length - 1] = [a, tr]; else r.push([a, tr]);
+      falas.push([id, t + tr]); livre = t + tr + vozDur(id) + FOLGA;
+    }
+    const [aL, rL] = r[r.length - 1], D = Math.max(rL + (DUR[p] - aL), livre - t - .6);
+    w[p] = r; t += D;
+  }
+  falas.push(['VO_A16_CONVITE', Math.max(t + .3, livre)]);
+  const fimVoz = falas[falas.length - 1][1] + vozDur('VO_A16_CONVITE') + .4;
+  return { o, w, falas, ceu: t, fim: Math.max(t + CEU, fimVoz) };
+}
+function tempoReal(regua, a) {   // momento (tempo real da peça) em que a animação chega ao instante a
+  let k = 0; while (k + 1 < regua.length && regua[k + 1][0] <= a) k++;
+  return regua[k][1] + (a - regua[k][0]);
+}
+// rótulos: [elemento, peça, início, fim] (tempos relativos à peça)
+const ROTULOS = [['sol', 'disco', 1.6, 4.0], ['mercurio', 'disco', 4.5, 6.3], ['venus', 'disco', 6.4, 9.6], ['faisca', 'disco', 11.8, 13.8], ['asteroides_sol', 'disco', 14.0, 16.0],
+  ['terra', 'SO', .6, 2.8], ['satelite', 'SO', 2.9, 4.3], ['foguete', 'SO', 3.6, 7.6],
+  ['saturno', 'NO', .6, 2.6], ['zuzu', 'NO', 2.8, 4.6], ['cometa', 'NO', 4.8, 7.3],
+  ['jupiter', 'NE', .6, 2.4], ['leo', 'NE', 2.6, 5.2], ['asteroides_grandes', 'NE', 5.3, 6.4],
+  ['marte', 'SE', .4, 1.9], ['bip', 'SE', 1.6, 3.6], ['bia', 'SE', 3.8, 6.2]];
+
+/* ---------- shaders ---------- */
+const NOISE = `
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}`;
+function coroaMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { uT: { value: 0 }, uA: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+    fragmentShader: `uniform float uT, uA; varying vec2 vUv; ${NOISE}
+      void main(){
+        vec2 p = (vUv - .5) * 2.; float r = length(p); float a = atan(p.y, p.x); const float R = .625;
+        float n = noise(vec2(a * 3. + uT * .5, r * 4. - uT * 1.1)) * .6 + noise(vec2(a * 8. - uT * .8, r * 10. + uT * 1.8)) * .4;
+        float borda = R + .05 + .30 * n; float chama = 1. - smoothstep(R, borda, r); float brilho = exp(-(r - R) * 7.) * .6;
+        vec3 cor = mix(vec3(1., .42, .05), vec3(1., .9, .45), chama * chama); float alfa = (chama * .95 + brilho) * uA;
+        gl_FragColor = vec4(cor * alfa, alfa); }`
+  });
+}
+function atmosferaMaterial(cor, forca = 1) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uCor: { value: new THREE.Color(cor) }, uSol: { value: new THREE.Vector3(1, 0, 0) }, uF: { value: forca } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `varying vec3 vN, vV; void main(){ vec4 wp = modelMatrix * vec4(position, 1.); vN = normalize(mat3(modelMatrix) * normal); vV = normalize(cameraPosition - wp.xyz); gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: `uniform vec3 uCor, uSol; uniform float uF; varying vec3 vN, vV;
+      void main(){ float f = pow(1. - max(dot(normalize(vN), normalize(vV)), 0.), 2.6); float lado = .35 + .65 * max(dot(normalize(vN), uSol), 0.);
+        gl_FragColor = vec4(uCor * f * lado * 1.1 * uF, f * lado * uF); }`
+  });
+}
+// recorte 2.5D: até 4 dobras (pivô, direção, alcance, largura, amplitude, frequência) + 1 piscar (centro, raio)
+function recorteMaterial(map, dobras, piscar, w, h) {
+  const A = [], P = [];
+  for (let i = 0; i < 4; i++) { const d = dobras[i]; A.push(d ? new THREE.Vector4((d.u - .5) * w, (.5 - d.v) * h, d.dir[0], d.dir[1]) : new THREE.Vector4(0, 0, 1, 0)); P.push(d ? new THREE.Vector4(d.len, d.half, d.amp, d.freq) : new THREE.Vector4(1, 1, 0, 0)); }
+  const pc = piscar ? new THREE.Vector3((piscar.u - .5) * w, (.5 - piscar.v) * h, piscar.r) : new THREE.Vector3(0, 0, 0);
+  return new THREE.ShaderMaterial({
+    uniforms: { map: { value: map }, uT: { value: 0 }, uArt: { value: A }, uPar: { value: P }, uPisca: { value: pc }, uPiscar: { value: 0 } }, transparent: true,
+    vertexShader: `uniform float uT, uPiscar; uniform vec4 uArt[4]; uniform vec4 uPar[4]; uniform vec3 uPisca; varying vec2 vUv;
+      vec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }
+      vec2 dobra(vec2 p, vec4 art, vec4 par, float fase){
+        vec2 piv = art.xy, dir = art.zw; vec2 d = p - piv;
+        float ao = dot(d, dir), lat = abs(dot(d, vec2(-dir.y, dir.x)));
+        float w = smoothstep(par.x * .25, par.x * .7, ao) * (1. - smoothstep(par.y, par.y * 1.6, lat));
+        return piv + rot(d, par.z * sin(uT * par.w + fase) * w); }
+      void main(){ vUv = uv; vec2 p = position.xy;
+        p = dobra(p, uArt[0], uPar[0], 0.); p = dobra(p, uArt[1], uPar[1], 1.3); p = dobra(p, uArt[2], uPar[2], 2.1); p = dobra(p, uArt[3], uPar[3], 3.4);
+        if (uPisca.z > 0.) { float d = distance(p, uPisca.xy); float w = 1. - smoothstep(uPisca.z * .5, uPisca.z, d); p.y = uPisca.y + (p.y - uPisca.y) * (1. - .85 * uPiscar * w); }
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, position.z, 1.); }`,
+    fragmentShader: `uniform sampler2D map; varying vec2 vUv; void main(){ vec4 c = texture2D(map, vUv); if (c.a < .03) discard; gl_FragColor = c;
+#include <colorspace_fragment>
+}`
+  });
+}
+function pontosMaterial(cor, mapa, blending = THREE.AdditiveBlending) {
+  return new THREE.ShaderMaterial({
+    // uEsc: escala do quebra-cabeça no mundo (1 sem câmera; na câmera o mundo do rastreador é em pixels do alvo e, sem isto, os pontos ficavam invisíveis)
+    uniforms: { map: { value: mapa }, uCor: { value: new THREE.Color(cor) }, uPx: { value: 800 }, uEsc: { value: 1 } }, transparent: true, depthWrite: false, blending,
+    vertexShader: `attribute float aTam, aAlfa; attribute vec3 aCor; uniform float uPx, uEsc; varying float vA; varying vec3 vC;
+      void main(){ vA = aAlfa; vC = aCor; vec4 mv = modelViewMatrix * vec4(position, 1.); gl_PointSize = aTam * uEsc * uPx / -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform sampler2D map; uniform vec3 uCor; varying float vA; varying vec3 vC; void main(){ vec4 c = texture2D(map, gl_PointCoord); gl_FragColor = vec4(uCor * vC * c.rgb, c.a * vA); }`
+  });
+}
+
+// brilho da peça reconhecida: contorno que pulsa e uma faixa de luz que atravessa (círculo, disco ou arco, em coordenadas polares)
+function brilhoPecaMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { uT: { value: 0 }, uA: { value: 0 }, uRi: { value: 0 }, uRo: { value: .5 }, uA0: { value: -Math.PI }, uA1: { value: Math.PI } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+    fragmentShader: `uniform float uT, uA, uRi, uRo, uA0, uA1; varying vec2 vP;
+      void main(){ float r = length(vP), a = atan(vP.y, vP.x);
+        float d = uRo - r; if (uRi > 0.) d = min(d, r - uRi);
+        if (uA1 - uA0 < 6.) d = min(d, min(a - uA0, uA1 - a) * r);
+        d = max(d, 0.);
+        float borda = exp(-d * 60.), halo = exp(-d * 16.) * .35;
+        float x = dot(vP, normalize(vec2(1., .55))), pos = fract(uT * .2) * 1.8 - .9, faixa = exp(-pow((x - pos) * 14., 2.));
+        float pulso = .6 + .4 * sin(uT * 3.2);
+        vec3 cor = mix(vec3(1., .8, .28), vec3(.55, .9, 1.), .5 + .5 * sin(uT * .8 + r * 7. + a));
+        float al = ((borda * 1.1 + halo) * pulso + faixa * .35) * uA;
+        gl_FragColor = vec4(cor, min(al, 1.)); }`
+  });
+}
+
+/* ---------- partículas simples (CPU) ---------- */
+class Particulas {
+  constructor(n, cor, mapa, blending) {
+    this.n = n; this.p = []; this.g = new THREE.BufferGeometry();
+    this.pos = new Float32Array(n * 3); this.tam = new Float32Array(n); this.alfa = new Float32Array(n); this.cor = new Float32Array(n * 3).fill(1);
+    this.g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3)); this.g.setAttribute('aTam', new THREE.BufferAttribute(this.tam, 1));
+    this.g.setAttribute('aAlfa', new THREE.BufferAttribute(this.alfa, 1)); this.g.setAttribute('aCor', new THREE.BufferAttribute(this.cor, 3));
+    this.obj = new THREE.Points(this.g, pontosMaterial(cor, mapa, blending)); this.obj.frustumCulled = false; this.obj.renderOrder = 8;
+  }
+  emitir(x, y, z, vx, vy, vz, o) { if (this.p.length >= this.n) this.p.shift(); this.p.push({ x, y, z, vx, vy, vz, t: 0, vida: o.vida, t0: o.tam, t1: o.tam2 || o.tam * 2.5, c0: o.cor0 || [1, 1, 1], c1: o.cor1 || o.cor0 || [1, 1, 1], g: o.grav || 0, arr: o.arrasto || 0 }); }
+  update(dt) {
+    const vivos = []; for (const q of this.p) { q.t += dt; if (q.t < q.vida) { q.vz -= q.g * dt; const a = 1 - q.arr * dt; q.vx *= a; q.vy *= a; q.vz *= a; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt; vivos.push(q); } }
+    this.p = vivos; let i = 0;
+    for (const q of this.p) { const k = q.t / q.vida; this.pos.set([q.x, q.y, q.z], i * 3); this.tam[i] = lerp(q.t0, q.t1, k); this.alfa[i] = Math.sin(Math.PI * k) ** .7; this.cor.set([lerp(q.c0[0], q.c1[0], k), lerp(q.c0[1], q.c1[1], k), lerp(q.c0[2], q.c1[2], k)], i * 3); i++; }
+    this.g.setDrawRange(0, i); this.g.attributes.position.needsUpdate = true; this.g.attributes.aTam.needsUpdate = true; this.g.attributes.aAlfa.needsUpdate = true; this.g.attributes.aCor.needsUpdate = true;
+  }
+}
+
+/* ---------- a cena ---------- */
+function buildScene() {
+  const root = new THREE.Group(); const objetos = [];
+  const AR = modo === 'ar';   // na câmera: só os astros 3D saem da peça; personagens e objetos ficam no impresso e "acordam" com brilhos
+  const porPeca = {}; const reg = (k, obj) => { (porPeca[E[k].peca] ||= []).push(obj); };
+  root.add(new THREE.AmbientLight(0xffffff, .5));
+  const oclusor = new THREE.Mesh(new THREE.CircleGeometry(.5, 96), new THREE.MeshBasicMaterial({ colorWrite: false })); oclusor.position.z = -.0006; oclusor.renderOrder = -1; root.add(oclusor);
+  // remendos do fundo limpo
+  const remendos = {};
+  Object.keys(E).forEach((k, i) => {
+    const r = E[k].remendo;
+    const mat = new THREE.MeshBasicMaterial({ map: TEX['remendo_' + k + '.webp'], transparent: true, opacity: 0, depthWrite: false });
+    mat.onBeforeCompile = sh => {   // nada do remendo aparece fora do círculo do quebra-cabeça
+      sh.uniforms.uC = { value: new THREE.Vector4(r.x, r.y, r.w, r.h) };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vUvC;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvUvC = uv;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vUvC; uniform vec4 uC;').replace('#include <dithering_fragment>', '#include <dithering_fragment>\n{ vec2 pr = uC.xy + (vUvC - .5) * uC.zw; gl_FragColor.a *= 1. - smoothstep(.494, .5, length(pr)); }');
+    };
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.h), mat);
+    m.position.set(r.x, r.y, .0006 + i * .0001); m.renderOrder = 1; remendos[k] = m; reg(k, m);
+    if (modo !== 'ar') root.add(m);   // na câmera o desenho impresso fica à mostra: o remendo digital não combina com a imagem da câmera
+  });
+  const sombra = (k, w, h) => {   // a sombra só aparece em cima do quebra-cabeça (é cortada na borda do círculo)
+    const mat = new THREE.ShaderMaterial({ uniforms: { map: { value: sombraTex() }, uOp: { value: 0 }, uC: { value: new THREE.Vector4() } }, transparent: true, depthWrite: false,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform sampler2D map; uniform float uOp; uniform vec4 uC; varying vec2 vUv; void main(){ vec4 c = texture2D(map, vUv); vec2 pr = uC.xy + (vUv - .5) * uC.zw; float dentro = 1. - smoothstep(.492, .502, length(pr)); gl_FragColor = vec4(c.rgb, c.a * uOp * dentro); }` });
+    mat.opacity = 0;
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); sh.position.set(E[k].x, E[k].y, .0025); sh.renderOrder = 2;
+    sh.onBeforeRender = () => { mat.uniforms.uOp.value = mat.opacity; mat.uniforms.uC.value.set(sh.position.x, sh.position.y, w * sh.scale.x, h * sh.scale.y); };
+    root.add(sh); reg(k, sh); return sh; };
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vEsc = new THREE.Vector3(), q = new THREE.Quaternion(), q2 = new THREE.Quaternion();
+  function billboard(m, camera) { m.parent.getWorldQuaternion(q); camera.getWorldQuaternion(q2); m.quaternion.copy(q.invert().multiply(q2)); }
+
+  // ---- Sol
+  const rS = E.sol.w / 2 * .9;
+  const sol = new THREE.Group(); sol.position.set(E.sol.x, E.sol.y, rS * .8); sol.visible = false; root.add(sol); reg('sol', sol);
+  const solMesh = new THREE.Mesh(new THREE.SphereGeometry(rS, 64, 40), new THREE.MeshBasicMaterial({ map: TEX['tex_sol.webp'] }));
+  solMesh.rotation.x = Math.PI / 2; solMesh.userData.id = 'sol'; sol.add(solMesh); objetos.push(solMesh);
+  const solMesh2 = new THREE.Mesh(new THREE.SphereGeometry(rS * 1.012, 64, 40), new THREE.MeshBasicMaterial({ map: TEX['tex_sol.webp'], transparent: true, opacity: .32, blending: THREE.AdditiveBlending, depthWrite: false }));
+  solMesh2.rotation.set(Math.PI / 2 + .5, 0, .8); sol.add(solMesh2);
+  const luzSol = new THREE.PointLight(0xfff0d2, 0, 0, 0); sol.add(luzSol);
+  const coroa = new THREE.Mesh(new THREE.PlaneGeometry(rS * 3.2, rS * 3.2), coroaMaterial()); coroa.renderOrder = 6; sol.add(coroa);
+  const brilhoSol = new THREE.Mesh(new THREE.CircleGeometry(rS * 1.3, 48), new THREE.MeshBasicMaterial({ map: radial([[0, 'rgba(255,170,40,.7)'], [.5, 'rgba(255,120,20,.25)'], [1, 'rgba(255,100,0,0)']]), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+  brilhoSol.position.set(E.sol.x, E.sol.y, .004); brilhoSol.renderOrder = 2; root.add(brilhoSol); reg('sol', brilhoSol);
+
+  // ---- planetas (esfera + sombra + opcional órbita, atmosfera, nuvens, anel)
+  function planeta(k, texName, o) {
+    const d = E[k], r = d.w / 2;
+    const g = new THREE.Group(); g.position.set(d.x, d.y, r); g.visible = false; root.add(g); reg(k, g);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), new THREE.MeshStandardMaterial({ map: TEX[texName], roughness: o.rugosidade ?? 1, metalness: 0 }));
+    m.rotation.x = Math.PI / 2; m.userData.id = k; g.add(m); objetos.push(m);
+    const p = { k, g, m, r, sh: sombra(k, r * 2.3, r * 2.3), giro: o.giro ?? .3, alt: r + (o.alt ?? .03), fator: o.fator ?? 1, inclina: o.inclina ?? 0 };
+    if (o.atmosfera) { p.atm = new THREE.Mesh(new THREE.SphereGeometry(r * 1.045, 48, 32), atmosferaMaterial(o.atmosfera, o.forcaAtm ?? 1)); p.atm.renderOrder = 3; g.add(p.atm); }
+    if (o.nuvens) { p.nuv = new THREE.Mesh(new THREE.SphereGeometry(r * 1.02, 48, 32), new THREE.MeshStandardMaterial({ map: TEX[o.nuvens], transparent: true, roughness: 1, depthWrite: false })); p.nuv.rotation.x = Math.PI / 2; g.add(p.nuv); }
+    if (o.anel) {
+      const ri = r * 1.25, re = r * 2.3, geo = new THREE.RingGeometry(ri, re, 96, 1), uv = geo.attributes.uv, pos = geo.attributes.position;
+      for (let i = 0; i < uv.count; i++) { const L = Math.hypot(pos.getX(i), pos.getY(i)); uv.setXY(i, (L - ri) / (re - ri), .5); }
+      p.anel = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: TEX[o.anel], transparent: true, side: THREE.DoubleSide, depthWrite: false })); p.anel.rotation.set(.45, .15, 0); p.anel.renderOrder = 3; g.add(p.anel);
+      p.anel.userData.id = k; objetos.push(p.anel);
+    }
+    if (o.orbita) { // órbita em volta do Sol
+      const pts = []; for (let i = 0; i <= 120; i++) { const a = i / 120 * TAU; pts.push(new THREE.Vector3(E.sol.x + Math.cos(a) * o.orbita, E.sol.y + Math.sin(a) * o.orbita, 0)); }
+      p.orb = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xffffff, transparent: true, opacity: 0, dashSize: .012, gapSize: .009 })); p.orb.computeLineDistances(); p.orb.renderOrder = 2; root.add(p.orb); reg(k, p.orb);
+      p.R = o.orbita; p.artR = Math.hypot(d.x - E.sol.x, d.y - E.sol.y); p.ang0 = Math.atan2(d.y - E.sol.y, d.x - E.sol.x); p.w = TAU / o.periodo;
+    }
+    g.rotation.x = p.inclina;
+    return p;
+  }
+  const g2 = CFG.disco_w / 1;   // fator: o protótipo do disco usava o disco = 1
+  const merc = planeta('mercurio', 'tex_mercurio.webp', { orbita: .335 * g2, periodo: 7, fator: .75, giro: .35, alt: .045 });
+  const ven = planeta('venus', 'tex_venus.webp', { orbita: .455 * g2, periodo: 18, fator: .85, giro: -.12, rugosidade: .7, atmosfera: 0xfff2c4, alt: .07 });
+  const terra = planeta('terra', 'tex_terra.webp', { giro: .3, rugosidade: .8, atmosfera: 0x7fc4ff, forcaAtm: 1.4, nuvens: 'tex_terra_nuvens.webp', alt: .035, inclina: -.2 });
+  const marte = planeta('marte', 'tex_marte.webp', { giro: .3, alt: .03 });
+  const jup = planeta('jupiter', 'tex_jupiter.webp', { giro: .5, alt: .035, inclina: -.15 });
+  const sat = planeta('saturno', 'tex_saturno.webp', { giro: .45, alt: .045, anel: 'tex_saturno_anel.webp', inclina: -.25 });
+  const PL = [merc, ven, terra, marte, jup, sat];
+
+  // ---- recortes 2.5D
+  const DOBRAS = {   // direção em coordenadas do recorte (x direita, y para cima); len/half em fração de w/h
+    faisca: { rabo: { dir: [-.98, .2], len: ['w', .3], half: ['h', .6], amp: .26, freq: 2.0 }, pata_acenando: { dir: [1, 0], len: ['w', .22], half: ['h', .09], amp: .3, freq: 5.2 }, cabeca: { dir: [0, 1], len: ['h', .45], half: ['w', .24], amp: .06, freq: 1.3 } },
+    zuzu: { mao_acenando: { dir: [.58, .81], len: ['h', .14], half: ['w', .09], amp: .35, freq: 4.5 }, antena: { dir: [-.42, .9], len: ['h', .16], half: ['w', .05], amp: .25, freq: 3 }, olho: { piscar: ['w', .07] } },
+    leo: { cabeca: { dir: [0, 1], len: ['h', .45], half: ['w', .33], amp: .06, freq: 1.1 }, perna_dir: { dir: [.75, -.66], len: ['h', .3], half: ['w', .12], amp: .12, freq: 1.6 }, perna_esq: { dir: [-.55, -.83], len: ['h', .3], half: ['w', .12], amp: .12, freq: 1.6 } },
+    bia: { braco_esq: { dir: [-1, -.15], len: ['w', .35], half: ['h', .09], amp: .15, freq: 1.4 }, braco_dir: { dir: [.8, -.55], len: ['w', .3], half: ['h', .09], amp: .15, freq: 1.4 }, perna_esq: { dir: [-.2, -.98], len: ['h', .3], half: ['w', .12], amp: .1, freq: 1.2 }, cabeca: { dir: [0, 1], len: ['h', .4], half: ['w', .32], amp: .05, freq: 1.0 } },
+    bip: { garra: { dir: [.25, .97], len: ['h', .45], half: ['w', .12], amp: .12, freq: 1.3 }, antena_parabolica: { dir: [-.9, .45], len: ['w', .3], half: ['h', .2], amp: .15, freq: 1.0 }, cabeca: { dir: [-.35, .94], len: ['h', .4], half: ['w', .3], amp: .06, freq: 1.2 }, olhos: { piscar: ['w', .12] } },
+  };
+  function recorte(k, segs = 1) {
+    const d = E[k], dobras = [], D = DOBRAS[k] || {}; let piscar = null;
+    for (const a of (k === 'faisca' ? (d.art || []) : [])) { const s = D[a.nome]; if (!s) continue; const f = x => (x[0] === 'w' ? d.w : d.h) * x[1]; if (s.piscar) piscar = { u: a.u, v: a.v, r: f(s.piscar) }; else dobras.push({ u: a.u, v: a.v, dir: s.dir, len: f(s.len), half: f(s.half), amp: s.amp, freq: s.freq }); }
+    const mat = (dobras.length || piscar) ? recorteMaterial(TEX[k + '.webp'], dobras, piscar, d.w, d.h) : new THREE.MeshBasicMaterial({ map: TEX[k + '.webp'], transparent: true, alphaTest: .05 });
+    if (AR) mat.visible = false;   // na câmera o recorte não aparece (o impresso já está lá), mas continua tocável
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(d.w, d.h, (dobras.length || piscar) ? 40 : 1, (dobras.length || piscar) ? 30 : 1), mat);
+    m.position.set(d.x, d.y, .002); m.visible = false; m.userData.id = k; m.renderOrder = 4; root.add(m); objetos.push(m); reg(k, m);
+    return { k, m, d, sh: sombra(k, d.w * .9, d.h * .9), anim: mat.uniforms ? mat : null, x0: d.x, y0: d.y };
+  }
+  const R = {}; for (const k of ['faisca', 'asteroides_sol', 'zuzu', 'telescopio', 'leo', 'asteroides_grandes', 'bip', 'bia', 'satelite', 'onibus', 'foguete']) R[k] = recorte(k);
+  // ---- cometa 3D (núcleo + cauda de partículas), no lugar da cabeça do cometa da arte
+  const cm = E.cometa, cometa = new THREE.Group(); cometa.visible = false; root.add(cometa); reg('cometa', cometa);
+  const nucleo = new THREE.Mesh(new THREE.SphereGeometry(cm.h * .2, 24, 16), new THREE.MeshStandardMaterial({ map: TEX['tex_lua.webp'], roughness: .8, color: 0xffffff, emissive: 0x8ec0ee, emissiveIntensity: .7 })); nucleo.userData.id = 'cometa'; cometa.add(nucleo); objetos.push(nucleo);
+  const coma = new THREE.Mesh(new THREE.PlaneGeometry(cm.h * 1.6, cm.h * 1.6), new THREE.MeshBasicMaterial({ map: bolaTex(), color: 0xd6f0ff, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); coma.renderOrder = 6; cometa.add(coma);
+  // cauda: pontos fixos ao longo da direção "longe do Sol", recalculados a cada quadro (não depende da taxa de quadros)
+  const NC = 90, cg = new THREE.BufferGeometry(), cPos = new Float32Array(NC * 3), cTam = new Float32Array(NC), cAlfa = new Float32Array(NC), cCor = new Float32Array(NC * 3), cSeed = Array.from({ length: NC }, () => [Math.random(), Math.random(), Math.random()]);
+  cg.setAttribute('position', new THREE.BufferAttribute(cPos, 3)); cg.setAttribute('aTam', new THREE.BufferAttribute(cTam, 1)); cg.setAttribute('aAlfa', new THREE.BufferAttribute(cAlfa, 1)); cg.setAttribute('aCor', new THREE.BufferAttribute(cCor, 3));
+  const cauda = { obj: new THREE.Points(cg, pontosMaterial(0xffffff, bolaTex())), update() {} }; cauda.obj.frustumCulled = false; cauda.obj.renderOrder = 7; cauda.obj.visible = false; root.add(cauda.obj); reg('cometa', cauda.obj);
+  function caudaCometa(x, y, z, longe, f) {
+    const L = .17 * f; for (let i = 0; i < NC; i++) { const s = ((cSeed[i][0] + T * .35) % 1), [, r1, r2] = cSeed[i]; const esp = .004 + s * .03;
+      cPos.set([x + longe.x * s * L + (r1 - .5) * esp * 2, y + longe.y * s * L + (r2 - .5) * esp * 2, z + longe.z * s * L * .4 + (r1 - r2) * esp], i * 3);
+      cTam[i] = (.016 + .034 * (1 - s)) * f; cAlfa[i] = (1 - s) * (1 - s) * f; cCor.set([.85 + .15 * (1 - s), .93, 1], i * 3); }
+    cg.attributes.position.needsUpdate = cg.attributes.aTam.needsUpdate = cg.attributes.aAlfa.needsUpdate = cg.attributes.aCor.needsUpdate = true;
+  }
+  const cometaPos0 = new THREE.Vector2(cm.x - cm.w * .3, cm.y - cm.h * .25);   // cabeça do cometa na arte (lado de baixo/esquerda)
+  // ---- partículas dos emissores
+  const jato = new Particulas(120, 0xffffff, bolaTex(), THREE.NormalBlending); root.add(jato.obj); reg('leo', jato.obj);
+  const chama = new Particulas(220, 0xffffff, bolaTex()); root.add(chama.obj); reg('foguete', chama.obj);
+  const fumaca = new Particulas(220, 0xffffff, bolaTex(), THREE.NormalBlending); root.add(fumaca.obj); reg('foguete', fumaca.obj);
+  const poeira = new Particulas(100, 0xffffff, bolaTex(), THREE.NormalBlending); root.add(poeira.obj); reg('bip', poeira.obj);
+  const chamaTex = canvasTex(64, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(.12, 'rgba(255,220,90,1)'); gr.addColorStop(.45, 'rgba(255,120,20,.85)'); gr.addColorStop(1, 'rgba(255,50,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); const gh = g.createLinearGradient(0, 0, w, 0); gh.addColorStop(0, 'rgba(0,0,0,1)'); gh.addColorStop(.5, 'rgba(0,0,0,0)'); gh.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = gh; g.fillRect(0, 0, w, h); });
+  const chamaSprite = new THREE.Mesh(new THREE.PlaneGeometry(.075, .15), new THREE.MeshBasicMaterial({ map: chamaTex, transparent: true, opacity: 0, depthWrite: false })); chamaSprite.geometry.translate(0, -.05, 0); chamaSprite.renderOrder = 5; chamaSprite.visible = false; root.add(chamaSprite); reg('foguete', chamaSprite);
+  const fumacaBase = new THREE.Mesh(new THREE.PlaneGeometry(.11, .11), new THREE.MeshBasicMaterial({ map: bolaTex(), color: 0xdfe3ee, transparent: true, opacity: 0, depthWrite: false })); fumacaBase.renderOrder = 5; fumacaBase.visible = false; root.add(fumacaBase); reg('foguete', fumacaBase);
+  const brilhoTel = new Particulas(40, 0xfff3b0, estrelaTex()); root.add(brilhoTel.obj); reg('telescopio', brilhoTel.obj);
+  // ---- estrelinhas (ignição) e estrelas cadentes
+  const N = 320, pos = new Float32Array(N * 3), tam = new Float32Array(N), alfa = new Float32Array(N), cor = new Float32Array(N * 3).fill(1), fase = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const a = Math.random() * TAU, rr = Math.sqrt(Math.random()) * .5; pos.set([Math.cos(a) * rr, Math.sin(a) * rr, .01 + Math.random() * .08], i * 3); fase[i] = Math.random() * TAU; tam[i] = .008 + Math.random() * .008; }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); sg.setAttribute('aTam', new THREE.BufferAttribute(tam, 1)); sg.setAttribute('aAlfa', new THREE.BufferAttribute(alfa, 1)); sg.setAttribute('aCor', new THREE.BufferAttribute(cor, 3));
+  const estrelas = new THREE.Points(sg, pontosMaterial(0xffffff, estrelaTex())); estrelas.visible = false; estrelas.renderOrder = 7; estrelas.frustumCulled = false; root.add(estrelas);
+  const riscos = []; for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(.16, .01), new THREE.MeshBasicMaterial({ map: riscoTex(), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); m.renderOrder = 7; m.visible = false; m.userData.prox = 2 + i * 3 + Math.random() * 3; m.userData.ini = -9; root.add(m); riscos.push(m); }
+  // ---- céu em volta: estrelinhas sempre piscando, em volta e por cima do quebra-cabeça (fica em volta da peça reconhecida)
+  const ceu = new THREE.Group(); root.add(ceu);
+  const NA = 270, aPos = new Float32Array(NA * 3), aTam = new Float32Array(NA), aAlfa = new Float32Array(NA), aCor = new Float32Array(NA * 3), aFase = new Float32Array(NA), aVel = new Float32Array(NA), aBase = new Float32Array(NA);
+  for (let i = 0; i < NA; i++) {
+    const fora = i < 190, a = Math.random() * TAU, rr = fora ? .53 + Math.pow(Math.random(), 1.5) * .34 : Math.sqrt(Math.random()) * .47;
+    aPos.set([Math.cos(a) * rr, Math.sin(a) * rr, fora ? .005 + Math.random() * .2 : .09 + Math.random() * .2], i * 3);
+    aTam[i] = (fora ? .008 : .006) + Math.random() * (fora ? .011 : .007); aFase[i] = Math.random() * TAU; aVel[i] = .5 + Math.random() * 1.7; aBase[i] = fora ? .3 + Math.random() * .35 : .12 + Math.random() * .2;
+    const tinta = Math.random(); aCor.set(tinta < .22 ? [1, .9, .62] : tinta < .42 ? [.72, .87, 1] : [1, 1, 1], i * 3);
+  }
+  const ag = new THREE.BufferGeometry(); ag.setAttribute('position', new THREE.BufferAttribute(aPos, 3)); ag.setAttribute('aTam', new THREE.BufferAttribute(aTam, 1)); ag.setAttribute('aAlfa', new THREE.BufferAttribute(aAlfa, 1)); ag.setAttribute('aCor', new THREE.BufferAttribute(aCor, 3));
+  const estrelasCeu = new THREE.Points(ag, pontosMaterial(0xffffff, estrelaTex())); estrelasCeu.renderOrder = 7; estrelasCeu.frustumCulled = false; ceu.add(estrelasCeu);
+  const NX = 46, xPos = new Float32Array(NX * 3), xTam = new Float32Array(NX), xAlfa = new Float32Array(NX), xCor = new Float32Array(NX * 3).fill(1), xFase = new Float32Array(NX), xVel = new Float32Array(NX);
+  for (let i = 0; i < NX; i++) { const a = Math.random() * TAU, fora = i < 34, rr = fora ? .54 + Math.random() * .3 : Math.sqrt(Math.random()) * .45;
+    xPos.set([Math.cos(a) * rr, Math.sin(a) * rr, fora ? .01 + Math.random() * .18 : .1 + Math.random() * .18], i * 3); xTam[i] = .03 + Math.random() * .035; xFase[i] = Math.random() * TAU; xVel[i] = .35 + Math.random() * .8;
+    if (Math.random() < .3) xCor.set([1, .9, .6], i * 3); }
+  const xg = new THREE.BufferGeometry(); xg.setAttribute('position', new THREE.BufferAttribute(xPos, 3)); xg.setAttribute('aTam', new THREE.BufferAttribute(xTam, 1)); xg.setAttribute('aAlfa', new THREE.BufferAttribute(xAlfa, 1)); xg.setAttribute('aCor', new THREE.BufferAttribute(xCor, 3));
+  const cintilas = new THREE.Points(xg, pontosMaterial(0xffffff, cruzTex())); cintilas.renderOrder = 7; cintilas.frustumCulled = false; ceu.add(cintilas);
+  if (AR) {   // na câmera, em volta do quebra-cabeça fica a mesa clara: estrelas brancas somadas sumiriam, então em volta elas são douradas e um pouco maiores
+    estrelasCeu.material.blending = THREE.NormalBlending;
+    for (let i = 0; i < NA; i++) { if (i < 190) { const t = Math.random(); aCor.set(t < .6 ? [1, .76, .2] : t < .85 ? [1, .88, .45] : [.5, .74, 1], i * 3); } aTam[i] *= i < 190 ? 1.7 : 1.2; }
+    cintilas.material = pontosMaterial(0xffffff, brilhoArTex(), THREE.NormalBlending); xCor.fill(1); for (let i = 0; i < NX; i++) xTam[i] *= 1.4;
+  }
+  const aTam0 = aTam.slice(), xTam0 = xTam.slice();   // tamanho de cada estrela; na câmera elas "pulsam" ao piscar
+  riscos.forEach(m => { root.remove(m); ceu.add(m); });
+  // ---- brilhos do toque
+  const brilhos = new Particulas(160, 0xfff4c8, estrelaTex()); root.add(brilhos.obj);
+  const faiscar = (x, y, z, n = 18) => { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = .05 + Math.random() * .09; brilhos.emitir(x, y, z + .01, Math.cos(a) * v, Math.sin(a) * v, (Math.random() - .2) * .07, { vida: .55 + Math.random() * .5, tam: .024, tam2: .004, arrasto: 2.4, cor0: [1, .97, .8], cor1: [1, .78, .35] }); } };
+  // ---- brilho da peça reconhecida
+  const brilhoPeca = new THREE.Mesh(new THREE.CircleGeometry(.5, 128), brilhoPecaMaterial()); brilhoPeca.position.z = .0012; brilhoPeca.renderOrder = 6; root.add(brilhoPeca);
+  function formaDaPeca(pecas) {   // círculo inteiro, disco ou arco: o mesmo formato da peça, para o contorno brilhar no lugar certo
+    const u = brilhoPeca.material.uniforms, rd = CFG.disco_w / 2;
+    let ri = 0, ro = .5, a0 = -Math.PI, a1 = Math.PI;
+    if (pecas.length === 1 && pecas[0] === 'disco') ro = rd;
+    else if (pecas.length === 1) { ri = rd; [a0, a1] = { NE: [0, Math.PI / 2], NO: [Math.PI / 2, Math.PI], SO: [-Math.PI, -Math.PI / 2], SE: [-Math.PI / 2, 0] }[pecas[0]]; }
+    brilhoPeca.geometry.dispose(); brilhoPeca.geometry = new THREE.RingGeometry(Math.max(ri, .0005), ro, 160, 1, a0, a1 - a0);
+    oclusor.geometry.dispose(); oclusor.geometry = new THREE.RingGeometry(Math.max(ri, .0005), ro, 128, 1, a0, a1 - a0);   // o oclusor tem o formato da peça (fora dela aparece a mesa)
+    u.uRi.value = ri; u.uRo.value = ro; u.uA0.value = a0; u.uA1.value = a1;
+    const f = pecas.length === 1 ? PECAS[pecas[0]] : { cx: 0, cy: 0, w: 1 }; ceu.position.set(f.cx, f.cy, 0); ceu.scale.setScalar(f.w);
+  }
+
+  // ---- estado
+  // estado: 'pronto' (reconhecido, esperando o Play) → 'abertura' → 'explorar'
+  let tl = 0, T = 0, ativas = ORDEM.slice(), ini = inicio(ativas), estado = 'pronto', explorando = false, rotuloAtivo = null, rotuloAte = 0, rotuloTocado = false, ditas = 0, bounce = {}, pisca = 0;
+  let antes = {}, semSom = true, prontoDesde = 0;
+  const acao = {};   // instante do último toque em cada elemento
+  const desdeToque = k => acao[k] === undefined ? 99 : T - acao[k];
+  const pulo = (k, alt, dur) => { const d = desdeToque(k); return d < dur ? alt * Math.sin(Math.PI * d / dur) : 0; };
+  const voltaExtra = (k, dur = 1.1) => { const d = desdeToque(k); return d < dur ? TAU * smooth(d / dur) : 0; };   // uma volta inteira a mais, sem pulo no fim
+  const balanca = (k, amp = .3) => { const d = desdeToque(k); return d < 1.6 ? amp * Math.sin(d * 13) * Math.exp(-d * 2.6) : 0; };
+  function ativar(pecas) {
+    ativas = pecas.slice(); ini = inicio(ativas);
+    for (const p of ORDEM) for (const o of (porPeca[p] || [])) o.userData.inativo = !ativas.includes(p);
+    oclusor.visible = true; formaDaPeca(ativas); estado = 'pronto'; prontoDesde = T; ir(0); estado = 'pronto';
+  }
+  function comecar() { estado = 'abertura'; ir(0); }
+  // relógio de cada peça: s(a0, a1) = progresso (0–1) de um movimento que começa no instante a0 da animação e dura a1 − a0 segundos;
+  // desde(a) = segundos reais desde o instante a da animação (negativo antes dele)
+  const relogio = p => { const ok = ativas.includes(p), tr = ok ? tl - ini.o[p] : -1e9, w = ok ? ini.w[p] : null, R0 = a => tempoReal(w, a);
+    return { ok, tr, s: (a0, a1) => ok ? clamp01((tr - R0(a0)) / (a1 - a0)) : 0, desde: a => ok ? tr - R0(a) : -1e9 }; };
+  const vis = (obj, cond) => { obj.visible = cond && !obj.userData.inativo; };
+  function posPlanetaOrbita(p, K, a0, a1, b0, b1, g0) {   // aparece (a0–a1), sobe para a órbita (b0–b1), começa a girar em g0
+    const s0 = K.s(a0, a1), s1 = smooth(K.s(b0, b1)), gd = K.desde(g0);
+    vis(p.g, s0 > 0); const esc = Math.max(.001, outBack(s0)) * lerp(1, p.fator, s1) * (1 + (bounce[p.k] || 0)); p.g.scale.setScalar(esc);
+    const ang = p.ang0 + (gd > 0 ? p.w * smooth(clamp01(gd / 1.5)) * gd : 0), rad = lerp(p.artR, p.R, s1);
+    const x = E.sol.x + Math.cos(ang) * rad, y = E.sol.y + Math.sin(ang) * rad, z = lerp(p.r, p.alt, s1) + .005 * Math.sin(T * 1.7 + p.ang0);
+    p.g.position.set(x, y, z + pulo(p.k, .02, .6)); p.m.rotation.y = T * p.giro + voltaExtra(p.k);
+    const dx = x - E.sol.x, dy = y - E.sol.y, L = Math.hypot(dx, dy) || 1;
+    p.sh.position.set(x + dx / L * z * .5, y + dy / L * z * .5, .0025); p.sh.scale.setScalar(esc * (1 + z * 2)); p.sh.material.opacity = .9 * s0 * (1 - .5 * s1); vis(p.sh, s0 > 0);
+    p.orb.material.opacity = .32 * s1; p.orb.position.z = p.alt - p.r * .2; vis(p.orb, s1 > 0);
+    remendos[p.k].material.opacity = K.s(b0, b0 + .6);
+    if (p.atm) { p.g.getWorldPosition(vA); sol.getWorldPosition(vB); p.atm.material.uniforms.uSol.value.copy(vB.sub(vA).normalize()); }
+  }
+  function posPlanetaFixo(p, K, a0, a1) {   // sobe da arte e fica girando no lugar
+    const s = K.s(a0, a1), s1 = smooth(s);
+    vis(p.g, s > 0); const esc = Math.max(.001, outBack(s)) * (1 + (bounce[p.k] || 0)); p.g.scale.setScalar(esc);
+    const z = lerp(p.r * .85, p.alt + p.r, s1) + .004 * Math.sin(T * 1.3 + p.r * 40);
+    p.g.position.set(E[p.k].x, E[p.k].y, z + pulo(p.k, .025, .6)); p.m.rotation.y = T * p.giro + voltaExtra(p.k); if (p.nuv) p.nuv.rotation.y = T * p.giro * 1.25 + voltaExtra(p.k) * 1.1;
+    if (p.anel) p.anel.rotation.z = T * .02 + voltaExtra(p.k) * .5;
+    p.sh.material.opacity = .85 * s1; p.sh.scale.setScalar(1 + (z - p.r) * 2); vis(p.sh, s > 0); p.sh.position.set(E[p.k].x + .01 * s1, E[p.k].y - .008 * s1, .0025);
+    remendos[p.k].material.opacity = K.s(a1 - .5, a1 + .4);
+    if (p.atm) { p.g.getWorldPosition(vA); sol.getWorldPosition(vB); p.atm.material.uniforms.uSol.value.copy(vB.sub(vA).normalize()); }
+  }
+  function flutua(r, K, a0, a1, o = {}) {   // recorte sobe e flutua (na câmera: fica no impresso e acorda com brilhos)
+    const f = smooth(K.s(a0, a1)); vis(r.m, f > 0);
+    if (AR) {
+      const a = antes['acorda_' + r.k]; antes['acorda_' + r.k] = f > 0;
+      if (f > 0 && !a && !semSom && estado !== 'pronto') faiscar(r.x0, r.y0, .004, 22);
+      r.m.position.set(r.x0, r.y0, .002); r.m.rotation.set(0, 0, 0); r.m.scale.setScalar(1); vis(r.sh, false);
+      return f;
+    }
+    if (f <= 0) return 0;
+    const PULO = { bia: [.075, 1.7], faisca: [.035, .8], bip: [.025, .5], leo: [.03, .9] }[r.k] || [.02, .55];
+    const alt = o.alt ?? .05, z = lerp(.002, alt, f) + (o.bob ?? .005) * Math.sin(T * 1.5 + r.x0 * 10) + pulo(r.k, PULO[0], PULO[1]) * f;
+    const x = (o.x ?? r.x0) + .004 * Math.sin(T * .7 + r.y0 * 7) * f, y = (o.y ?? r.y0) + .003 * Math.cos(T * .9 + r.x0 * 5) * f;
+    r.m.position.set(x, y, o.z ?? z); r.m.rotation.set((o.tilt ?? .2) * f, .04 * Math.sin(T * .6) * f, (o.rz ?? 0) * f + .04 * Math.sin(T * .8 + r.x0) * f + balanca(r.k, r.k === 'zuzu' ? .35 : .18) * f); r.m.scale.setScalar((o.esc ?? 1) * (1 + (bounce[r.k] || 0)));
+    if (r.anim) r.anim.uniforms.uT.value = T * f;
+    r.sh.material.opacity = .8 * f; r.sh.position.set(x + .012 * f, y - .01 * f, .0025); r.sh.scale.setScalar(1 + (o.z ?? z) * 2); vis(r.sh, f > 0);
+    remendos[r.k].material.opacity = K.s(a0, a0 + .7);
+    return f;
+  }
+  const emDir = new THREE.Vector3(), emPos = new THREE.Vector3();
+  function pontoRecorte(r, u, v) { return emPos.set((u - .5) * r.d.w, (.5 - v) * r.d.h, 0).applyMatrix4(r.m.matrix); }   // ponto do recorte em coordenadas da cena
+  let acc = {};
+  const cada = (nome, dt, taxa, fn) => { acc[nome] = (acc[nome] || 0) + dt * taxa; while (acc[nome] >= 1) { acc[nome]--; fn(); } };
+
+  // efeito sonoro quando uma condição começa (não toca depois de pular no tempo)
+  const ev = (nome, cond, efeito) => { const a = antes[nome]; antes[nome] = cond; if (cond && !a && !semSom && estado !== 'pronto') som(efeito); };
+  function update(dt, camera, pxAltura) {
+    if (estado !== 'pronto') tl += dt; T += dt; const t = tl;
+    for (const k in bounce) bounce[k] = Math.max(0, bounce[k] - dt * .6);
+    pisca = (T % 3.4 > 3.15) ? Math.sin((T % 3.4 - 3.15) / .25 * Math.PI) : 0;
+    for (const r of Object.values(R)) if (r.anim) r.anim.uniforms.uPiscar.value = pisca;
+    root.getWorldScale(vEsc);   // tamanho dos pontos (estrelas, brilhos, fumaça, cauda do cometa) na escala do mundo
+    for (const o of [estrelas, estrelasCeu, cintilas, brilhos.obj, cauda.obj, jato.obj, chama.obj, fumaca.obj, poeira.obj, brilhoTel.obj]) { o.material.uniforms.uPx.value = pxAltura; o.material.uniforms.uEsc.value = vEsc.x; }
+    // ===== céu em volta: estrelinhas piscando o tempo todo (mais fortes enquanto espera o Play)
+    { const forte = estado === 'pronto' ? 1.25 : 1;
+      for (let i = 0; i < NA; i++) { const brilho = Math.pow(Math.max(0, Math.sin(T * aVel[i] * .7 + aFase[i] * 3)), 24) * .9; aAlfa[i] = Math.min(1, (aBase[i] * (.62 + .38 * Math.sin(T * aVel[i] + aFase[i])) + brilho) * forte); if (AR) aTam[i] = aTam0[i] * (.85 + .7 * brilho); }
+      ag.attributes.aAlfa.needsUpdate = true; if (AR) ag.attributes.aTam.needsUpdate = true; estrelasCeu.rotation.z = T * .012;
+      for (let i = 0; i < NX; i++) { xAlfa[i] = Math.min(1, Math.pow(.5 + .5 * Math.sin(T * xVel[i] + xFase[i]), 6) * .95 * forte); if (AR) xTam[i] = xTam0[i] * (.5 + .6 * xAlfa[i]); }   // acendem e apagam devagar, cada uma no seu tempo
+      xg.attributes.aAlfa.needsUpdate = true; if (AR) xg.attributes.aTam.needsUpdate = true; cintilas.rotation.z = -T * .008;
+      // estrelas cadentes de vez em quando
+      riscos.forEach(m => { const u = m.userData, v = (T - u.ini) / .9;
+        if (v > 1 && T > u.prox) { u.ini = T; u.prox = T + 3.5 + Math.random() * 6; u.a = Math.random() * TAU; u.d = u.a + Math.PI / 2 + (Math.random() - .5); u.r = .3 + Math.random() * .45; u.z = .1 + Math.random() * .12; }
+        const w = (T - u.ini) / .9; m.visible = w >= 0 && w <= 1;
+        if (m.visible) { const cx = Math.cos(u.a) * u.r, cy = Math.sin(u.a) * u.r, dx = Math.cos(u.d), dy = Math.sin(u.d);
+          m.position.set(cx + dx * (w - .5) * .4, cy + dy * (w - .5) * .4, u.z); m.rotation.z = u.d; m.material.opacity = Math.sin(w * Math.PI) * .9; } }); }
+    // ===== brilho da peça: acende quando o quebra-cabeça é reconhecido e apaga no começo da abertura
+    { const u = brilhoPeca.material.uniforms; u.uT.value = T;
+      u.uA.value = estado === 'pronto' ? clamp01((T - prontoDesde) / .8) : estado === 'abertura' ? clamp01(1 - tl / 3.5) * .9 : 0; brilhoPeca.visible = u.uA.value > .001; }
+    // ===== DISCO
+    const td = relogio('disco');
+    const eA = td.s(0, .5) * (1 - td.s(2.0, 2.6)); vis(estrelas, eA > 0);
+    if (eA > 0) { for (let i = 0; i < N; i++) alfa[i] = eA * (.55 + .45 * Math.sin(T * 6 + fase[i] * 9)); sg.attributes.aAlfa.needsUpdate = true; }
+    const s1 = td.s(1.2, 2.8); vis(sol, s1 > 0);
+    sol.scale.setScalar(Math.max(.001, outBack(s1)) * (1 + .012 * Math.sin(T * 2.1)) * (1 + (bounce.sol || 0)));
+    solMesh.rotation.y = T * .07; solMesh2.rotation.y = -T * .05; luzSol.intensity = 2.0 * s1;
+    { const d = desdeToque('sol'), fl = d < 1.2 ? Math.sin(Math.PI * d / 1.2) : 0; coroa.scale.setScalar(1 + .3 * fl); coroa.material.uniforms.uT.value = T * (1 + fl); }
+    coroa.material.uniforms.uA.value = Math.min(1, td.s(1.7, 3.6) * (1 + .4 * (desdeToque('sol') < 1.2 ? 1 : 0))); billboard(coroa, camera);
+    brilhoSol.material.opacity = .6 * s1 * (1 + .1 * Math.sin(T * 2.1)); brilhoSol.rotation.z = T * .1; vis(brilhoSol, s1 > 0);
+    remendos.sol.material.opacity = td.s(2.4, 3.4);
+    posPlanetaOrbita(merc, td, 4.2, 4.8, 5.2, 7.2, 8.6); posPlanetaOrbita(ven, td, 5.6, 6.2, 6.6, 8.6, 8.6);
+    { const r = R.faisca, dir = new THREE.Vector2(r.x0 - E.sol.x, r.y0 - E.sol.y).normalize(), f = smooth(td.s(11.4, 13.4));
+      flutua(r, td, 11.4, 13.4, { x: r.x0 + dir.x * .042 * f, y: r.y0 + dir.y * .042 * f, alt: .035, rz: .18 }); }
+    flutua(R.asteroides_sol, td, 13.8, 15.4, { alt: .03, tilt: .12 });
+    ev('sol', s1 > 0, 'sol'); ev('merc', td.s(4.2, 4.8) > 0, 'subir'); ev('ven', td.s(5.6, 6.2) > 0, 'subir'); ev('faisca', td.s(11.4, 13.4) > 0, 'subir'); ev('astS', td.s(13.8, 15.4) > 0, 'subir');
+    // ===== ARCO SO: Terra, satélite, ônibus, foguete
+    const tso = relogio('SO');
+    posPlanetaFixo(terra, tso, 0, 2);
+    function orbitaTerra(r, t, a0, a1, rx, ry, periodo, sentido, alt) {   // recorte sobe um pouco e dá voltas baixas em torno da Terra (elipse achatada para não sair da peça)
+      const f = flutua(r, t, a0, a1, { alt, tilt: 0, bob: 0 }); if (f <= 0 || AR) return;
+      const ang0 = Math.atan2(r.y0 - E.terra.y, r.x0 - E.terra.x), rad0 = Math.hypot(r.x0 - E.terra.x, r.y0 - E.terra.y);
+      const mix = smooth(t.s(a1, a1 + 1.2)), a = ang0 + sentido * Math.max(0, t.desde(a1)) * TAU / periodo;
+      const ex = lerp(rad0, terra.r * rx, mix), ey = lerp(rad0, terra.r * ry, mix);
+      const x = E.terra.x + Math.cos(a) * ex, y = E.terra.y + Math.sin(a) * ey, z = alt + .008 * Math.sin(a * 2);
+      r.m.position.set(x, y, z + pulo(r.k, .02, .5)); r.m.rotation.set(0, 0, sentido * (a - ang0) * .9 + voltaExtra(r.k));
+      r.sh.position.set(x + .006, y - .006, .0025); r.sh.material.opacity = .7 * f;
+    }
+    orbitaTerra(R.satelite, tso, 1.6, 2.6, 1.2, 1.5, 8, 1, .02); orbitaTerra(R.onibus, tso, 2.2, 3.2, 1.3, 1.8, 12, -1, .03);
+    ev('terra', tso.s(0, 2) > 0, 'subir'); ev('sat', tso.s(1.6, 2.6) > 0, 'bip'); ev('onibus', tso.s(2.2, 3.2) > 0, 'subir');
+    { const r = R.foguete; vis(r.m, false); vis(r.sh, false); remendos.foguete.material.opacity = 0;   // o foguete fica na peça; só os motores "ligam"
+      const dT = desdeToque('foguete'), liga = Math.max(tso.s(3.2, 4.0) * (1 - tso.s(8.0, 8.5)), tso.ok && dT < 2.2 ? Math.min(1, dT * 6) * (1 - dT / 2.2) : 0);   // no toque, os motores roncam de novo
+      motor(estado === 'pronto' ? 0 : liga);
+      vis(fumacaBase, liga > 0); vis(chamaSprite, false);
+      if (liga > 0) { const d = new THREE.Vector3(EM.chama_foguete.dir[0], -EM.chama_foguete.dir[1], 0).normalize();   // sentido do escape (para baixo/direita)
+        const b = new THREE.Vector3(EM.chama_foguete.x + d.x * .045, EM.chama_foguete.y + d.y * .045, .004);   // um pouco além do bocal, já sobre a Lua, para a fumaça não cobrir o corpo do foguete
+        fumacaBase.position.set(b.x, b.y, .003); fumacaBase.scale.setScalar(.6 + .08 * Math.sin(T * 7)); fumacaBase.material.opacity = .4 * liga; fumacaBase.material.color.set(0xffb45a); billboard(fumacaBase, camera);
+        const lado = new THREE.Vector3(-d.y, d.x, 0);
+        // fumaça rasteira: espalha pelo chão da Lua, para longe do foguete (subindo, ela cobriria o corpo dele na tela)
+        cada('fumaca', dt, 55 * liga, () => { const s = (Math.random() - .5) * 2; fumaca.emitir(b.x + lado.x * s * .02, b.y + lado.y * s * .02, .004, lado.x * s * .012 + d.x * .05 + (Math.random() - .5) * .006, lado.y * s * .012 + d.y * .05 + (Math.random() - .5) * .006, .006 + Math.random() * .006, { vida: 2.2 + Math.random(), tam: .016, tam2: .06, cor0: [.95, .93, .9], cor1: [.65, .65, .7], arrasto: .8 }); });
+        cada('chama', dt, 40 * liga, () => chama.emitir(b.x - d.x * .015 + (Math.random() - .5) * .015, b.y - d.y * .015 + (Math.random() - .5) * .008, .003, d.x * .03 + (Math.random() - .5) * .01, d.y * .03 + (Math.random() - .5) * .01, .004 + Math.random() * .004, { vida: .35 + Math.random() * .2, tam: .02, tam2: .005, cor0: [1, .9, .5], cor1: [1, .4, .05] })); } }
+    // ===== ARCO NO: Saturno, Zuzu, cometa, telescópio
+    const tno = relogio('NO');
+    posPlanetaFixo(sat, tno, 0, 2);
+    flutua(R.zuzu, tno, 1.6, 3.6, { alt: .05, tilt: .16 });
+    ev('saturno', tno.s(0, 2) > 0, 'subir'); ev('zuzu', tno.s(1.6, 3.6) > 0, 'disco'); ev('cometa', tno.s(3.6, 4.4) > 0, 'cometa'); ev('tel', tno.s(4.8, 6.6) > 0, 'brilho');
+    { const f = smooth(tno.s(3.6, 4.4)); vis(cometa, f > 0); remendos.cometa.material.opacity = tno.s(3.4, 4.0);
+      if (f > 0) { const v = tno.s(4.4, 7.4), curva = Math.sin(v * Math.PI);   // passeio: sai e volta ao longo do anel
+        const tang = new THREE.Vector2(-cometaPos0.y, cometaPos0.x).normalize();
+        const x = cometaPos0.x + tang.x * .13 * curva, y = cometaPos0.y + tang.y * .13 * curva, z = lerp(.01, .06, f) + .03 * curva;
+        cometa.position.set(x, y, z); nucleo.rotation.x = T * 2; cometa.scale.setScalar(f * (1 + (bounce.cometa || 0))); coma.material.opacity = .85 * f; billboard(coma, camera);
+        const longe = new THREE.Vector3(x - E.sol.x, y - E.sol.y, .15).normalize();   // cauda aponta para longe do Sol
+        const dc = desdeToque('cometa'); caudaCometa(x, y, z, longe, f * (1 + (dc < 1.4 ? .8 * Math.sin(Math.PI * dc / 1.4) : 0))); }
+      vis(cauda.obj, f > 0); }
+    { const r = R.telescopio, f = flutua(r, tno, 4.8, 6.6, { alt: .03, tilt: .15 }); if (f > 0) { if (!AR) r.m.rotation.y += .25 * Math.sin(T * .5) * f; r.m.updateMatrix();
+        cada('tel', dt, desdeToque('telescopio') < 1.2 ? 40 : 6, () => { const p = pontoRecorte(r, .28 + Math.random() * .14, .35 + Math.random() * .16); brilhoTel.emitir(p.x, p.y, p.z + .004, 0, 0, .01, { vida: .7, tam: .022, tam2: .003 }); }); } }
+    // ===== ARCO NE: Júpiter, Léo, asteroides
+    const tne = relogio('NE');
+    posPlanetaFixo(jup, tne, 0, 2);
+    { const r = R.leo, f = flutua(r, tne, 1.6, 3.2, { alt: .06, tilt: .18 });
+      if (f > 0) { r.m.updateMatrix();
+        for (const [u, v, nome] of [[.22, .74, 'jatoE'], [.8, .72, 'jatoD']]) { const b = pontoRecorte(r, u, v).clone();
+          cada(nome, dt, 42 * f * (desdeToque('leo') < 1.2 ? 3 : 1), () => jato.emitir(b.x + (Math.random() - .5) * .006, b.y, AR ? .006 : b.z - .004, (Math.random() - .5) * .02, -.03 - Math.random() * .02, AR ? .004 : -.015, { vida: 1.0 + Math.random() * .4, tam: .011, tam2: .042, cor0: [1, 1, 1], cor1: [.8, .8, .85], arrasto: 1.6 })); } } }
+    { const r = R.asteroides_grandes, f = flutua(r, tne, 4.8, 6.2, { alt: .035, tilt: .12 }); if (f > 0) r.m.rotation.z += .05 * Math.sin(T * .4) * f; }
+    ev('jup', tne.s(0, 2) > 0, 'subir'); ev('leo', tne.s(1.6, 3.2) > 0, 'jato'); ev('astG', tne.s(4.8, 6.2) > 0, 'subir');
+    // ===== ARCO SE: Marte, Bip, Bia
+    const tse = relogio('SE');
+    posPlanetaFixo(marte, tse, 0, 1.5);
+    flutua(R.bip, tse, 1.2, 2.6, { alt: .02, tilt: .1, bob: .002 });
+    flutua(R.bia, tse, 3.4, 5.0, { alt: .04, tilt: .14 });
+    ev('marte', tse.s(0, 1.5) > 0, 'subir'); ev('bip', tse.s(1.2, 2.6) > 0, 'bip'); ev('bia', tse.s(3.4, 5.0) > 0, 'pulo');
+    // ===== céu vivo no fim da abertura: uma chuva de estrelas cadentes
+    if (estado === 'abertura' && tl >= ini.ceu && !antes.chuva) { antes.chuva = true; riscos.forEach((m, i) => { m.userData.prox = T + .2 + i * .7; m.userData.ini = -9; }); }
+    // partículas
+    jato.update(dt); chama.update(dt); fumaca.update(dt); poeira.update(dt); brilhoTel.update(dt); brilhos.update(dt);
+    // rótulos
+    if (estado === 'abertura') {
+      const r = ROTULOS.find(([, p, a, b]) => { if (!ativas.includes(p)) return false; const tr = tl - ini.o[p]; return tr >= tempoReal(ini.w[p], a) && tr < tempoReal(ini.w[p], b); });
+      rotuloAtivo = r ? r[0] : null; rotuloTocado = false;
+      while (ditas < ini.falas.length && tl >= ini.falas[ditas][1]) { if (tl - ini.falas[ditas][1] < .5) falar(ini.falas[ditas][0]); ditas++; }
+      if (tl >= ini.fim) { explorando = true; estado = 'explorar'; if (!semSom) { som('fanfarra'); medir('fim_abertura', { pecas: ativas.length === 1 ? ativas[0] : 'todas' }); } toast(trad('Toque nos astros e nos personagens para descobrir!'), 4000); }
+    } else if (rotuloAtivo && T > rotuloAte) { rotuloAtivo = null; rotuloTocado = false; }
+    semSom = false;
+  }
+  function pontoLocal(k, acima = true) {   // centro do elemento (ou um pouco acima dele, para o rótulo), em coordenadas do quebra-cabeça
+    const v = new THREE.Vector3(); const pl = PL.find(p => p.k === k);
+    if (k === 'sol') v.set(E.sol.x, E.sol.y, acima ? rS * 2.0 : rS * .9);
+    else if (pl) { v.copy(pl.g.position); if (acima) v.z += pl.r * 1.6; }
+    else if (k === 'cometa') { v.copy(cometa.position); if (acima) v.z += .03; }
+    else if (R[k]) { v.copy(R[k].m.position); if (acima) { v.y += E[k].h * .55; v.z += .02; } }
+    return v;
+  }
+  const pontoRotulo = k => root.localToWorld(pontoLocal(k));
+  const SOM_TOQUE = { bip: 'bip', zuzu: 'disco', leo: 'jato', bia: 'pulo', cometa: 'cometa', telescopio: 'brilho', satelite: 'bip' };
+  function tocar(id) {   // toque: o elemento reage (pula, gira, balança, solta brilhos); depois da abertura, a Cleo fala e aparece o cartão
+    bounce[id] = .18; acao[id] = T; som(SOM_TOQUE[id] || 'pop');
+    const c = pontoLocal(id, false); faiscar(c.x, c.y, c.z);
+    if (!explorando) return;
+    medir('tocar_elemento', { elemento: id });
+    const voz = 'VO_' + id.toUpperCase(); falar(voz); rotuloAtivo = id; rotuloTocado = true; rotuloAte = T + Math.max(4.5, vozDur(voz) + 1.2);
+  }
+  function ir(t0) {
+    tl = t0; explorando = t0 >= ini.fim; if (estado !== 'pronto') estado = explorando ? 'explorar' : 'abertura';
+    rotuloAtivo = null; rotuloTocado = false; vozCalar(); semSom = true; antes.chuva = t0 >= ini.ceu;
+    ditas = 0; while (ditas < ini.falas.length && ini.falas[ditas][1] < t0 - .01) ditas++;
+    if (estado === 'explorar') toast(trad('Toque nos astros e nos personagens para descobrir!'), 4000);
+  }
+  function idioma() {   // trocou o idioma: a abertura passa a esperar as falas do novo idioma; a fala em andamento recomeça nele
+    const k = Math.max(0, ditas - 1), naFala = estado === 'abertura' && ditas > 0 && ditas <= ini.falas.length;
+    ini = inicio(ativas);
+    if (estado === 'abertura') { if (naFala) ir(ini.falas[k][1]); else ir(0); }
+    else if (estado === 'explorar') tl = Math.max(tl, ini.fim);
+  }
+  ativar(ORDEM);
+  const fecharRotulo = () => { rotuloAtivo = null; rotuloTocado = false; };
+  return { root, objetos, update, pontoRotulo, tocar, ir, ativar, comecar, fecharRotulo, idioma, get estado() { return estado; }, get rotulo() { return rotuloAtivo; }, get tocado() { return rotuloTocado; }, get t() { return tl; }, get fim() { return ini.fim; }, get falas() { return ini.falas; }, get explorando() { return explorando; } };
+}
+
+/* ---------- rótulo flutuante ---------- */
+const vTmp = new THREE.Vector3();
+function mostrarRotulo(cena, camera, renderer) {
+  const k = cena.rotulo;
+  // o texto do elemento tocado vai para o cartão de baixo; perto do elemento fica só o nome
+  if (k && cena.tocado) { if (ui.cartao.dataset.k !== k || ui.cartao.classList.contains('hidden')) { ui.cartao.dataset.k = k; ui.cartao.querySelector('b').textContent = fatos(k)[0]; ui.cartao.querySelector('span').textContent = fatos(k)[1]; ui.cartao.classList.remove('hidden'); } }
+  else if (!ui.cartao.classList.contains('hidden')) { ui.cartao.classList.add('hidden'); ui.cartao.dataset.k = ''; }
+  if (!k) { ui.rotulo.classList.add('hidden'); return; }
+  const p = cena.pontoRotulo(k); vTmp.copy(p).project(camera);
+  if (vTmp.z > 1 || Math.abs(vTmp.x) > 1.3 || Math.abs(vTmp.y) > 1.3) { ui.rotulo.classList.add('hidden'); return; }
+  const W = renderer.domElement.clientWidth, H = renderer.domElement.clientHeight;
+  const x = (vTmp.x * .5 + .5) * W, y = (-vTmp.y * .5 + .5) * H;
+  const meia = Math.min(W * .44, (ui.rotulo.offsetWidth || 120) / 2), alto = ui.rotulo.offsetHeight || 60, abaixo = y - 10 - alto < 64;   // o rótulo agora é só o nome: pode chegar perto da borda
+  ui.rotulo.classList.toggle('abaixo', abaixo);
+  const lx = Math.max(meia + 6, Math.min(W - meia - 6, x)), larg = ui.rotulo.offsetWidth || 2 * meia;
+  ui.rotulo.style.left = lx + 'px'; ui.rotulo.style.top = (abaixo ? Math.min(y + 4, H - alto - 90) : y - 10) + 'px';
+  ui.rotulo.style.setProperty('--sx', Math.max(-larg / 2 + 18, Math.min(larg / 2 - 18, x - lx)) + 'px');
+  if (ui.rotulo.dataset.k !== k) { ui.rotulo.dataset.k = k; ui.rotulo.querySelector('b').textContent = fatos(k)[0]; const sp = ui.rotulo.querySelector('span'); sp.textContent = ''; sp.classList.add('hidden'); }
+  ui.rotulo.classList.remove('hidden');
+}
+
+/* ---------- toque ---------- */
+function ligarToque(el, cena, getCamera) {
+  const ray = new THREE.Raycaster(), m = new THREE.Vector2(); let t0 = 0, p0 = null;
+  el.addEventListener('pointerdown', e => { t0 = performance.now(); p0 = [e.clientX, e.clientY]; });
+  el.addEventListener('pointerup', e => {
+    if (!p0 || performance.now() - t0 > 400 || Math.hypot(e.clientX - p0[0], e.clientY - p0[1]) > 12) return;
+    const r = el.getBoundingClientRect(); m.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(m, getCamera());
+    const hit = ray.intersectObjects(cena.objetos.filter(o => o.visible && o.parent.visible), false)[0];
+    if (hit) { cena.tocar(hit.object.userData.id); if (cena.tocado) { clearTimeout(toastTimer); ui.toast.style.opacity = 0; } }
+  });
+}
+
+/* ---------- controle geral ---------- */
+let renderer, scene, camera, cena, mind, controls, onResize, modo = null, pecaTit = 'todas';
+const NOME_PECA = { todas: 'círculo inteiro', disco: 'disco do Sol', SO: 'arco do foguete', NO: 'arco do Zuzu', NE: 'arco do Léo', SE: 'arco da Lua' };
+const titulo = p => { pecaTit = p; $('#tit').textContent = trad('Missão Espacial') + ' · ' + trad(NOME_PECA[p]); };
+function entrarHud() { ui.inicio.hidden = true; ui.hud.classList.remove('hidden'); }
+// botões conforme o momento: Play quando o quebra-cabeça está pronto; Pular só na abertura; Repetir na abertura e depois dela
+function botoes(visivel) {
+  const e = cena ? cena.estado : null;
+  ui.play.classList.toggle('hidden', !(e === 'pronto' && visivel));
+  ui.pular.classList.toggle('hidden', e !== 'abertura');
+  ui.repetir.classList.toggle('hidden', !(e === 'abertura' || e === 'explorar'));
+}
+function pararTudo() {   // volta ao menu: cala a voz, solta a câmera e deixa tudo pronto para entrar de novo
+  try { renderer && renderer.setAnimationLoop(null); } catch (e) {}
+  try { mind && mind.stop(); } catch (e) {}
+  try { controls && controls.dispose(); renderer && renderer.dispose(); } catch (e) {}
+  if (onResize) removeEventListener('resize', onResize);
+  $('#stage').innerHTML = ''; $('#stage').classList.remove('v3d'); renderer = scene = camera = cena = mind = controls = null; modo = null;
+  ui.hud.classList.add('hidden'); ui.scan.classList.add('hidden'); ui.rotulo.classList.add('hidden'); ui.cartao.classList.add('hidden'); ui.play.classList.add('hidden'); ui.inicio.hidden = false; loading(); vozCalar(); musicaParar(); motor(0);
+  $('#idiomas-app').hidden = true;
+}
+$('#bVoltar').onclick = pararTudo;
+const ICONE_SOM = ['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5h4l5-4.5v14l-5-4.5H3z"/><path d="M15.5 8.5l5.5 7M21 8.5l-5.5 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5h4l5-4.5v14l-5-4.5H3z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.3 6.3a8.3 8.3 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'];
+function pintarSom() { const b = $('#bSom'); b.innerHTML = ICONE_SOM[+VOZ.ligado]; b.setAttribute('aria-label', trad(VOZ.ligado ? 'Desligar o som' : 'Ligar o som')); b.setAttribute('aria-pressed', String(!VOZ.ligado)); }
+pintarSom();
+$('#bSom').onclick = () => {   // liga e desliga todo o som (voz e música)
+  vozIniciar(); VOZ.ligado = !VOZ.ligado; if (!VOZ.ligado) vozParar();
+  if (VOZ.geral) VOZ.geral.gain.setTargetAtTime(VOZ.ligado ? 1 : 0, VOZ.ctx.currentTime, .05);
+  pintarSom();
+};
+$('#bRepetir').onclick = () => cena && cena.ir(0);
+$('#bFechar').onclick = e => { e.stopPropagation(); ui.cartao.classList.add('hidden'); ui.rotulo.classList.add('hidden'); if (cena) cena.fecharRotulo(); vozCalar(); };   // X do cartão: fecha e cala a voz
+$('#bPlay').onclick = () => {   // o toque no Play também libera o som no celular
+  vozIniciar(); if (!cena || cena.estado !== 'pronto') return;
+  som('play'); cena.comecar(); botoes(true); clearTimeout(toastTimer); ui.toast.style.opacity = 0; medir('comecar_missao', { modo });
+};
+$('#bPular').onclick = () => cena && cena.ir(cena.fim);
+addEventListener('pagehide', () => { try { mind && mind.stop(); } catch (e) {} });
+Idioma.aoMudar(() => {   // troca de idioma a qualquer momento: textos, cartão aberto, voz e o ritmo da abertura
+  soltarOutrasLinguas(); vozCalar(); if (VOZ.ctx) carregarLingua(lingua());
+  ui.cartao.dataset.k = ''; ui.rotulo.dataset.k = ''; pintarSom(); clearTimeout(toastTimer); ui.toast.style.opacity = 0;
+  if (cena) { titulo(pecaTit); cena.idioma(); }
+});
+if (/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Line\//i.test(navigator.userAgent)) $('#aviso-nav').hidden = false;   // navegador de dentro de rede social: a câmera costuma falhar
+$('#link-contagem').addEventListener('click', ev => { ev.preventDefault(); if (window.XalingoAceite) window.XalingoAceite.reabrir(); else location.href = $('#link-privacidade').href; });
+
+/* ---------- modo câmera ---------- */
+$('#bCamera').onclick = async () => {
+  aviso(''); vozIniciar();
+  if (EMBUTIDO || !window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { aviso(trad('Este navegador não deixa usar a câmera neste endereço. Use o botão “Ver em 3D sem câmera”.')); return; }
+  medir('abrir_camera'); loading(trad('Abrindo a câmera…'));
+  try {
+    const [{ MindARThree }] = await Promise.all([import('mindar-image-three'), carregando, vozIniciar()]);
+    entrarHud(); modo = 'ar';
+    const qs = new URLSearchParams(location.search);
+    mind = new MindARThree({ container: $('#stage'), imageTargetSrc: SRC['alvos.mind'], maxTrack: 1, uiLoading: 'no', uiScanning: 'no', uiError: 'no',
+      filterMinCF: +(qs.get('cf') || .0008), filterBeta: +(qs.get('beta') || 600), warmupTolerance: 3, missTolerance: 12 });
+    ({ renderer, scene, camera } = mind);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
+    mind.cssRenderer.domElement.style.pointerEvents = 'none';
+    cena = buildScene(); window.__cena = cena;
+    scene.add(new THREE.AmbientLight(0xffffff, 1.15));   // mais luz nos planetas (o "Ver sem câmera" já tinha esta luz a mais; na câmera faltava)
+    // A cena fica num grupo "suave" que segue o alvo com um filtro: tremidinhas pequenas do rastreamento são amortecidas
+    // e movimentos de verdade do celular são seguidos rápido. ?suave=0 desliga (para comparar).
+    const suave = new THREE.Group(); suave.visible = false; scene.add(suave);
+    const SUAVE = qs.get('suave') !== '0';
+    // um âncora por alvo; o "ajuste" de cada alvo leva a cena inteira (em unidades do círculo) para o pedaço reconhecido
+    const ALVOS = [['todas', { cx: 0, cy: 0, w: 1 }], ['disco', PECAS.disco], ['NO', PECAS.NO], ['NE', PECAS.NE], ['SE', PECAS.SE], ['SO', PECAS.SO]];
+    // atual: o modo da animação (círculo inteiro ou uma peça); alvo: o que a câmera está usando de referência agora (pode ser só um pedaço do círculo)
+    let atual = null, achou = false, ultimoPerdeu = 0, avisou = false, alvo = null, encaixar = true, semAlvoDesde = performance.now(), circuloVisto = false;
+    ALVOS.forEach(([nome, f], i) => {
+      const anchor = mind.addAnchor(i); const aj = new THREE.Group(); aj.scale.setScalar(1 / f.w); aj.position.set(-f.cx / f.w, -f.cy / f.w, 0); aj.updateMatrix(); anchor.group.add(aj);
+      anchor.userData = { nome, aj };
+      anchor.onTargetFound = () => {
+        const perdido = semAlvoDesde ? performance.now() - semAlvoDesde : 0;   // há quanto tempo nada estava sendo rastreado (0 = trocou de referência sem perder)
+        // Com o círculo inteiro já reconhecido, chegar perto faz a câmera achar só o disco ou um arco: eles viram só referência
+        // e a animação do círculo inteiro continua do ponto em que estava (não volta para o Play).
+        const parte = nome !== 'todas' && circuloVisto && perdido < 60000, modoNome = parte ? 'todas' : nome;
+        if (nome === 'todas') circuloVisto = true;
+        if (!alvo || perdido > 500) encaixar = true;   // voltou depois de um tempo: encaixa direto; troca de referência sem perder: desliza
+        alvo = { nome, anchor, aj };
+        if (atual !== modoNome || perdido > 8000 || !achou) {
+          if (cena.root.parent !== suave) suave.add(cena.root);
+          cena.ativar(modoNome === 'todas' ? ORDEM : [modoNome]); atual = modoNome; achou = true; vozCalar(); som('brilho');
+          titulo(modoNome); toast(trad('Encontrei: {p}! Toque no ▶').replace('{p}', trad(NOME_PECA[modoNome]))); medir('quebra_cabeca_reconhecido', { qual: modoNome });
+        }
+        window.__alvo = nome; window.__modoAr = atual;   // ganchos de teste
+      };
+      anchor.userData.anchor = anchor;
+    });
+    // Câmera em 720p (sem pedir nada, o navegador abre em 640×480: rastreamento mais tremido e imagem borrada). ?res=480 ou ?res=0 para comparar.
+    const RES = +(qs.get('res') ?? 720), gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    if (RES > 0) navigator.mediaDevices.getUserMedia = c => gum(c && c.video && typeof c.video === 'object' ? { ...c, video: { ...c.video, width: { ideal: Math.round(RES * 16 / 9) }, height: { ideal: RES } } } : c);
+    try { await mind.start(); } finally { navigator.mediaDevices.getUserMedia = gum; }
+    window.__video = mind.video ? [mind.video.videoWidth, mind.video.videoHeight] : null; window.__cam = () => camera;   // ganchos de teste
+    loading(); ui.scan.classList.remove('hidden'); musicaTocar(); falar('VO_MIRE');
+    ligarToque(renderer.domElement, cena, () => camera);
+    const clock = new THREE.Clock(), size = new THREE.Vector2();
+    const mT = new THREE.Matrix4(), pT = new THREE.Vector3(), qT = new THREE.Quaternion(), sT = new THREE.Vector3(), vT = new THREE.Vector3();
+    const pP = new THREE.Vector3(), qP = new THREE.Quaternion(), sP = new THREE.Vector3();   // pré-filtro curto (tira os pulos de cada leitura)
+    const seguir = dt => {   // pose do alvo -> grupo suave (filtro em 2 estágios; parâmetros escolhidos em simulação de ruído do rastreador)
+      const g = alvo && alvo.anchor.group;
+      if (!g || !g.visible) return false;
+      mT.multiplyMatrices(g.matrix, alvo.aj.matrix); mT.decompose(pT, qT, sT);
+      if (encaixar || !SUAVE) { suave.position.copy(pT); suave.quaternion.copy(qT); suave.scale.copy(sT); pP.copy(pT); qP.copy(qT); sP.copy(sT); encaixar = false; return true; }
+      const b = 1 - Math.exp(-25 * dt); pP.lerp(pT, b); qP.slerp(qT, b); sP.lerp(sT, b);
+      const p = suave.position, prof = Math.max(Math.abs(p.z), 1e-6);
+      // quanto a pose "fugiu" do que está na tela: de lado (ângulo de visão), em distância e em giro
+      const m = Math.max(Math.hypot(pP.x - p.x, pP.y - p.y) / prof / .0087, Math.abs(pP.z - p.z) / prof / .025, suave.quaternion.angleTo(qP) / .028);
+      const a = 1 - Math.exp(-(2 + 32 * THREE.MathUtils.smoothstep(m, .25, 1)) * dt);   // parado: segue devagar (amortece); mexendo: segue rápido
+      p.lerp(pP, a); suave.quaternion.slerp(qP, a); suave.scale.lerp(sP, a);
+      return true;
+    };
+    const projetar = M => { const o = []; for (const [x, y] of [[0, 0], [.5, 0], [0, .5]]) { vT.set(x, y, 0).applyMatrix4(M).project(camera); o.push((vT.x * .5 + .5) * size.x, (-vT.y * .5 + .5) * size.y); } return o; };
+    renderer.setAnimationLoop(() => {
+      const dt = Math.min(clock.getDelta(), .05); renderer.getDrawingBufferSize(size);
+      const vivo = seguir(dt), agora = performance.now(); suave.visible = vivo;
+      // aviso de "procurando" só depois de um tempinho sem nada (na troca de referência ao chegar perto, não pisca)
+      if (vivo) { semAlvoDesde = 0; avisou = false; } else if (!semAlvoDesde) semAlvoDesde = agora;
+      const perdidoHa = semAlvoDesde ? agora - semAlvoDesde : 0;
+      ui.scan.classList.toggle('hidden', vivo || (achou && perdidoHa < 700));
+      if (achou && !avisou && perdidoHa > 2500 && agora - ultimoPerdeu > 12000) { avisou = true; ultimoPerdeu = agora; falar('VO_PERDEU'); }
+      if (vivo && window.__gravar) { suave.updateMatrix(); window.__gravar.push({ t: performance.now(), cru: projetar(mT), suave: projetar(suave.matrix) }); }   // gancho de teste
+      if (vivo) cena.update(dt, camera, size.y); else motor(0);
+      renderer.render(scene, camera); window.__frames = (window.__frames || 0) + 1;
+      if (vivo) mostrarRotulo(cena, camera, renderer); else { ui.rotulo.classList.add('hidden'); if (perdidoHa > 700) ui.cartao.classList.add('hidden'); }
+      botoes(vivo);
+    });
+  } catch (e) {
+    console.error(e); pararTudo();
+    aviso(trad('Não foi possível abrir a câmera. Permita o uso da câmera nas configurações do navegador e toque de novo, ou use o botão “Ver em 3D sem câmera”.'));
+  }
+};
+
+/* ---------- modo sem câmera ---------- */
+$('#bSemCamera').onclick = async () => {
+  aviso(''); vozIniciar(); loading(trad('Montando o quebra-cabeça…'));
+  try {
+    const [{ OrbitControls }] = await Promise.all([import('three/addons/controls/OrbitControls.js'), carregando, vozIniciar()]);
+    entrarHud(); modo = '3d';
+    const stage = $('#stage'); stage.classList.add('v3d');
+    renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight); renderer.outputColorSpace = THREE.SRGBColorSpace; stage.appendChild(renderer.domElement);
+    scene = new THREE.Scene(); scene.background = new THREE.Color(0x070b24);
+    const peca = $('#peca').value || 'todas', f = peca === 'todas' ? { cx: 0, cy: 0, w: 1 } : PECAS[peca];
+    const aspect = innerWidth / innerHeight, fov = aspect < 1 ? 52 : 40;
+    camera = new THREE.PerspectiveCamera(fov, aspect, .01, 60); camera.up.set(0, 0, 1);
+    const vf = THREE.MathUtils.degToRad(fov), hf = 2 * Math.atan(Math.tan(vf / 2) * aspect);
+    const d0 = Math.max(.6 * f.w / Math.tan(hf / 2), .58 * f.w / Math.tan(vf / 2)), el = THREE.MathUtils.degToRad(58);
+    camera.position.set(f.cx, f.cy - d0 * Math.cos(el), d0 * Math.sin(el));
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(f.cx, f.cy, .03); controls.enableDamping = true; controls.enablePan = false;
+    controls.minDistance = .2; controls.maxDistance = Math.max(3, d0 * 1.8); controls.maxPolarAngle = 1.4; controls.update();
+    const N = 1200, sg = new THREE.BufferGeometry(), sp = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { const v = new THREE.Vector3().randomDirection().multiplyScalar(8 + Math.random() * 6); sp.set([v.x, v.y, Math.abs(v.z) * .9 + .2], i * 3); }
+    sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+    scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: .7 })));
+    const mesa = new THREE.Mesh(new THREE.CircleGeometry(3, 64), new THREE.MeshBasicMaterial({ map: canvasTex(512, 512, (g, w) => { const gr = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); gr.addColorStop(0, '#26306a'); gr.addColorStop(.3, '#151c48'); gr.addColorStop(1, '#070b24'); g.fillStyle = gr; g.fillRect(0, 0, w, w); }) }));
+    mesa.position.z = -.012; scene.add(mesa);
+    const lado = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, .011, 128, 1, true), new THREE.MeshStandardMaterial({ color: 0xc9a36b, roughness: .9 })); lado.rotation.x = Math.PI / 2; lado.position.z = -.0055; scene.add(lado);
+    // a arte: círculo inteiro, só o disco, ou um arco (recortado por máscara de pedaço)
+    const arte = new THREE.Mesh(new THREE.CircleGeometry(.5, 128), new THREE.MeshBasicMaterial({ map: TEX['circulo.webp'], transparent: true })); scene.add(arte);
+    if (peca !== 'todas') { arte.material.alphaMap = canvasTex(1024, 1024, (g, w) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, w); g.fillStyle = '#fff'; g.beginPath();
+        if (peca === 'disco') g.arc(w / 2, w / 2, w * CFG.disco_w / 2, 0, TAU); else { const a0 = { NE: -Math.PI / 2, NO: Math.PI, SE: 0, SO: Math.PI / 2 }[peca]; g.arc(w / 2, w / 2, w / 2, a0, a0 + Math.PI / 2); g.arc(w / 2, w / 2, w * CFG.disco_w / 2, a0 + Math.PI / 2, a0, true); }
+        g.closePath(); g.fill(); }); arte.material.needsUpdate = true; lado.visible = false; }
+    scene.add(new THREE.AmbientLight(0xffffff, 1));
+    cena = buildScene(); window.__cena = cena; scene.add(cena.root); cena.ativar(peca === 'todas' ? ORDEM : [peca]);
+    window.__passo = (n, d = .05) => { for (let i = 0; i < n; i++) cena.update(d, camera, 800); return cena.t; };   // gancho de teste
+    window.__cam = () => camera; window.__controls = controls;   // ganchos de teste (prints da capa)
+    musicaTocar(); window.__mus = MUS; window.__musica = { tocar: musicaTocar, parar: musicaParar };   // gancho de teste
+    titulo(peca); medir('ver_3d_sem_camera', { peca });
+    onResize = () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+    addEventListener('resize', onResize);
+    ligarToque(renderer.domElement, cena, () => camera);
+    loading(); toast(trad('Gire com o dedo e aproxime com dois dedos.'));
+    const clock = new THREE.Clock(), size = new THREE.Vector2();
+    renderer.setAnimationLoop(() => {
+      const dt = Math.min(clock.getDelta(), .05); renderer.getDrawingBufferSize(size);
+      controls.update(); if (!window.__pausa) cena.update(dt, camera, size.y); renderer.render(scene, camera); mostrarRotulo(cena, camera, renderer); botoes(true); window.__frames = (window.__frames || 0) + 1;
+    });
+  } catch (e) { console.error(e); pararTudo(); aviso(trad('Não foi possível montar o 3D neste navegador.')); }
+};
+if (EMBUTIDO) $('#bCamera').disabled = true;
+</script>
+</body>
+</html>
