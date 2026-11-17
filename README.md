@@ -8,6 +8,7 @@ Publicado em https://inovacaoxalingo.github.io/interactive-play/
 | `corpo-humano/` | Quebra-cabeça Conhecendo o Corpo Humano (ref. 53309) |
 | `conhecendo-os-planetas/` | Quebra-cabeça Conhecendo os Planetas (ref. 53265) |
 | `corpo-humano-20932/` | Quebra-cabeça Corpo Humano (ref. 2093.2), linha Explora — realidade aumentada: o corpo em pé em 3D sobre o quebra-cabeça, com textos e voz em português, inglês e espanhol; página própria, fora da lista da entrada |
+| `pixel-art-21143/` | Quadro de Colorir Pixel Art (ref. 2114.3) — Pixel Art em 3D: a câmera lê o desenho pintado no quadro (os 125 gabaritos ou um desenho inventado) e mostra em 3D; lê em voz alta nomes e números escritos com o alfabeto do manual; página própria, fora da lista da entrada |
 | `arca-de-noe/` | Quebra-cabeça para colorir Arca de Noé (ref. 2084.3), marca Arca Toys — página própria, fora da lista da entrada |
 
 Cada produto fica em uma pasta própria, com o seu `index.html` e a pasta `assets/`.
