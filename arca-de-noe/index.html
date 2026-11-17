@@ -50,6 +50,7 @@ button{font:inherit}
 /* início */
 #inicio{overflow:auto;background:linear-gradient(#eaf5ff 0,#eaf5ff 55%,#d4ebfb 100%)}
 .miolo{max-width:560px;margin:0 auto;padding:22px 16px 40px}
+.voltar-site{display:inline-flex;align-items:center;min-height:40px;margin:0 0 12px;padding:6px 14px;border-radius:999px;background:#fff;color:#164194;font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 2px 0 rgba(13,45,87,.12)}
 .marca{font-weight:800;font-size:13px;color:var(--mar);letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:8px}
 .marca span{background:var(--mar);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;flex:none}
 h1{font-size:30px;line-height:1.08;margin:0 0 10px;color:var(--mar2);font-weight:800}
@@ -121,6 +122,7 @@ body.girar #camera .ui,body.girar #camera.demo #ar,body.girar #ver3d{inset:auto;
 <body>
 <section id="inicio" class="tela ativa">
   <div class="miolo">
+    <a class="voltar-site" href="https://inovacaoxalingo.github.io/ra/" aria-label="Voltar para a central de realidade aumentada da Xalingo">‹ Todas as experiências</a>
     <p class="marca"><span>Ref. 2084.3</span> Arca Toys · Quebra-cabeça para colorir Arca de Noé</p>
     <h1>Pinte a arca e veja ela em 3D</h1>
     <p class="sub">A câmera reconhece o quebra-cabeça e monta a arca de Noé em 3D com as cores que você pintou.</p>
@@ -177,7 +179,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const $ = s => document.querySelector(s);
 const DEBUG = /[?&]debug=1/.test(location.search);
-const VERSAO = '1.0.1 · 13/11/2026';
+const VERSAO = '1.0.2 · 16/11/2026';
 const medir = (nome, p) => { try { window.medir && window.medir(nome, p); } catch (e) {} }; // contagem anônima (só se o adulto permitiu no aviso)
 // qualidade automática: começa pelo aparelho e baixa sozinha se ficar lento (?qualidade=alta|media|baixa força)
 const QUAL = (() => { const q = (location.search.match(/qualidade=(alta|media|baixa)/) || [])[1];
