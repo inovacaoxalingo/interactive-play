@@ -184,8 +184,9 @@ header .snd{background:#e8eefb;flex-basis:36px;width:36px;height:36px}
     <p class="aviso-nav" id="aviso-nav" hidden>Para a câmera funcionar, abra este endereço no <b>Chrome</b> (Android) ou no <b>Safari</b> (iPhone), e não dentro do Instagram, do Facebook ou do TikTok.</p>
     <button type="button" class="bt prim" id="bScan">Ler meu desenho</button>
     <a class="bt sec" href="#/desenhos" id="bLista">Ver os 125 desenhos em 3D</a>
+    <a class="bt sec" href="https://inovacaoxalingo.github.io/manuais/manuais/21143/" id="bManual">Manual: como pintar cada desenho</a>
     <p class="nota" id="nota-legal">Brinque com um adulto por perto e em um lugar seguro. Use a câmera por pouco tempo de cada vez: ligada por muito tempo, ela esquenta o celular e gasta bateria. A imagem da câmera é usada só neste aparelho para ler o quadro: nenhuma foto é enviada ou guardada. <a href="../privacidade.html" id="link-privacidade">Privacidade</a> · <a href="#" id="link-contagem">Contagem de acessos</a></p>
-    <p class="nota">© Xalingo Brinquedos · versão 1.1 · 16/11/2026</p>
+    <p class="nota">© Xalingo Brinquedos · versão 1.2 · 24/11/2026</p>
   </div>
 </section>
 
@@ -195,6 +196,7 @@ header .snd{background:#e8eefb;flex-basis:36px;width:36px;height:36px}
     <a class="voltar" href="#">‹ Início</a>
     <div class="intro"><h1>Os 125 desenhos</h1><p>Escolha um desenho para ver em 3D, com ou sem a câmera.</p></div>
     <button class="btn primary big" id="bScanG">📷 Ler meu desenho</button>
+    <p class="or" style="margin:2px 0 10px"><a id="gManual" href="https://inovacaoxalingo.github.io/manuais/manuais/21143/" style="color:var(--navy);font-weight:800">Como pintar? Abra o manual com o passo a passo ›</a></p>
     <p class="or">Ou procure o desenho na lista:</p>
     <div class="filters">
       <input id="q" type="search" placeholder="Procurar desenho pelo nome ou número" aria-label="Procurar desenho">
@@ -225,6 +227,7 @@ header .snd{background:#e8eefb;flex-basis:36px;width:36px;height:36px}
     <div class="card" style="display:grid;gap:10px">
       <button class="btn primary" id="bAR">📷 Abrir câmera</button>
       <button class="btn soft" id="bPV">Ver em 3D sem câmera</button>
+      <a class="btn soft" id="hManual" href="https://inovacaoxalingo.github.io/manuais/manuais/21143/" style="text-decoration:none">📘 Ver como pintar este desenho</a>
     </div>
   </main>
 </section>
@@ -3980,6 +3983,15 @@ three/build/three.module.js:
   $('link-contagem').addEventListener('click', function (ev) { ev.preventDefault(); if (window.XalingoAceite) window.XalingoAceite.reabrir(); else location.href = $('link-privacidade').href; });
   if (/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|Line\//i.test(navigator.userAgent)) $('aviso-nav').hidden = false;   /* navegador de dentro de rede social: a câmera costuma falhar */
   var medir = function (n, p) { try { if (window.medir) window.medir(n, p); } catch (e) {} };
+  /* manual do produto: na tela de um desenho, abre o passo a passo daquele desenho */
+  var MANUAL = 'https://inovacaoxalingo.github.io/manuais/manuais/21143/';
+  function ligaManual() {
+    var a = $('hManual'); if (!a) return;
+    var m = location.hash.match(/^#\/d\/(\d+)/);
+    a.href = m ? MANUAL + '#/d/' + m[1] : MANUAL;
+    a.textContent = m ? '📘 Ver como pintar este desenho' : '📘 Abrir o manual de gabaritos';
+  }
+  addEventListener('hashchange', ligaManual); ligaManual();
   var NOMES = {};
   (window.__DATA || []).forEach(function (d) { NOMES[d.name.toUpperCase()] = d.name; });
   document.addEventListener('click', function (ev) {
